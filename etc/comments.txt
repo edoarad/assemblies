@@ -1,0 +1,16 @@
+*flake8 - for conventions
+*pip install -r requirements.txt - install all the packages appears in the file
+*python setup.py install - install all the requirements
+*python setup.py sdist - create source distribution of the project. After that, a tar.gz file will be located in dist/, and this file can be installed by pip. 
+
+#TODO: 
+readme (how to run tests...)
+
+
+account for github:
+BrainProjectTau@gmail.com
+password: brain1234!
+
+
+CODECOV_TOKEN="cea63242-1213-444e-9df4-35330e591600"
+
