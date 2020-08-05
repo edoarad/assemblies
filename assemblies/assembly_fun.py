@@ -171,14 +171,18 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
 
             brain.connectome.winners[self.area] = list(neurons)
 
-            # TODO: is it only for better performance? it seems to affect correctness
             # Replace=True for better performance
+            # TODO: is it only for better performance? it seems to affect correctness
+            # Response: Yes it also affects operation, but you & I (Yonatan) discussed this
+            #           And this is the implementation you requested.
             # TODO: *** WRONG LOGIC *** - add mapping area->area
             brain.next_round({self.area: [area]}, replace=True, iterations=iterations or brain.repeat)
 
             projected_assembly._update_hook(brain=brain)
 
         # TODO: calling `bind_like` manually is error-prone because someone can forget it. can you make a decorator or a more automated way to do it?
+        # Response: No, this is the standard path defined in the Bindable API.
+        #           No user should any be in the situation to call this function manually.
         projected_assembly.bind_like(self)
         return projected_assembly
 
@@ -227,8 +231,10 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         assert len(assemblies) != 0, "tried to merge with empty input"
         # TODO: type hint is redundant
         # TODO 2: check documentation of `intersection` - it seems to be an instance method that works here by chance!
-        # Response: To avoid edge cases it is better to leave this as is. it also simplifies the code
-        #           and makes much more sense in implementation...
+        # Response: Please refer to the official documentation
+        #           - https://docs.python.org/3/library/stdtypes.html#frozenset.intersection
+        #           
+        #           They probably forgot to update this in the source code.
         merged_assembly: Assembly = Assembly(assemblies, area,
                                              appears_in=set.intersection(*[x.appears_in for x in assemblies]))
         # TODO: this is actually a way to check if we're in "binded" or "non binded" state.
