@@ -18,12 +18,11 @@ if TYPE_CHECKING:  # TODO: this is not needed. It's better to always import them
 # Response: This is standard typing in python.
 Projectable = Union['Assembly', Stimulus]
 
-# TODO: Look at parameters as well? (Yonatan, for associate)
 bound_assembly_tuple = ImplicitResolution(lambda instance, name:
-                                          Bindable.implicitly_resolve_many(instance.assemblies, name, False), 'brain')
+                                          Bindable.implicitly_resolve_many(instance.assemblies, name, True), 'brain')
 
 
-@Recordable(('merge', True), 'associate',
+@Recordable(('merge', True), '_associate',
             resolution=ImplicitResolution(
                 lambda instance, name: Bindable.implicitly_resolve_many(instance.assemblies, name, False), 'recording'))
 class AssemblyTuple(object):
@@ -60,9 +59,15 @@ class AssemblyTuple(object):
     def merge(self, area: Area, *, brain: Brain = None):
         return Assembly._merge(self.assemblies, area, brain=brain)
 
-    @bound_assembly_tuple
     def associate(self, other: AssemblyTuple, *, brain: Brain = None):
-        return Assembly._associate(self.assemblies, other.assemblies, brain=brain)
+        # Hack for resolution
+        return AssemblyTuple(*(self.assemblies + other.assemblies))._associate(self, other, brain=brain)
+
+    # Yoantan: Please document and rename better
+    @bound_assembly_tuple
+    def _associate(self, left: AssemblyTuple, right: AssemblyTuple, *, brain: Brain = None):
+        assert all(ass in self.assemblies for ass in left) and all(ass in self.assemblies for ass in right), "Inner check, never should be called by user"
+        return Assembly._associate(left.assemblies, right.assemblies, brain=brain)
 
     # TODO: rename other
     def __rshift__(self, other: Area):
@@ -233,7 +238,7 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         # TODO 2: check documentation of `intersection` - it seems to be an instance method that works here by chance!
         # Response: Please refer to the official documentation
         #           - https://docs.python.org/3/library/stdtypes.html#frozenset.intersection
-        #           
+        #
         #           They probably forgot to update this in the source code.
         merged_assembly: Assembly = Assembly(assemblies, area,
                                              appears_in=set.intersection(*[x.appears_in for x in assemblies]))

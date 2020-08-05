@@ -55,7 +55,7 @@ class Bindable(Generic[T]):
         if len(options) == 1:
             return True, options.pop()
         elif len(options) > 1 and not graceful:
-            raise Exception("Multiple different bound parameters for the different instances")
+            raise Exception("Multiple different bound parameters for %s in the different instances" % param_name)
 
         return False, None
 
