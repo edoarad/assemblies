@@ -8,7 +8,7 @@ from pathlib import Path
 from brain import Area, Stimulus, BrainRecipe, bake, Connectome
 from assemblies import Assembly
 from assemblies.utils import fire_many
-from simulations.logger import Logger
+from utils.logger import Logger
 from utils.i_love_my_ram import protecc_ram
 
 import matplotlib.pyplot as plt

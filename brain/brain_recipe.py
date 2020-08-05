@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import List, Union, TYPE_CHECKING, Dict, Optional, Set
 
-from assemblies.assembly_fun import Assembly
+from assemblies.assembly import Assembly
 from brain.components import Area, Stimulus, BrainPart
 from utils.blueprints.recording import Recording
 if TYPE_CHECKING:

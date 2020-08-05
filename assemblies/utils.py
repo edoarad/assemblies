@@ -1,6 +1,6 @@
 from typing import Iterable, Dict, List
 
-from assemblies.assembly_fun import Projectable, Assembly
+from assemblies.assembly import Projectable, Assembly
 from brain import Brain, Area, Stimulus
 
 

@@ -12,11 +12,14 @@ if TYPE_CHECKING:
 
 from utils.bindable import Bindable, bindable_property
 
-# TODO: document me pleaaase
-# TODO 2: explain why this is needed (rather than, for example, implementing `__eq__` for Assembly)
-# Response: Since this is common to all brain parts, this allows indexing dictionaries with such objects.
-#           In addition, this represents a special comparison which is based only on the instance and not on properties.
+
 class UniquelyIdentifiable:
+    """
+    we make all brain components hashable with this class, to allow use in global dictionaries and such.
+    we cant simply use __eq__, as two assemblies may be identical as "lists" of their parents,
+    but are bound in two different brains/recipes.
+    In addition, this represents a special comparison which is based only on the instance and not on properties.
+    """
     hist = {}
 
     def __init__(self, uid=None):
@@ -59,7 +62,7 @@ class Area(UniquelyIdentifiable):
 
     @bindable_property
     def active_assembly(self, *, brain: Brain):
-        from assemblies.assembly_fun import Assembly
+        from assemblies.assembly import Assembly
         return Assembly.read(self, brain=brain)
 
     def __repr__(self):

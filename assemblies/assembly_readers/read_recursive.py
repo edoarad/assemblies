@@ -1,5 +1,5 @@
 from brain import Brain
-from assemblies.assembly_fun import Assembly
+from assemblies.assembly import Assembly
 from assemblies.utils import fire_many, revert_changes
 
 # TODO: Mention explicitly where and how this is used. Very unclear, especially since it can't be
