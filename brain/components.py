@@ -15,10 +15,8 @@ from utils.bindable import Bindable, bindable_property
 
 class UniquelyIdentifiable:
     """
-    we make all brain components hashable with this class, to allow use in global dictionaries and such.
-    we cant simply use __eq__, as two assemblies may be identical as "lists" of their parents,
-    but are bound in two different brains/recipes.
-    In addition, this represents a special comparison which is based only on the instance and not on properties.
+    This class represents objects that are uniquely identifiable, objects that should be identified by instance
+    and not by their properties.
     """
     hist = {}
 

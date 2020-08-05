@@ -14,14 +14,11 @@ if TYPE_CHECKING:  # TODO: this is not needed. It's better to always import them
     from brain.brain_recipe import BrainRecipe
 
 """
-standard python 3.8 typing
+Standard python 3.8 typing
 Projectable is an umbrella type for regular assemblies 
 and top level assemblies with no parents (i.e stimuli)
 """
 Projectable = Union['Assembly', Stimulus]
-
-bound_assembly_tuple = ImplicitResolution(lambda instance, name:
-                                          Bindable.implicitly_resolve_many(instance.assemblies, name, True), 'brain')
 
 
 @Recordable(('merge', True), '_associate',
@@ -62,20 +59,13 @@ class AssemblyTuple(object):
             raise TypeError("Assemblies can be concatenated only to assemblies")
         return AssemblyTuple(*(self.assemblies + other.assemblies))
 
-    @bound_assembly_tuple
     def merge(self, area: Area, *, brain: Brain = None):
+        brain = brain or Bindable[Assembly].implicitly_resolve_many(self.assemblies, 'brain', False)
         return Assembly._merge(self.assemblies, area, brain=brain)
 
     def associate(self, other: AssemblyTuple, *, brain: Brain = None):
-        # Hack for resolution
-        return AssemblyTuple(*(self.assemblies + other.assemblies))._associate(self, other, brain=brain)
-
-    # Yoantan: Please document and rename better
-    @bound_assembly_tuple
-    def _associate(self, left: AssemblyTuple, right: AssemblyTuple, *, brain: Brain = None):
-        assert all(ass in self.assemblies for ass in left) and all(
-            ass in self.assemblies for ass in right), "Inner check, never should be called by user"
-        return Assembly._associate(left.assemblies, right.assemblies, brain=brain)
+        brain = brain or Bindable[Assembly].implicitly_resolve_many(self.assemblies + other.assemblies, 'brain', False)
+        return Assembly._associate(self.assemblies, other.assemblies, brain=brain)
 
     def __rshift__(self, target_area: Area):
         """
@@ -176,6 +166,9 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         # TODO 2: more verification? area is not None, area is inside the brain
         # Response: isinstance(area, Area) => area is not None
         # TODO 3: check any edge cases in the dependency between area and brain
+        # Response: This is highly non-pythonic, anyway if this will happen it makes more sense
+        #           that connectome will raise a meaningful error, as it is redundant to check this is all places
+        #           calling to connectome.
         if not isinstance(area, Area):
             raise TypeError("Project target must be an Area")
         projected_assembly: Assembly = Assembly([self], area, initial_recipes=self.appears_in)
@@ -188,8 +181,7 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
             # TODO: is it only for better performance? it seems to affect correctness
             # Response: Yes it also affects operation, but you & I (Yonatan) discussed this
             #           And this is the implementation you requested.
-            # TODO: *** WRONG LOGIC *** - add mapping area->area
-            brain.next_round({self.area: [area]}, replace=True, iterations=iterations or brain.repeat)
+            brain.next_round({self.area: [area], area: area}, replace=True, iterations=iterations or brain.repeat)
 
             projected_assembly.trigger_reader_update_hook(brain=brain)
 
