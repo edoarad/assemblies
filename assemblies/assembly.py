@@ -113,7 +113,7 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         """
         :param parents: the Assemblies and/or Stimuli that were used to create the assembly
         :param area: an Area where the Assembly "lives"
-        :param appears_in: an iterable containing every BrainRecipe in which the assembly appears
+        :param initial_recipes: an iterable containing every BrainRecipe in which the assembly appears
         :param reader: name of a read driver pulled from assembly_readers. defaults to 'default'
         """
 
@@ -178,7 +178,7 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         # TODO 3: check any edge cases in the dependency between area and brain
         if not isinstance(area, Area):
             raise TypeError("Project target must be an Area")
-        projected_assembly: Assembly = Assembly([self], area, appears_in=self.appears_in)
+        projected_assembly: Assembly = Assembly([self], area, initial_recipes=self.appears_in)
         if brain is not None:
             neurons = self.identify(brain=brain)
 
@@ -245,7 +245,7 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         #
         #           They probably forgot to update this in the source code.
         merged_assembly: Assembly = Assembly(assemblies, area,
-                                             appears_in=set.intersection(*[x.appears_in for x in assemblies]))
+                                             initial_recipes=set.intersection(*[x.appears_in for x in assemblies]))
         # TODO: this is actually a way to check if we're in "binded" or "non binded" state.
         # TODO: can you think of a nicer way to do that?
         # TODO: otherwise it seems like a big block of code inside the function that sometimes happens and sometimes not. it is error-prone
