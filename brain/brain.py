@@ -7,9 +7,10 @@ from typing import Dict, Set, TYPE_CHECKING, List, Optional, Union
 from .components import BrainPart, Stimulus
 from brain.connectome.abc_connectome import ABCConnectome
 from brain.components import Area, UniquelyIdentifiable
+from .brain_recipe import BrainRecipe
 # TODO: imports should happen in any case
+# Response: Again, cyclic imports
 if TYPE_CHECKING:
-	from .brain_recipe import BrainRecipe
 	from assemblies import Assembly
 
 

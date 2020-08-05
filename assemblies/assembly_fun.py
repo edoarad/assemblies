@@ -1,5 +1,6 @@
 # TODO: rename this file
 from __future__ import annotations  # TODO: remove this allover, we are using python 3
+                                    # Response: No, this allows future declaration and simpler typing
 from .read_driver import ReadDriver  # TODO: It shouldn't depend on directory structure.
 from utils.blueprints.recordable import Recordable
 from utils.implicit_resolution import ImplicitResolution
@@ -9,10 +10,12 @@ from typing import Iterable, Union, Tuple, TYPE_CHECKING, Set, Optional, Dict
 from itertools import product
 
 if TYPE_CHECKING:  # TODO: this is not needed. It's better to always import them.
+                   # Response: This is to avoid cyclic imports...
     from brain import Brain
     from brain.brain_recipe import BrainRecipe
 
 # TODO: Document this type annotation. remember that future contributers may not know why it is necessary to use a string
+# Response: This is standard typing in python.
 Projectable = Union['Assembly', Stimulus]
 
 # TODO: Look at parameters as well? (Yonatan, for associate)
@@ -83,6 +86,8 @@ class AssemblyTuple(object):
 class Assembly(UniquelyIdentifiable, AssemblyTuple):
     # TODO: It makes no logical sense for Assembly to inherit AssemblyTuple.
     # TODO: instead, they can inherit from a mutual `AssemblyOperator` class that defines the operators they both support
+    # An assembly is in particular a tuple of assemblies of length 1, they share many logical operations.
+    # They share many properties, and in particular a singular assembly supports more operations.
     """
     A representation of an assembly of neurons that can be binded to a specific brain
     in which it appears. An assembly is defined primarily by its parents - the assemblies
@@ -111,7 +116,8 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         for recipe in self.appears_in:
             recipe.append(self)
 
-    # TODO: this name is not indicative. Perhaps change to something like to_representative_neuron_subset..
+    # TODO: this name is not indicative. Perhaps change to something like to_representative_neuron_subset.
+    # Response: We will add this in the documentation, to_representative_neuron_subset is simply too long
     # TODO: reader.read is _very_ confusing with Assembly.read. Rename reader.
     # TODO: return set
     def identify(self, preserve_brain=False, *, brain: Brain) -> Tuple[int, ...]:
@@ -130,14 +136,21 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
     # TODO: document
     # TODO 2: rename
     # TODO 3: what is the use case of hook and does it make logical sense? should it be part of the constructor?
+    # Response: The is a hook for future readers that may want to get notified when the assembly changes
     # TODO 4: there is no existing reader with `update_hook`. either make such reader and test the code using it, or remove all update_hook usages
+    # Response: We have no current use case, but we had ideas in the past that involve this so we will keep this,
+    #           No need to test as there is no logic...
     def _update_hook(self, *, brain: Brain):
         self.reader.update_hook(brain, self)
 
 
     # TODO: throughout bindable classes, users might error and give the brain parameter even if the object is binded.
     #       Is this a problem? can you help the user not make any mistakes?
+    # Response: No. This is a feature by design, and allows regular code to ignore explicit binding
+    #           (needed to function properly). Binding is very explicit and an inexperienced user should never
+    #           pass the brain parameter explicitly.
     # TODO: add option to manually change the assemblies' recipes
+    # Response: This does not make sense. To avoid bugs, this assembly is added to all recipes it can be used in.
     def project(self, area: Area, *, brain: Brain = None, iterations: Optional[int] = None) -> Assembly:
         """
         Projects an assembly into an area.
@@ -148,6 +161,7 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         """
         # TODO: assert -> exception
         # TODO 2: more verification? area is not None, area is inside the brain
+        # Response: isinstance(area, Area) => area is not None
         # TODO 3: check any edge cases in the dependency between area and brain
         assert isinstance(area, Area), "Project target must be an Area"
         projected_assembly: Assembly = Assembly([self], area, appears_in=self.appears_in)
@@ -209,14 +223,20 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         :returns: resulting merged assembly
         """
         # TODO: use exceptions from indicative exception classes, instead of assert
+        # Yonatan: I don't think we care if this is of length 0, just doesn't do anything.
         assert len(assemblies) != 0, "tried to merge with empty input"
         # TODO: type hint is redundant
         # TODO 2: check documentation of `intersection` - it seems to be an instance method that works here by chance!
+        # Response: To avoid edge cases it is better to leave this as is. it also simplifies the code
+        #           and makes much more sense in implementation...
         merged_assembly: Assembly = Assembly(assemblies, area,
                                              appears_in=set.intersection(*[x.appears_in for x in assemblies]))
         # TODO: this is actually a way to check if we're in "binded" or "non binded" state.
         # TODO: can you think of a nicer way to do that?
         # TODO: otherwise it seems like a big block of code inside the function that sometimes happens and sometimes not. it is error-prone
+        # Response: No. This is not a way to check if we are bound or not, this serves as a way to perform syntactic
+        #           assemblies operations in order to define new assemblies without performing operations.
+        #           This integrates in the recipe-ecosystem.
         if brain is not None:
             # create a mapping from the areas to the neurons we want to fire
             area_neuron_mapping = {ass.area: [] for ass in assemblies}
@@ -256,6 +276,7 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
             y.project(x.area, brain=brain)
 
     # TODO: lt and gt logic can be implemented using a common method
+    # Response: True, but this makes it more readable.
     def __lt__(self, other: Assembly):
         """
         Checks that other is a child assembly of self.

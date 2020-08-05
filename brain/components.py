@@ -5,6 +5,8 @@ import uuid
 from uuid import UUID
 
 # TODO: remove type checking everywhere
+# Response: Again, this is to avoid cyclic imports...
+#           No need to import modules used only for type checking.
 if TYPE_CHECKING:
     from .brain import Brain
 
@@ -12,6 +14,8 @@ from utils.bindable import Bindable, bindable_property
 
 # TODO: document me pleaaase
 # TODO 2: explain why this is needed (rather than, for example, implementing `__eq__` for Assembly)
+# Response: Since this is common to all brain parts, this allows indexing dictionaries with such objects.
+#           In addition, this represents a special comparison which is based only on the instance and not on properties.
 class UniquelyIdentifiable:
     hist = {}
 
@@ -27,7 +31,9 @@ class UniquelyIdentifiable:
 
     def __eq__(self, other):
         # TODO: make more readable
+        # Response: This is quite readable... we check types and then compare uids
         # TODO 2: avoid edge case in which _uid and getattr are both None
+        # Response: This never happens, refer to the constructor.
         return type(self) == type(other) and self._uid == getattr(other, '_uid', None)
 
 
@@ -81,7 +87,10 @@ class OutputArea(Area):
 # TODO: use a parent class instead of union
 # A union is C-style code (where we would get a pointer to some place)
 # It seems that there is a logical relation between the classes here, which would be better modeled using a parent class
+# Response: I beg to differ. This is much more specific type-hinting, and it describes exactly what is needed,
+#           A parent class is less specific and will create bugs if people attempt to subclass it.
 # TODO 2: OutputArea inherits from Area, no need to specify both
+# Response: This is true, but it is more explicit and thus more understandable.
 BrainPart = Union[Area, Stimulus, OutputArea]
 
 

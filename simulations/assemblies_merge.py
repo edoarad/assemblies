@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 Parameter Selection
 """
 # Number of samples per graph point
-AVERAGING_SIZE = 100
+AVERAGING_SIZE = 5
 # Size of Stimulus
 STIMULUS_SIZE = 100
 # Size of areas
@@ -38,6 +38,9 @@ TESTS = (
     (500, (1, 3, 5, 10, 25, 50, 100, 250)),
 )
 
+"""
+Setup
+"""""
 # Generate a unique identifier for saving the graph
 uid = uuid.uuid4()
 
@@ -71,6 +74,14 @@ ax.set_xscale('log')
 plt.xlabel('t (Repeat Parameter)')
 plt.ylabel('Overlap %')
 
+
+##################################################################################################################
+
+
+"""
+Simulation
+"""
+
 # Create basic brain model
 stimulus = Stimulus(STIMULUS_SIZE)
 area1 = Area(AREA_SIZE)
@@ -91,8 +102,6 @@ for merge_stabilization, repeats in TESTS:
     with recipe:
         # Manual merge process by interleaved projects
         for _ in range(merge_stabilization):
-
-
             assembly1 >> area3
             assembly2 >> area3
 
