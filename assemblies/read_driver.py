@@ -1,8 +1,12 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
 import sys
 from pathlib import Path
 import importlib
 import re
-from brain import Brain
+
+if TYPE_CHECKING:
+    from brain import Brain
 
 
 class ReadDriver:

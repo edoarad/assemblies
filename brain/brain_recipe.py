@@ -1,10 +1,10 @@
 from __future__ import annotations
 from typing import List, Union, TYPE_CHECKING, Dict, Optional, Set
 
-from assemblies.assembly import Assembly
 from brain.components import Area, Stimulus, BrainPart
 from utils.blueprints.recording import Recording
 if TYPE_CHECKING:
+    from assemblies.assembly import Assembly
     from brain import Brain
 
 
@@ -38,6 +38,8 @@ class BrainRecipe:
 
     # TODO: rename `part` - Assembly is not a part
     def append(self, part: Union[Assembly, BrainPart]):
+        from assemblies.assembly import Assembly
+
         if isinstance(part, Area):
             self._add_area(part)
         elif isinstance(part, Stimulus):

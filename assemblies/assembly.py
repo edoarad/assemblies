@@ -4,14 +4,16 @@ from .read_driver import ReadDriver  # TODO: It shouldn't depend on directory st
 from utils.blueprints.recordable import Recordable
 from utils.implicit_resolution import ImplicitResolution
 from utils.bindable import Bindable
-from brain.components import Stimulus, Area, UniquelyIdentifiable
+from utils.uniquely_identifiable import UniquelyIdentifiable
 from typing import Iterable, Union, Tuple, TYPE_CHECKING, Set, Optional, Dict
 from itertools import product
+from brain import Stimulus, Area
 
 if TYPE_CHECKING:  # TODO: this is not needed. It's better to always import them.
     # Response: This is to avoid cyclic imports...
     from brain import Brain
-    from brain.brain_recipe import BrainRecipe
+    from brain import BrainRecipe
+
 
 """
 Standard python 3.8 typing
@@ -60,11 +62,12 @@ class AssemblyTuple(object):
         return AssemblyTuple(*(self.assemblies + other.assemblies))
 
     def merge(self, area: Area, *, brain: Brain = None):
-        brain = brain or Bindable[Assembly].implicitly_resolve_many(self.assemblies, 'brain', False)
+        brain = brain or Bindable[Assembly].implicitly_resolve_many(self.assemblies, 'brain', False)[1]
         return Assembly._merge(self.assemblies, area, brain=brain)
 
     def associate(self, other: AssemblyTuple, *, brain: Brain = None):
-        brain = brain or Bindable[Assembly].implicitly_resolve_many(self.assemblies + other.assemblies, 'brain', False)
+        brain = brain or Bindable[Assembly].implicitly_resolve_many(self.assemblies + other.assemblies,
+                                                                    'brain', False)[1]
         return Assembly._associate(self.assemblies, other.assemblies, brain=brain)
 
     def __rshift__(self, target_area: Area):
@@ -181,7 +184,7 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
             # TODO: is it only for better performance? it seems to affect correctness
             # Response: Yes it also affects operation, but you & I (Yonatan) discussed this
             #           And this is the implementation you requested.
-            brain.next_round({self.area: [area], area: area}, replace=True, iterations=iterations or brain.repeat)
+            brain.next_round({self.area: [area], area: [area]}, replace=True, iterations=iterations or brain.repeat)
 
             projected_assembly.trigger_reader_update_hook(brain=brain)
 

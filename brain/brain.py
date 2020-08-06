@@ -15,8 +15,6 @@ if TYPE_CHECKING:
 
 
 class Brain(UniquelyIdentifiable):
-	# TODO: is T used?
-	T = 10
 	"""
 	Represents a simulated brain, with it's connectome which holds the areas, stimuli, and all the synapse weights.
 	The brain updates by selecting a subgraph of stimuli and areas, and activating only those connections.

@@ -41,15 +41,13 @@ class Connectome(ABCConnectome):
         if initialize:
             self._initialize_parts((areas or []) + (stimuli or []))
 
-    def disable_plasticity(self):
-        self._disabled = True
-
     @property
-    def plasticity_status(self):
+    def plasticity(self) -> bool:
         return self._disabled
 
-    def enable_plasticity(self):
-        self._disabled = False
+    @plasticity.setter
+    def plasticity(self, mode: bool):
+        self._disabled = not mode
 
     def add_area(self, area: Area):
         super().add_area(area)
