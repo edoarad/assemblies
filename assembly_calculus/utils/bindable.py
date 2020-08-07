@@ -1,11 +1,11 @@
 from collections.abc import Mapping
 from functools import wraps, cached_property
-from typing import Optional, Any, Tuple, Dict, Set, Generic, Iterator
+from typing import Optional, Any, Tuple, Dict, Set, Generic
 from inspect import Parameter
 
-from utils.class_manipulation import variables
-from utils.argument_manipulation import signature
-from utils.implicit_resolution import ImplicitResolution, implicit_property, T
+from .class_manipulation import variables
+from .argument_manipulation import signature
+from .implicit_resolution import ImplicitResolution, implicit_property, T
 
 
 class Bindable(Generic[T]):

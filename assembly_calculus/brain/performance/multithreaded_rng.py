@@ -1,10 +1,6 @@
 from numpy.random import Generator, PCG64
-import multiprocessing
-import concurrent.futures
 import numpy as np
-from brain.performance.multithreaded import multithreaded
-
-from typing import Optional
+from .multithreaded import multithreaded
 
 
 # TODO: remove unused imports

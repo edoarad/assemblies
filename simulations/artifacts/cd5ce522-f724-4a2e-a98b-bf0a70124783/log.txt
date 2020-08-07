@@ -1,0 +1,39 @@
+Warning: no ram protection (possibly you are on windows)
+Writing simulation to C:\Users\user\Documents\My Documents\Git Experiments\assemblies\simulations\artifacts\cd5ce522-f724-4a2e-a98b-bf0a70124783
+Beginning simulation with merge_stabilization=1, t=1:
+	Overlap: 62.58064516129032%
+	Current simulation took 0.41290950775146484s
+	Elapsed time: 0.41490626335144043s
+Beginning simulation with merge_stabilization=1, t=3:
+	Overlap: 48.38709677419355%
+	Current simulation took 0.41695642471313477s
+	Elapsed time: 0.8337814807891846s
+Beginning simulation with merge_stabilization=1, t=5:
+	Overlap: 57.41935483870968%
+	Current simulation took 0.4226059913635254s
+	Elapsed time: 1.25638747215271s
+Beginning simulation with merge_stabilization=1, t=10:
+	Overlap: 64.51612903225808%
+	Current simulation took 0.4142916202545166s
+	Elapsed time: 1.6716482639312744s
+Beginning simulation with merge_stabilization=1, t=25:
+	Overlap: 86.4516129032258%
+	Current simulation took 0.41779208183288574s
+	Elapsed time: 2.0904078483581543s
+Beginning simulation with merge_stabilization=1, t=100:
+	Overlap: 94.19354838709678%
+	Current simulation took 0.5194578170776367s
+	Elapsed time: 2.6108639240264893s
+Beginning simulation with merge_stabilization=1, t=250:
+	Overlap: 98.70967741935483%
+	Current simulation took 0.7472386360168457s
+	Elapsed time: 3.3600692749023438s
+Beginning simulation with merge_stabilization=3, t=1:
+	Overlap: 61.29032258064516%
+	Current simulation took 0.3869478702545166s
+	Elapsed time: 4.0442214012146s
+Beginning simulation with merge_stabilization=3, t=3:
+	Overlap: 69.6774193548387%
+	Current simulation took 0.4045085906982422s
+	Elapsed time: 4.449259281158447s
+Beginning simulation with merge_stabilization=3, t=5:

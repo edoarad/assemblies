@@ -1,1 +1,1 @@
-from .assembly_fun import Assembly
+from .assembly import Assembly

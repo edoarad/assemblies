@@ -8,8 +8,8 @@ from collections import defaultdict
 from wrapt import ObjectProxy
 import scipy.sparse as sp
 
-from ..components import Area, BrainPart, Stimulus, Connection
 from .abc_connectome import ABCConnectome
+from ..components import Area, BrainPart, Stimulus, Connection
 
 
 class NonLazySparseConnectome(ABCConnectome):

@@ -2,8 +2,8 @@ from functools import partial, wraps
 from inspect import Parameter, Signature
 from typing import Tuple, Any, Optional, Callable, TypeVar, Generic
 
-from utils.class_manipulation import FunctionWrapper
-from utils.argument_manipulation import signature
+from .class_manipulation import FunctionWrapper
+from .argument_manipulation import signature
 
 T = TypeVar('T')
 

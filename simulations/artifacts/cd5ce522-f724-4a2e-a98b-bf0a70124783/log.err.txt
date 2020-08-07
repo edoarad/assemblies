@@ -1,0 +1,28 @@
+Traceback (most recent call last):
+  File "C:\Users\user\AppData\Local\Programs\Python\Python38\lib\runpy.py", line 194, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "C:\Users\user\AppData\Local\Programs\Python\Python38\lib\runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "C:\Users\user\Documents\My Documents\Git Experiments\assemblies\simulations\assemblies_merge.py", line 118, in <module>
+    with bake(recipe, 0.1, Connectome, train_repeat=t, effective_repeat=3) as brain:
+  File "C:\Users\user\Documents\My Documents\Git Experiments\assemblies\assembly_calculus\brain\brain.py", line 149, in bake
+    brain = Brain(connectome_cls(p), recipe=recipe, repeat=train_repeat)
+  File "C:\Users\user\Documents\My Documents\Git Experiments\assemblies\assembly_calculus\brain\brain.py", line 42, in __init__
+    self.add_area(area)
+  File "C:\Users\user\Documents\My Documents\Git Experiments\assemblies\assembly_calculus\brain\brain.py", line 70, in add_area
+    self.connectome.add_area(area)
+  File "C:\Users\user\Documents\My Documents\Git Experiments\assemblies\assembly_calculus\brain\connectome\connectome.py", line 52, in add_area
+    self._initialize_parts([area])
+  File "C:\Users\user\Documents\My Documents\Git Experiments\assemblies\assembly_calculus\brain\connectome\connectome.py", line 72, in _initialize_parts
+    self._initialize_connection(part, other)
+  File "C:\Users\user\Documents\My Documents\Git Experiments\assemblies\assembly_calculus\brain\connectome\connectome.py", line 85, in _initialize_connection
+    synapses = self.rng.multi_generate(area.n, part.n, self.p).reshape((part.n, area.n), order='F')
+  File "C:\Users\user\Documents\My Documents\Git Experiments\assemblies\assembly_calculus\brain\performance\multithreaded\multithreaded.py", line 44, in __call__
+    concurrent.futures.wait(futures)
+  File "C:\Users\user\AppData\Local\Programs\Python\Python38\lib\concurrent\futures\_base.py", line 305, in wait
+    waiter.event.wait(timeout)
+  File "C:\Users\user\AppData\Local\Programs\Python\Python38\lib\threading.py", line 558, in wait
+    signaled = self._cond.wait(timeout)
+  File "C:\Users\user\AppData\Local\Programs\Python\Python38\lib\threading.py", line 302, in wait
+    waiter.acquire()
+KeyboardInterrupt

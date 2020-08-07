@@ -4,12 +4,9 @@ from typing import Dict, List, Iterable, NamedTuple, cast
 import numpy as np
 from collections import defaultdict
 
-from ..performance import MultithreadedRNG
-from ..performance.multithreaded.multi_sum import multi_sum
-
-from ..components import Area, BrainPart, Stimulus, Connection
 from .abc_connectome import ABCConnectome
-
+from ..performance import MultithreadedRNG
+from ..components import Area, BrainPart, Stimulus, Connection
 
 
 class NonLazyConnectomeOriginal(ABCConnectome):

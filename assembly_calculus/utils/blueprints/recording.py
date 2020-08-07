@@ -1,7 +1,7 @@
 from collections import namedtuple
 from typing import Mapping, Tuple, List
 
-from utils.argument_manipulation import argument_restrict
+from ..argument_manipulation import argument_restrict
 
 
 class Recording:

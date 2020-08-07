@@ -1,0 +1,7 @@
+Warning: no ram protection (possibly you are on windows)
+Writing simulation to C:\Users\user\Documents\My Documents\Git Experiments\assemblies\simulations\artifacts\577bb201-dc80-4218-9d2e-398fda994a19
+Beginning simulation with merge_stabilization=1, t=1:
+	Overlap: 60.645161290322584%
+	Current simulation took 0.4038975238800049s
+	Elapsed time: 0.40586376190185547s
+Beginning simulation with merge_stabilization=1, t=3:

@@ -2,11 +2,11 @@ from functools import wraps
 from inspect import Parameter
 from typing import Tuple, Union, Dict, Optional
 
-from utils.argument_manipulation import argument_extend, argument_explicit_restrict, signature
-from utils.bindable import Bindable, protected_bindable
-from utils.blueprints.recording import Recording
-from utils.class_manipulation import variables, FunctionWrapper
-from utils.implicit_resolution import ImplicitResolution
+from .recording import Recording
+from ..argument_manipulation import argument_extend, argument_explicit_restrict, signature
+from ..bindable import Bindable, protected_bindable
+from ..class_manipulation import variables, FunctionWrapper
+from ..implicit_resolution import ImplicitResolution
 
 
 class Recordable:

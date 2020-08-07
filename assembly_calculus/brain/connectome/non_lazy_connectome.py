@@ -10,8 +10,8 @@ from itertools import product, chain
 from numpy.core._multiarray_umath import ndarray
 from typing import Dict, List, Tuple, Mapping, Iterable, Set
 
-from ..components import Area, BrainPart, Stimulus, Connection
 from .connectome import Connectome
+from ..components import Area, BrainPart, Stimulus, Connection
 
 
 # TODO: remove all non-used code from the main repository (for example - all NonLazyConnectome derivatives)
