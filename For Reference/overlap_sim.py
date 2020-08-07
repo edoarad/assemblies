@@ -22,7 +22,7 @@
  Now with 4th area D: proj(proj(x,C),D) and proj(proj(y,C),D) for 1 time ste
 """
 
-import brain
+from assembly_calculus import brain
 import brain_util as bu
 import copy
 

@@ -5,11 +5,10 @@ import time
 import uuid
 from pathlib import Path
 
-from brain import Area, Stimulus, BrainRecipe, bake, Connectome
-from assemblies import Assembly
-from assemblies.utils import fire_many
-from utils.logger import Logger
-from utils.i_love_my_ram import protecc_ram
+from assembly_calculus import Area, Stimulus, BrainRecipe, bake, Connectome, Assembly
+from assembly_calculus.assemblies.utils import fire_many
+
+from utils import Logger, protecc_ram
 
 import matplotlib.pyplot as plt
 
