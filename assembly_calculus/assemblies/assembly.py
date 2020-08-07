@@ -1,5 +1,5 @@
 from __future__ import annotations  # TODO: remove this allover, we are using python 3
-# Response: No, this allows future declaration and simpler typing
+# Response: It actually allows forward declarations and such :)
 from typing import Iterable, Union, Tuple, TYPE_CHECKING, Set, Optional, Dict
 from itertools import product
 
@@ -8,7 +8,8 @@ from ..utils import Recordable, ImplicitResolution, Bindable, UniquelyIdentifiab
 from ..brain import Stimulus, Area
 
 if TYPE_CHECKING:  # TODO: this is not needed. It's better to always import them.
-    # Response: This is to avoid cyclic imports...
+    # Response: Sadly we need to do it to avoid cyclic imports,
+    #           So I use TYPE_CHECKING for typing only imports
     from ..brain import Brain
     from ..brain import BrainRecipe
 
@@ -137,8 +138,7 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         return max(overlap.keys(), key=lambda x: overlap[x])  # TODO: return None below some threshold
 
     # TODO 4: there is no existing reader with `update_hook`. either make such reader and test the code using it, or remove all update_hook usages
-    # Response: We have no current use case, but we had ideas in the past that involve this so we will keep this,
-    #           No need to test as there is no logic...
+    # TODO: Yonatan: Let's just remove this
     def trigger_reader_update_hook(self, *, brain: Brain):
         """
         some read_drivers may want to be notified on certain changes
@@ -151,11 +151,11 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
 
     # TODO: throughout bindable classes, users might error and give the brain parameter even if the object is binded.
     #       Is this a problem? can you help the user not make any mistakes?
-    # Response: No. This is a feature by design, and allows regular code to ignore explicit binding
-    #           (needed to function properly). Binding is very explicit and an inexperienced user should never
-    #           pass the brain parameter explicitly.
+    # Response: This is a feature by design, and allows regular code to ignore explicit binding
+    #           (needed to function properly). An inexperienced user should never pass the brain parameter explicitly,
+    #           so this shouldn't happen anyway.
     # TODO: add option to manually change the assemblies' recipes
-    # Response: This does not make sense. To avoid bugs, this assembly is added to all recipes it can be used in.
+    # Response: To avoid bugs, this assembly is added to all recipes it can be used in
     def project(self, area: Area, *, brain: Brain = None, iterations: Optional[int] = None) -> Assembly:
         """
         Projects an assembly into an area.
@@ -164,14 +164,9 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         :param area: the area in which the new assembly is going to be created
         :returns: resulting projected assembly
         """
-        # TODO 2: more verification? area is not None, area is inside the brain
-        # Response: isinstance(area, Area) => area is not None
-        # TODO 3: check any edge cases in the dependency between area and brain
-        # Response: This is highly non-pythonic, anyway if this will happen it makes more sense
-        #           that connectome will raise a meaningful error, as it is redundant to check this is all places
-        #           calling to connectome.
-        if not isinstance(area, Area):
-            raise TypeError("Project target must be an Area")
+        if not isinstance(area, Area) and area in brain.recipe.areas:
+            raise TypeError("Projection target must be an Area in the Brain")
+
         projected_assembly: Assembly = Assembly([self], area, initial_recipes=self.appears_in)
         if brain is not None:
             neurons = self.identify(brain=brain)
@@ -187,8 +182,8 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
             projected_assembly.trigger_reader_update_hook(brain=brain)
 
         # TODO: calling `bind_like` manually is error-prone because someone can forget it. can you make a decorator or a more automated way to do it?
-        # Response: No, this is the standard path defined in the Bindable API.
-        #           No user should any be in the situation to call this function manually.
+        # Response: This is the standard path defined in the Bindable API,
+        #           And "automation" will be quite weird, anyway this is used only a couple of times, and only in internal API
         projected_assembly.bind_like(self)
         return projected_assembly
 
@@ -231,25 +226,32 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         :param area: the area into which we merge
         :returns: resulting merged assembly
         """
+        # Response: Added area checks
+        if not isinstance(area, Area) and area in brain.recipe.areas:
+            raise TypeError("Project target must be an Area in the brain")
 
         # TODO 2: check documentation of `intersection` - it seems to be an instance method that works here by chance!
-        # Response: Please refer to the official documentation
+        # Response: In the official documentation they actually mention it
         #           - https://docs.python.org/3/library/stdtypes.html#frozenset.intersection
-        #
-        #           They probably forgot to update this in the source code.
+        #           They probably forgot to update this in the source code?
         merged_assembly: Assembly = Assembly(assemblies, area,
                                              initial_recipes=set.intersection(*[x.appears_in for x in assemblies]))
         # TODO: this is actually a way to check if we're in "binded" or "non binded" state.
         # TODO: can you think of a nicer way to do that?
         # TODO: otherwise it seems like a big block of code inside the function that sometimes happens and sometimes not. it is error-prone
-        # Response: No. This is not a way to check if we are bound or not, this serves as a way to perform syntactic
-        #           assemblies operations in order to define new assemblies without performing operations.
-        #           This integrates in the recipe-ecosystem.
+        # Response: This does not serve as a check to see if we are bound or not,
+        #           this serves as a way to perform syntactic assemblies operations in order to define new assemblies
+        #           without performing the operations themselves.
+        #           This is simply to support the recipe ecosystem.
+        #
+        #           In my opinion, this class should be designed as if binding does not exist, and binding is
+        #           purely a syntactic sugar that makes the usage easier
         if brain is not None:
             # create a mapping from the areas to the neurons we want to fire
             area_neuron_mapping = {ass.area: [] for ass in assemblies}
             for ass in assemblies:
                 # TODO: What happens if we merge assemblies that are already in the same area?
+                # Response: We take their union, I think this is an OK generalization?
                 area_neuron_mapping[ass.area] = list(
                     ass.identify(brain=brain))
 
@@ -286,7 +288,7 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
             y.project(x.area, brain=brain)
 
     # TODO: lt and gt logic can be implemented using a common method
-    # Response: True, but this makes it more readable.
+    # Response: True, but I think it is a tad more readable this way
     def __lt__(self, other: Assembly):
         """
         Checks that other is a child assembly of self.

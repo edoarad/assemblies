@@ -4,8 +4,7 @@ from typing import Optional, Union, TYPE_CHECKING
 
 from ..utils import UniquelyIdentifiable, Bindable, bindable_property
 # TODO: remove type checking everywhere
-# Response: Again, this is to avoid cyclic imports...
-#           No need to import modules used only for type checking.
+# Response: this is to avoid cyclic imports, I have (more) in-depth responses in some of the other files
 if TYPE_CHECKING:
     from .brain import Brain
 
@@ -60,11 +59,9 @@ class OutputArea(Area):
 # TODO: use a parent class instead of union
 # A union is C-style code (where we would get a pointer to some place)
 # It seems that there is a logical relation between the classes here, which would be better modeled using a parent class
-# Response: I beg to differ. This is much more specific type-hinting, and it describes exactly what is needed,
-#           A parent class is less specific and will create bugs if people attempt to subclass it.
-# TODO 2: OutputArea inherits from Area, no need to specify both
-# Response: This is true, but it is more explicit and thus more understandable.
-BrainPart = Union[Area, Stimulus, OutputArea]
+# Response: In my opinion, this is a more specific type-hinting, and it describes exactly what is needed,
+#           A parent class is less specific and will create bugs if people attempt to subclass it, no?
+BrainPart = Union[Area, Stimulus]
 
 
 class Connection:
