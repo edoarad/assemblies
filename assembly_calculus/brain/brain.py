@@ -9,7 +9,8 @@ from .components import BrainPart, Stimulus
 from .connectome.abc_connectome import ABCConnectome
 from ..utils import UniquelyIdentifiable
 # TODO: imports should happen in any case
-# Response: Again, cyclic imports
+# Response: Trying to avoid cyclic imports, if it is important we can figure out the minimal amount of
+#           such imports to avoid a cycle, but it makes it a bit more clear this way in my opinion
 if TYPE_CHECKING:
 	from ..assemblies import Assembly
 
