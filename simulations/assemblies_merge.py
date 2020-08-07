@@ -5,9 +5,7 @@ import time
 import uuid
 from pathlib import Path
 
-from assembly_calculus.brain import Area, Stimulus, BrainRecipe, bake, Connectome
-from assembly_calculus.assemblies import Assembly
-# Split to two: originally: from assembly_calculus import Area, Stimulus, BrainRecipe, bake, connectome, Assembly
+from assembly_calculus import Area, Stimulus, BrainRecipe, bake, Connectome, Assembly
 from assembly_calculus.assemblies.utils import fire_many
 
 from utils import Logger, protecc_ram
