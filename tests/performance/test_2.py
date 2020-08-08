@@ -1,4 +1,3 @@
-import pytest
 
 from assembly_calculus.brain import *
 from assembly_calculus.brain.connectome import *
