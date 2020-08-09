@@ -1,6 +1,6 @@
-from brain import Brain
+from assembly_calculus.brain import Brain
 import logging
-from assemblies.assembly_fun import Assembly, NamedStimulus
+from ..assemblies import Assembly, NamedStimulus
 from typing import List
 
 """
