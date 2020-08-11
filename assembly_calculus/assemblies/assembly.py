@@ -181,6 +181,8 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         projected_assembly: Assembly = Assembly([self], area, initial_recipes=self.appears_in)
         if brain is not None:
             Assembly._activate_assemblies([self], brain=brain)
+            # TODO: Is this OK? (To Edo)
+            brain.winners[area] = list()
             brain.next_round({self.area: [area], area: [area]}, replace=True, iterations=brain.repeat)
             projected_assembly.trigger_reader_update_hook(brain=brain)
 
@@ -196,12 +198,11 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         # create a mapping from the areas to the neurons we want to fire
         area_neuron_mapping = {ass.area: [] for ass in assemblies}
         for ass in assemblies:
-            area_neuron_mapping[ass.area] = list(
-                ass.representative_neuron(brain=brain))
+            area_neuron_mapping[ass.area] = list(ass.representative_neuron(brain=brain))
 
         # update winners for relevant areas in the connectome
         for source in area_neuron_mapping.keys():
-            brain.connectome.winners[source] = area_neuron_mapping[source]
+            brain.winners[source] = area_neuron_mapping[source]
 
     def __rshift__(self, target: Area):
         """
@@ -261,7 +262,9 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         if brain is not None:
             Assembly._activate_assemblies(assemblies, brain=brain)
 
-            brain.next_round(subconnectome={**{ass.area: [area] for ass in assemblies}, area: [area]},
+            # TODO: Is this OK? (To Edo)
+            brain.winners[area] = list()
+            brain.next_round(subconnectome={**{ass.area: [area] for ass in assemblies}, area: [area]}, replace=True,
                              iterations=brain.repeat)
 
             merged_assembly.trigger_reader_update_hook(brain=brain)

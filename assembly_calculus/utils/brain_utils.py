@@ -66,9 +66,10 @@ def fire_many(brain: Brain, projectables: Iterable[Projectable], area: Area, pre
         if preserve_brain:
             for areas in mapping.values():
                 for area in areas:
-                    changed_areas[area] = brain.winners[area]
+                    if area not in changed_areas:
+                        changed_areas[area] = brain.winners[area]
 
-        brain.next_round(subconnectome=mapping)   # fire this layer of objects
+        brain.next_round(subconnectome=mapping, replace=True)   # fire this layer of objects
     if not original_plasticity:
         brain.connectome.plasticity = True
     return changed_areas
