@@ -11,7 +11,7 @@ All of these can be used for testing the library, to perform experiments for res
 or to used as a baseline for profiling and optimization.
 """
 
-import brain
+from assembly_calculus import brain
 from lazy_brain import LazyBrain
 from non_lazy_brain import NonLazyBrain
 import brain_util as bu
