@@ -6,7 +6,9 @@ def variables(cls):
     """Return all variables of a class: name -> (attribute, bound_attribute)"""
     result: Dict[str, Tuple[Any, Any]] = {}
     for name, attr in vars(cls).items():
-        bound = getattr(cls, name)
+        bound = getattr(cls, name, None)
+        if bound is None:
+            continue
         if isinstance(attr, staticmethod):
             result[name] = bound, bound
         else:

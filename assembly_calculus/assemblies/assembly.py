@@ -6,6 +6,8 @@ from itertools import product
 from .read_driver import ReadDriver  # TODO: It shouldn't depend on directory structure.
 from ..utils import Recordable, ImplicitResolution, Bindable, UniquelyIdentifiable
 from ..brain import Stimulus, Area
+from .reader import Reader
+from .assembly_readers.read_recursive import ReadRecursive
 
 if TYPE_CHECKING:  # TODO: this is not needed. It's better to always import them.
     # Response: Sadly we need to do it to avoid cyclic imports,
@@ -99,9 +101,10 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
     This class implements basic operations on assemblies (project, reciprocal_project,
     merge and associate) by using a reader object, which interacts with the brain directly.
     """
+    _default_reader: Reader = ReadRecursive
 
     def __init__(self, parents: Iterable[Projectable], area: Area,
-                 initial_recipes: Iterable[BrainRecipe] = None, reader: str = 'default'):
+                 initial_recipes: Iterable[BrainRecipe] = None, reader: Reader = None):
         """
         :param parents: the Assemblies and/or Stimuli that were used to create the assembly
         :param area: an Area where the Assembly "lives"
@@ -116,16 +119,24 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
 
         self.parents: Tuple[Projectable, ...] = tuple(parents)
         self.area: Area = area
-        self.reader = ReadDriver(reader)
+        self.reader = reader
         self.appears_in: Set[BrainRecipe] = set(initial_recipes or [])
         for recipe in self.appears_in:
             recipe.append(self)
+
+    @staticmethod
+    def set_default_reader(reader):
+        Assembly._default_reader = reader
 
     # TODO: this name is not indicative. Perhaps change to something like to_representative_neuron_subset.
     # Response: We will add this in the documentation, to_representative_neuron_subset is simply too long
     # TODO: reader.read is _very_ confusing with Assembly.read. Rename reader.
     def identify(self, preserve_brain=False, *, brain: Brain) -> Set[int, ...]:
-        return set(self.reader.read(self, brain, preserve_brain=preserve_brain))
+        if self.reader:
+            read = self.reader.read
+        else:
+            read = Assembly._default_reader.read
+        return set(read(self, preserve_brain=preserve_brain, brain=brain))
 
     @staticmethod
     def read(area: Area, *, brain: Brain):
@@ -147,7 +158,7 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         :param brain:
         :return:
         """
-        self.reader.update_hook(brain, self)
+        self.reader.update_hook(self, brain=brain)
 
     # TODO: throughout bindable classes, users might error and give the brain parameter even if the object is binded.
     #       Is this a problem? can you help the user not make any mistakes?

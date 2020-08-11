@@ -1,7 +1,8 @@
-from typing import Iterable, Dict, List
-
-from .assembly import Projectable, Assembly
+from __future__ import annotations
+from typing import Iterable, Dict, List, TYPE_CHECKING
 from ..brain import Brain, Area, Stimulus
+if TYPE_CHECKING:
+    from .assembly import Projectable, Assembly
 
 
 def fire_many(brain: Brain, projectables: Iterable[Projectable], area: Area, preserve_brain: bool = False):
@@ -19,6 +20,7 @@ def fire_many(brain: Brain, projectables: Iterable[Projectable], area: Area, pre
     :param area: the area into which the objects are projected
     :param preserve_brain: a boolean deteremining whether we want the brain to be changed in the process
     """
+    from .assembly import Assembly
     # TODO: `plasticity_status`, `disable_plasticity` are not defined in `ABCConnectome`
     # TODO 2: instead of keeping `original_plasticity` and restoring, this is a classic use for context! (for example: `with brain.disable_plasticity():` )
     # TODO 3: try to split the sub-steps of this function to smaller functions
@@ -52,6 +54,7 @@ def fire_many(brain: Brain, projectables: Iterable[Projectable], area: Area, pre
                                                         layer.items() if isinstance(stim, Stimulus)}
         assembly_mapping: Dict[Area, List[Area]] = {}
         # TODO: why such complex logic instead of using `layer.keys()` instead of `layer.items()`?
+        # Response: To get the value as well in the iterator itself
         for ass, areas in filter(lambda t: (lambda assembly, _: isinstance(assembly, Assembly))(*t), layer.items()):
             # map area to all areas into which this area needs to be fired
             assembly_mapping[ass.area] = assembly_mapping.get(ass.area, []) + areas
@@ -60,11 +63,13 @@ def fire_many(brain: Brain, projectables: Iterable[Projectable], area: Area, pre
         if preserve_brain:
             for areas in mapping.values():
                 for area in areas:
-                    changed_areas[area] = area.winners
-        brain.next_round(mapping)   # fire this layer of objects
+                    changed_areas[area] = brain.winners[area]
+
+        brain.next_round(subconnectome=mapping)   # fire this layer of objects
     if not original_plasticity:
         brain.connectome.plasticity = True
     return changed_areas
+
 
 # TODO: This function should belong to brain.py, and probably implemented otherwise.
 #       This is because it is very likely that changes will be made that will make
