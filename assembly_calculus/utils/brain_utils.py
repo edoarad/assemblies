@@ -1,8 +1,10 @@
 from __future__ import annotations
 from typing import Iterable, Dict, List, TYPE_CHECKING
+
 from ..brain import Brain, Area, Stimulus
+
 if TYPE_CHECKING:
-    from .assembly import Projectable, Assembly
+    from ..assemblies import Projectable
 
 
 def fire_many(brain: Brain, projectables: Iterable[Projectable], area: Area, preserve_brain: bool = False):
@@ -20,7 +22,8 @@ def fire_many(brain: Brain, projectables: Iterable[Projectable], area: Area, pre
     :param area: the area into which the objects are projected
     :param preserve_brain: a boolean deteremining whether we want the brain to be changed in the process
     """
-    from .assembly import Assembly
+    from ..assemblies import Projectable, Assembly
+
     # TODO: `plasticity_status`, `disable_plasticity` are not defined in `ABCConnectome`
     # TODO 2: instead of keeping `original_plasticity` and restoring, this is a classic use for context! (for example: `with brain.disable_plasticity():` )
     # TODO 3: try to split the sub-steps of this function to smaller functions

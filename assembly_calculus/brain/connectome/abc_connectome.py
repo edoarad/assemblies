@@ -26,10 +26,10 @@ class MappingProxy(Generic[K_co, V_contra]):
         self._setter = setter
 
     def __getitem__(self, key: K_co):
-        return self._getter(key)
+        return self._getter(key).copy()
 
     def __setitem__(self, key: K_co, value: V_contra):
-        self._setter(key, value)
+        self._setter(key, value.copy())
 
 
 # TODO: find a better name than ABCConnectome. something that other researches can understand.

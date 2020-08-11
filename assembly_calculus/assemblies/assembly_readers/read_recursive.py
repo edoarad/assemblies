@@ -1,6 +1,6 @@
 from __future__ import annotations
-from ..utils import fire_many, revert_changes
 from ..reader import Reader
+from ...utils.brain_utils import fire_many, revert_changes
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ..assembly import Assembly

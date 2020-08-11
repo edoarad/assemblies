@@ -103,6 +103,14 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
     """
     _default_reader: Reader = ReadRecursive
 
+    @staticmethod
+    def assembly_hash(area, parents):
+        return hash((area, *sorted(parents, key=hash)))
+
+    def __new__(cls, parents: Iterable[Projectable], area: Area, initial_recipes: Iterable[BrainRecipe] = None,
+                reader: str = 'default'):
+        return UniquelyIdentifiable.__new__(cls, uid=Assembly.assembly_hash(area, parents))
+
     def __init__(self, parents: Iterable[Projectable], area: Area,
                  initial_recipes: Iterable[BrainRecipe] = None, reader: Reader = None):
         """
@@ -114,7 +122,7 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
 
         # We hash an assembly using its parents (sorted by id) and area
         # this way equivalent assemblies have the same id.
-        UniquelyIdentifiable.__init__(self, uid=hash((area, *sorted(parents, key=hash))))
+        UniquelyIdentifiable.__init__(self)
         AssemblyTuple.__init__(self, self)
 
         self.parents: Tuple[Projectable, ...] = tuple(parents)
@@ -145,7 +153,7 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         for assembly in assemblies:
             # TODO: extract calculation to function with indicative name
             overlap[assembly] = len(
-                set(area.winners) & set(assembly.identify(preserve_brain=True, brain=brain))) / area.k
+                set(brain.winners[area]) & set(assembly.identify(preserve_brain=True, brain=brain))) / area.k
         return max(overlap.keys(), key=lambda x: overlap[x])  # TODO: return None below some threshold
 
     # TODO 4: there is no existing reader with `update_hook`. either make such reader and test the code using it, or remove all update_hook usages
@@ -167,7 +175,7 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
     #           so this shouldn't happen anyway.
     # TODO: add option to manually change the assemblies' recipes
     # Response: To avoid bugs, this assembly is added to all recipes it can be used in
-    def project(self, area: Area, *, brain: Brain = None, iterations: Optional[int] = None) -> Assembly:
+    def project(self, area: Area, *, brain: Brain = None) -> Assembly:
         """
         Projects an assembly into an area.
 
@@ -180,9 +188,14 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
 
         projected_assembly: Assembly = Assembly([self], area, initial_recipes=self.appears_in)
         if brain is not None:
+            Assembly._activate_assemblies([self], brain=brain)
 
-            # read activate_assemblies for documentation
-            Assembly._activate_assemblies([self], area, brain=brain)
+            # Replace=True for better performance
+            # TODO: is it only for better performance? it seems to affect correctness
+            # Response: Yes it also affects operation, but you & I (Yonatan) discussed this
+            #           And this is the implementation you requested.
+            brain.next_round({self.area: [area], area: [area]}, iterations=brain.repeat)
+            # OLD: brain.next_round({self.area: [area]}, replace=True, iterations=brain.repeat)
 
             projected_assembly.trigger_reader_update_hook(brain=brain)
 
@@ -193,13 +206,9 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         return projected_assembly
 
     @staticmethod
-    def _activate_assemblies(assemblies, area: Area, *, brain: Brain):
-        """
-        to prevent code duplication, this function does the common thing
-        of taking a list of assemblies and creating a dictionary from area to neurons (of the
-        assemblies) to set as winners, and fire in the next round (into area).
-        (activating the assemblies in the list).
-        """
+    def _activate_assemblies(assemblies, *, brain: Brain):
+        """Activates a list of assemblies"""
+        # TODO: FIX
         # create a mapping from the areas to the neurons we want to fire
         area_neuron_mapping = {ass.area: [] for ass in assemblies}
         for ass in assemblies:
@@ -209,15 +218,6 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         # update winners for relevant areas in the connectome
         for source in area_neuron_mapping.keys():
             brain.connectome.winners[source] = area_neuron_mapping[source]
-
-        # creating the correct subconnectome
-        subconnectome = {source: [area] for source in area_neuron_mapping}
-        # we also want area to be able to fire into itself (area -> area)
-        subconnectome[area] = subconnectome.get(area, []) + [area]
-
-        # Replace=True for better performance
-        brain.next_round(subconnectome=subconnectome, replace=True,
-                         iterations=brain.repeat)
 
     def __rshift__(self, target: Area):
         """
@@ -279,9 +279,10 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         #           In my opinion, this class should be designed as if binding does not exist, and binding is
         #           purely a syntactic sugar that makes the usage easier
         if brain is not None:
+            Assembly._activate_assemblies(assemblies, brain=brain)
 
-            # Read activate_assemblies for documentation
-            Assembly._activate_assemblies(assemblies, area, brain=brain)
+            brain.next_round(subconnectome={**{ass.area: [area] for ass in assemblies}, area: [area]},
+                             iterations=brain.repeat)
 
             merged_assembly.trigger_reader_update_hook(brain=brain)
         merged_assembly.bind_like(*assemblies)

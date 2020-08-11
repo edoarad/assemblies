@@ -9,6 +9,7 @@ def variables(cls):
         bound = getattr(cls, name, None)
         if bound is None:
             continue
+
         if isinstance(attr, staticmethod):
             result[name] = bound, bound
         else:

@@ -6,7 +6,7 @@ import uuid
 from pathlib import Path
 
 from assembly_calculus import Area, Stimulus, BrainRecipe, bake, Connectome, Assembly
-from assembly_calculus.assemblies.utils import fire_many
+from assembly_calculus.utils.brain_utils import fire_many
 
 from utils import Logger, protecc_ram
 
@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 Parameter Selection
 """
 # Number of samples per graph point
-AVERAGING_SIZE = 5
+AVERAGING_SIZE = 25
 # Size of Stimulus
 STIMULUS_SIZE = 100
 # Size of areas
@@ -117,7 +117,7 @@ for merge_stabilization, repeats in TESTS:
             with bake(recipe, 0.1, Connectome, train_repeat=t, effective_repeat=3) as brain:
                 def overlap(A, B):
                     assert len(A) == len(B)
-                    return len(set(A).intersection(set(B))) / len(A)
+                    return len(set(A) & set(B)) / len(A)
 
 
                 # Project assembly for the first time
