@@ -169,15 +169,9 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
 
         projected_assembly: Assembly = Assembly([self], area, initial_recipes=self.appears_in)
         if brain is not None:
-            neurons = self.identify(brain=brain)
 
-            brain.connectome.winners[self.area] = list(neurons)
-
-            # Replace=True for better performance
-            # TODO: is it only for better performance? it seems to affect correctness
-            # Response: Yes it also affects operation, but you & I (Yonatan) discussed this
-            #           And this is the implementation you requested.
-            brain.next_round({self.area: [area], area: [area]}, replace=True, iterations=iterations or brain.repeat)
+            # read activate_assemblies for documentation
+            Assembly.activate_assemblies([self], area, brain)
 
             projected_assembly.trigger_reader_update_hook(brain=brain)
 
@@ -205,8 +199,13 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         for source in area_neuron_mapping.keys():
             brain.connectome.winners[source] = area_neuron_mapping[source]
 
+        # creating the correct subconnectome
+        subconnectome = {source: [area] for source in area_neuron_mapping}
+        # we also want area to be able to fire into itself (area -> area)
+        subconnectome[area] = subconnectome.get(area, []) + [area]
+
         # Replace=True for better performance
-        brain.next_round(subconnectome={source: [area] for source in area_neuron_mapping}, replace=True,
+        brain.next_round(subconnectome=subconnectome, replace=True,
                          iterations=brain.repeat)
 
     def __rshift__(self, target: Area):
@@ -269,21 +268,9 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         #           In my opinion, this class should be designed as if binding does not exist, and binding is
         #           purely a syntactic sugar that makes the usage easier
         if brain is not None:
-            # create a mapping from the areas to the neurons we want to fire
-            area_neuron_mapping = {ass.area: [] for ass in assemblies}
-            for ass in assemblies:
-                # TODO: What happens if we merge assemblies that are already in the same area?
-                # Response: We take their union, I think this is an OK generalization?
-                area_neuron_mapping[ass.area] = list(
-                    ass.identify(brain=brain))
 
-            # update winners for relevant areas in the connectome
-            for source in area_neuron_mapping.keys():
-                brain.connectome.winners[source] = area_neuron_mapping[source]
-
-            # Replace=True for better performance
-            brain.next_round(subconnectome={source: [area] for source in area_neuron_mapping}, replace=True,
-                             iterations=brain.repeat)
+            # Read activate_assemblies for documentation
+            Assembly.activate_assemblies(assemblies, area, brain)
 
             merged_assembly.trigger_reader_update_hook(brain=brain)
         merged_assembly.bind_like(*assemblies)
