@@ -199,6 +199,28 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         projected_assembly.bind_like(self)
         return projected_assembly
 
+    @staticmethod
+    def activate_assemblies(assemblies, area: Area,  brain : Brain):
+        """
+        to prevent code duplication, this function does the common thing
+        of taking a list of assemblies and creating a dictionary from area to neurons (of the
+        assemblies) to set as winners, and fire in the next round (into area).
+        (activating the assemblies in the list).
+        """
+        # create a mapping from the areas to the neurons we want to fire
+        area_neuron_mapping = {ass.area: [] for ass in assemblies}
+        for ass in assemblies:
+            area_neuron_mapping[ass.area] = list(
+                ass.identify(brain=brain))
+
+        # update winners for relevant areas in the connectome
+        for source in area_neuron_mapping.keys():
+            brain.connectome.winners[source] = area_neuron_mapping[source]
+
+        # Replace=True for better performance
+        brain.next_round(subconnectome={source: [area] for source in area_neuron_mapping}, replace=True,
+                         iterations=brain.repeat)
+
     def __rshift__(self, target: Area):
         """
         In the context of assemblies, >> represents project.
