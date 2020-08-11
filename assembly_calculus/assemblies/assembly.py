@@ -119,10 +119,14 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
 
         self.parents: Tuple[Projectable, ...] = tuple(parents)
         self.area: Area = area
-        self.reader = reader
+        self._reader = reader
         self.appears_in: Set[BrainRecipe] = set(initial_recipes or [])
         for recipe in self.appears_in:
             recipe.append(self)
+
+    @property
+    def reader(self) -> Reader:
+        return self._reader or Assembly._default_reader
 
     @staticmethod
     def set_default_reader(reader):
@@ -132,11 +136,7 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
     # Response: We will add this in the documentation, to_representative_neuron_subset is simply too long
     # TODO: reader.read is _very_ confusing with Assembly.read. Rename reader.
     def identify(self, preserve_brain=False, *, brain: Brain) -> Set[int, ...]:
-        if self.reader:
-            read = self.reader.read
-        else:
-            read = Assembly._default_reader.read
-        return set(read(self, preserve_brain=preserve_brain, brain=brain))
+        return set(self.reader.read(self, preserve_brain=preserve_brain, brain=brain))
 
     @staticmethod
     def read(area: Area, *, brain: Brain):
@@ -182,7 +182,7 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         if brain is not None:
 
             # read activate_assemblies for documentation
-            Assembly.activate_assemblies([self], area, brain)
+            Assembly._activate_assemblies([self], area, brain=brain)
 
             projected_assembly.trigger_reader_update_hook(brain=brain)
 
@@ -193,7 +193,7 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         return projected_assembly
 
     @staticmethod
-    def activate_assemblies(assemblies, area: Area,  brain : Brain):
+    def _activate_assemblies(assemblies, area: Area, *, brain: Brain):
         """
         to prevent code duplication, this function does the common thing
         of taking a list of assemblies and creating a dictionary from area to neurons (of the
@@ -281,7 +281,7 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         if brain is not None:
 
             # Read activate_assemblies for documentation
-            Assembly.activate_assemblies(assemblies, area, brain)
+            Assembly._activate_assemblies(assemblies, area, brain=brain)
 
             merged_assembly.trigger_reader_update_hook(brain=brain)
         merged_assembly.bind_like(*assemblies)
