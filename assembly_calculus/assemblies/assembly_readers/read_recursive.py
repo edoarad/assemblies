@@ -7,8 +7,6 @@ if TYPE_CHECKING:
     from ...brain import Brain
 
 
-# TODO: Mention explicitly where and how this is used. Very unclear, especially since it can't be
-#       found using the IDE.
 class ReadRecursive(Reader):
     """
     A class representing a reader that obtains information about an assembly using the 'read' method.
