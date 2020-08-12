@@ -1,27 +1,40 @@
-from uuid import UUID, uuid4
+from __future__ import annotations
+from typing import Dict, Any
+from weakref import ref
 
 
-class UniquelyIdentifiable:
+class NoInitMeta(type):
+    def __call__(cls, *args, **kwargs):
+        obj = cls.__new__(cls, *args, **kwargs)
+        if not getattr(obj, '_done', False):
+            obj.__init__(*args, **kwargs)
+
+        return obj
+
+
+class UniquelyIdentifiable(metaclass=NoInitMeta):
     """
     This class represents objects that are uniquely identifiable, objects that should be identified by instance
     and not by their properties.
     """
-    hist = {}
+    custom_uids: Dict[Any, 'ref[UniquelyIdentifiable]'] = {}
 
-    def __init__(self, uid=None):
-        self._uid: UUID = uuid4()
-        if uid is not None and uid in UniquelyIdentifiable.hist:
-            self._uid = UniquelyIdentifiable.hist[uid]
-        elif uid is not None:
-            UniquelyIdentifiable.hist[uid] = self._uid
+    def __new__(cls, *args, uid: Any = None, **kwargs):
+        if uid is not None:
+            if uid not in UniquelyIdentifiable.custom_uids or UniquelyIdentifiable.custom_uids[uid]() is None:
+                obj = super(UniquelyIdentifiable, cls).__new__(cls)
+                UniquelyIdentifiable.custom_uids[uid] = ref(obj)
 
-    def __hash__(self):
-        return hash(self._uid)
+            obj = UniquelyIdentifiable.custom_uids[uid]()
+            setattr(obj, '_uid', uid)
+            return obj
+        else:
+            return super(UniquelyIdentifiable, cls).__new__(cls)
 
-    def __eq__(self, other):
-        # TODO: make more readable
-        # Removed the type check as it doesn't really matter, hope it is better now
-        # TODO 2: avoid edge case in which _uid and getattr are both None
-        # Response: I think this can never happen, since we always give it a non-None value in the constructor
+    def __init__(self, *args, **kwargs):
+        self._done = True
 
-        return self._uid == getattr(other, '_uid', None)
+    def __del__(self):
+        uid = getattr(self, '_uid', None)
+        if uid is not None:
+            del UniquelyIdentifiable.custom_uids[uid]

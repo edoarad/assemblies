@@ -149,7 +149,8 @@ class Connectome(ABCConnectome):
             prev_winner_inputs += np.sum((area_connectomes.synapses[winner, :] for winner in self.winners[source]), axis=0)
         if src_stimuli:
             prev_winner_inputs += np.sum(self.connections[stim, area].synapses.sum(axis=0) for stim in src_stimuli)
-        return np.argpartition(prev_winner_inputs, area.k-1)[-area.k:]
+
+        return np.argpartition(prev_winner_inputs, len(prev_winner_inputs) - area.k)[-area.k:]
 
     # TODO: change name
     def project(self, connections: Dict[BrainPart, List[Area]]):
