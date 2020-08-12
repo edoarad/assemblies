@@ -5,7 +5,6 @@ import logging
 import heapq
 import numpy as np
 from collections import defaultdict
-from wrapt import ObjectProxy
 import scipy.sparse as sp
 
 from .abc_connectome import ABCConnectome
