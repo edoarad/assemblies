@@ -1,3 +1,4 @@
+import gc
 import string
 from itertools import product
 from typing import Tuple, Dict
@@ -52,9 +53,12 @@ def test_projection(test_recipe):
         assembly_af = assembly_a >> area_f
         assembly_bf = assembly_b >> area_f
 
-    # TODO: (Tomer, from Yonatan) check this makes sense
-    with bake(recipe, 0.1, Connectome) as brain:
-        for _ in range(brain.repeat):
-            fire_many(brain, [assembly_a], area_f)
+    for _ in range(25):
+        # TODO: (Tomer, from Yonatan) check this makes sense
+        with bake(recipe, 0.1, Connectome, train_repeat=100, effective_repeat=1) as brain:
+            for _ in range(brain.repeat):
+                fire_many(brain, [assembly_a], area_f)
 
-        assert Assembly.read(area_f, brain=brain) == assembly_af
+            assert area_f.active_assembly == assembly_af, "Separate assemblies have merged :("
+
+        gc.collect()
