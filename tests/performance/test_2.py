@@ -77,7 +77,7 @@ def test_project_winners():
     brain.connections[s, a][0, 0] = 1
     brain.connections[s, a][0, 1] = 0
     brain.project({s: [a], a: [b]})
-    assert a.winners == [0]
+    assert brain.winners[a] == [0]
 
 
 # Supposed to test whether or not the code crashes with no winners
@@ -118,8 +118,8 @@ def test_project_connectomes():
     brain.project({a: [b]})
 
     print(brain.connections[a, b])
-    print(a.winners)
-    print(b.winners)
+    print(brain.winners[a])
+    print(brain.winners[b])
     assert abs(brain.connections[a, b][0, 0] - 1.1) < 0.0001
 
 
