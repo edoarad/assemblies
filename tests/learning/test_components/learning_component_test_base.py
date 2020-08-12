@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from assembly_calculus.learning.components.input import InputStimuli
 from assembly_calculus.learning.components.sequence import LearningSequence
-from tests.brain_test_utils import BrainTestUtils
+from tests.learning.brain_test_utils import BrainTestUtils
 
 
 class LearningComponentTestBase(TestCase):

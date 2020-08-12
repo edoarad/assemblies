@@ -2,7 +2,8 @@ import math
 from collections import namedtuple
 from contextlib import contextmanager
 
-from assembly_calculus.brain import Brain, OutputArea
+from assembly_calculus.brain import Brain
+from assembly_calculus.brain.components import OutputArea
 from assembly_calculus.learning.brain_modes import BrainLearningMode
 from assembly_calculus.learning.components.configurations import LearningConfigurations
 from assembly_calculus.learning.components.data_set.data_set import DataSet

@@ -1,7 +1,7 @@
 from contextlib import contextmanager
 from typing import Union, Type
 
-from assembly_calculus.brain import OutputArea
+from assembly_calculus.brain.components import OutputArea
 from lazy_brain import LazyBrain
 from non_lazy_brain import NonLazyBrain
 from assembly_calculus.utils import value_or_default
