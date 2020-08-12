@@ -1,7 +1,7 @@
-from learning.components.data_set.data_point import DataPoint
-from learning.components.data_set.data_set import DataSet
-from learning.components.data_set.lib.basic_types.partial_data_set import PartialDataSet
-from learning.components.data_set.mask import Mask
+from assembly_calculus.learning.components.data_set.data_point import DataPoint
+from assembly_calculus.learning.components.data_set.data_set import DataSet
+from assembly_calculus.learning.components.data_set.lib.basic_types.partial_data_set import PartialDataSet
+from assembly_calculus.learning.components.data_set.mask import Mask
 
 
 class TestSet(PartialDataSet):

@@ -1,7 +1,7 @@
 from unittest import TestCase
 
-from learning.components.input import InputStimuli
-from learning.components.sequence import LearningSequence
+from assembly_calculus.learning.components.input import InputStimuli
+from assembly_calculus.learning.components.sequence import LearningSequence
 from tests.brain_test_utils import BrainTestUtils
 
 

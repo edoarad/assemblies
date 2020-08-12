@@ -2,14 +2,14 @@ import math
 from collections import namedtuple
 from contextlib import contextmanager
 
-from brain import Brain, OutputArea
-from learning.brain_modes import BrainLearningMode
-from learning.components.configurations import LearningConfigurations
-from learning.components.data_set.data_set import DataSet
-from learning.components.errors import InputSizeMismatch, InputStimuliAndSequenceMismatch
-from learning.components.input import InputStimuli
-from learning.components.sequence import LearningSequence
-from learning.components.test_results import TestResults
+from assembly_calculus.brain import Brain, OutputArea
+from assembly_calculus.learning.brain_modes import BrainLearningMode
+from assembly_calculus.learning.components.configurations import LearningConfigurations
+from assembly_calculus.learning.components.data_set.data_set import DataSet
+from assembly_calculus.learning.components.errors import InputSizeMismatch, InputStimuliAndSequenceMismatch
+from assembly_calculus.learning.components.input import InputStimuli
+from assembly_calculus.learning.components.sequence import LearningSequence
+from assembly_calculus.learning.components.test_results import TestResults
 
 
 class LearningModel:
@@ -46,7 +46,7 @@ class LearningModel:
         This function trains the model with the given training set
         :param training_set: the set by which to train the model
         :param number_of_sequence_cycles: the number of times the entire sequence should run while on training mode.
-            If not given, the default value is taken from LearningConfigurations
+            If not given, the default value is taken from learningConfigurations
         """
         if training_set.input_size != self._input_size:
             raise InputSizeMismatch('Learning model InputStimuli', 'Training set', self._input_size, training_set.input_size)

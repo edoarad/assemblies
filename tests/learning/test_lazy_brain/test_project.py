@@ -1,7 +1,7 @@
-from brain import OutputArea
-from learning.brain_modes import BrainLearningMode
-from tests.test_lazy_brain.lazy_brain_test_base import LazyBrainTestBase
-from utils import get_matrix_max, get_matrix_min
+from assembly_calculus.brain import OutputArea
+from assembly_calculus.learning.brain_modes import BrainLearningMode
+from tests.learning.test_lazy_brain.lazy_brain_test_base import LazyBrainTestBase
+from assembly_calculus.utils import get_matrix_max, get_matrix_min
 
 
 class TestProjectLazy(LazyBrainTestBase):

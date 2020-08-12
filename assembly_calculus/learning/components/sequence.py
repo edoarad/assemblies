@@ -2,12 +2,12 @@ from enum import Enum
 from itertools import chain
 from typing import List, Dict, Optional, Callable, Union
 
-from brain import Brain, Area, OutputArea
-from learning.components.errors import MissingArea, SequenceRunNotInitializedOrInMidRun, SequenceFinalizationError, \
+from assembly_calculus.brain import Brain, Area, OutputArea
+from assembly_calculus.learning.components.errors import MissingArea, SequenceRunNotInitializedOrInMidRun, SequenceFinalizationError, \
     MissingStimulus
-from learning.components.sequence_components.connections_graph import ConnectionsGraph
-from learning.components.sequence_components.iteration import Iteration
-from learning.components.sequence_components.iteration_configuration import IterationConfiguration
+from assembly_calculus.learning.components.sequence_components.connections_graph import ConnectionsGraph
+from assembly_calculus.learning.components.sequence_components.iteration import Iteration
+from assembly_calculus.learning.components.sequence_components.iteration_configuration import IterationConfiguration
 
 
 class SourceType(Enum):

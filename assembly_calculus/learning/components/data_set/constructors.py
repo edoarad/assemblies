@@ -1,14 +1,14 @@
 from typing import Callable, List
 
-from learning.components.data_set.data_set import DataSet, DataSets
-from learning.components.data_set.lib.basic_types.callable_data_set import CallableDataSet as _CallableDataSet
-from learning.components.data_set.lib.basic_types.values_list_data_set import ValuesListDataSet as _ValuesListDataSet
-from learning.components.data_set.lib.masks.explicit_callable_mask import ExplicitCallableMask as _ExplicitCallableMask
-from learning.components.data_set.lib.masks.explicit_list_mask import ExplicitListMask as _ExplicitListMask
-from learning.components.data_set.lib.masks.lazy_mask import LazyMask as _LazyMask
-from learning.components.data_set.lib.test_set import TestSet as _TestSet
-from learning.components.data_set.lib.training_set import TrainingSet as _TrainingSet
-from learning.components.data_set.mask import Mask
+from assembly_calculus.learning.components.data_set.data_set import DataSet, DataSets
+from assembly_calculus.learning.components.data_set.lib.basic_types.callable_data_set import CallableDataSet as _CallableDataSet
+from assembly_calculus.learning.components.data_set.lib.basic_types.values_list_data_set import ValuesListDataSet as _ValuesListDataSet
+from assembly_calculus.learning.components.data_set.lib.masks.explicit_callable_mask import ExplicitCallableMask as _ExplicitCallableMask
+from assembly_calculus.learning.components.data_set.lib.masks.explicit_list_mask import ExplicitListMask as _ExplicitListMask
+from assembly_calculus.learning.components.data_set.lib.masks.lazy_mask import LazyMask as _LazyMask
+from assembly_calculus.learning.components.data_set.lib.test_set import TestSet as _TestSet
+from assembly_calculus.learning.components.data_set.lib.training_set import TrainingSet as _TrainingSet
+from assembly_calculus.learning.components.data_set.mask import Mask
 
 
 def create_data_set_from_callable(

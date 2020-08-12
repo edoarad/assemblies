@@ -1,6 +1,6 @@
 import unittest
 
-from tests.brain_test_utils import BrainTestUtils
+from tests.learning.brain_test_utils import BrainTestUtils
 
 
 class LazyBrainTestBase(unittest.TestCase):
