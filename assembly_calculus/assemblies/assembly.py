@@ -194,7 +194,9 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
 
     @staticmethod
     def _activate_assemblies(assemblies, *, brain: Brain):
-        """Activates a list of assemblies"""
+        """to prevent code duplication, this function does the common thing
+        of taking a list of assemblies and creating a dictionary from area to neurons (of the
+        assemblies) to set as winners"""
         # create a mapping from the areas to the neurons we want to fire
         area_neuron_mapping = {ass.area: [] for ass in assemblies}
         for ass in assemblies:
