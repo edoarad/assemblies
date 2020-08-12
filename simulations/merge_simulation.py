@@ -75,7 +75,6 @@ ax.set_xscale('log')
 plt.xlabel('t (Repeat Parameter)')
 plt.ylabel('Overlap %')
 
-
 ##################################################################################################################
 
 
@@ -136,8 +135,7 @@ for merge_stabilization, repeats in TESTS:
                 # Compute the overlap between first and second projection winners
                 values.append(overlap(first_winners, second_winners) * 100)
 
-            # TODO: Is this necessary? if so, write why, o/w delete it.
-            # Response: Yes, helps my computer deal with the RAM usage
+            # helps my computer deal with the RAM usage (not neccesary)
             gc.collect()
 
         # Compute average overlap
