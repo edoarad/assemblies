@@ -128,6 +128,8 @@ for merge_stabilization, repeats in TESTS:
                 # Store winners
                 first_winners = area3.winners
 
+                brain.winners[area3] = list()
+
                 # Project assembly for the second time
                 (assembly1 + assembly2) >> area3
                 # Store winners
