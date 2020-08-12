@@ -12,8 +12,11 @@ from utils import Logger, protecc_ram
 
 import matplotlib.pyplot as plt
 
-# TODO: Document this file, and explain what this is.
-#       Change the name to describe it as a simulation.
+# Merge simulation
+# ================
+#
+# We compare different merge strategies, and plot it all in a graph
+# describing the "merge efficiency" of every strategy
 
 """
 Parameter Selection
@@ -98,6 +101,7 @@ for merge_stabilization, repeats in TESTS:
     # that way merge can done manually!
     assembly3 = (assembly1 + assembly2) >> area3
 
+    # Define brain "active" recipe
     with recipe:
         # Manual merge process by interleaved projects
         for _ in range(merge_stabilization):
@@ -134,6 +138,7 @@ for merge_stabilization, repeats in TESTS:
                 values.append(overlap(first_winners, second_winners) * 100)
 
             # TODO: Is this necessary? if so, write why, o/w delete it.
+            # Response: Yes, helps my computer deal with the RAM usage
             gc.collect()
 
         # Compute average overlap
