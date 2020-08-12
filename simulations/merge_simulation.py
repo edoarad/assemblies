@@ -6,7 +6,6 @@ import uuid
 from pathlib import Path
 
 from assembly_calculus import Area, Stimulus, BrainRecipe, bake, Connectome, Assembly
-from assembly_calculus.utils.brain_utils import fire_many
 
 from utils import Logger, protecc_ram
 
@@ -125,12 +124,12 @@ for merge_stabilization, repeats in TESTS:
 
 
                 # Project assembly for the first time
-                fire_many(brain, [assembly1, assembly2], area3)
+                (assembly1 + assembly2) >> area3
                 # Store winners
                 first_winners = area3.winners
 
                 # Project assembly for the second time
-                fire_many(brain, [assembly1, assembly2], area3)
+                (assembly1 + assembly2) >> area3
                 # Store winners
                 second_winners = area3.winners
 
