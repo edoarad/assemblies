@@ -27,23 +27,35 @@ Projectable = Union['Assembly', Stimulus]
 @Recordable(('merge', True), 'associate',
             resolution=ImplicitResolution(
                 lambda instance, name: Bindable.implicitly_resolve_many(instance.assemblies, name, False), 'recording'))
-class AssemblyTuple(object):
+class AssemblyTuple(UniquelyIdentifiable):
     """
     Assembly tuple is used as an intermediate structure to support syntax such as
     group merge ( a1 | a2 | .. | a_n >> area) and other group operations.
     """
 
-    def __init__(self, *assemblies: Assembly):
+    @staticmethod
+    def assemblytuple_hash(assemblies):
+        # we now allow AssemblyTuples to be unique by the hash of the tuple of the
+        # sorted hashes of their content assemblies
+        return hash(tuple(sorted(map(lambda x: x._uid, assemblies))))
+
+    def __new__(cls, *assemblies):
+        return UniquelyIdentifiable.__new__(cls, uid=AssemblyTuple.assemblytuple_hash(assemblies))
+
+    def __init__(self, *assemblies: Assembly, **kwargs):
         """
         :param assemblies: the set of assemblies in the tuple
         """
 
         # asserting tuple not empty, and that all object are projectable.
+
         if len(assemblies) == 0:
             raise IndexError("Assembly tuple is empty")
+
         if not all([isinstance(x, Assembly) or isinstance(x, Stimulus) for x in assemblies]):
             raise TypeError("Tried to initialize Assembly tuple with invalid object")
 
+        UniquelyIdentifiable.__init__(self)
         self.assemblies: Tuple[Assembly, ...] = assemblies
 
     # TODO: This is confusing, because I expect Assembly + Assembly = Assembly.
@@ -136,7 +148,6 @@ class Assembly(UniquelyIdentifiable):
         # We hash an assembly using its parents (sorted by id) and area
         # this way equivalent assemblies have the same id.
         UniquelyIdentifiable.__init__(self)
-        AssemblyTuple.__init__(self, self)
 
         self.parents: Tuple[Projectable, ...] = tuple(parents)
         self.area: Area = area
