@@ -33,3 +33,6 @@ def test_projection():
             assert area_c.active_assembly == assembly_af, "Separate assemblies have merged :("
 
         gc.collect()
+
+
+
