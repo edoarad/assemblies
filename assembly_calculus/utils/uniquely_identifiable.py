@@ -34,6 +34,12 @@ class UniquelyIdentifiable(metaclass=NoInitMeta):
     def __init__(self, *args, **kwargs):
         self._done = True
 
+    def __hash__(self):
+        return id(self)
+
+    def __eq__(self, other):
+        return hash(self) == hash(other)
+
     def __del__(self):
         uid = getattr(self, '_uid', None)
         if uid is not None:

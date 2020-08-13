@@ -5,7 +5,7 @@ from typing import Iterable, Union, Tuple, TYPE_CHECKING, Set, Optional, Dict
 
 from .reader import Reader
 from .assembly_readers.read_recursive import ReadRecursive
-from ..utils import Recordable, ImplicitResolution, Bindable, UniquelyIdentifiable
+from ..utils import Recordable, ImplicitResolution, Bindable, UniquelyIdentifiable, set_hash
 from ..brain import Stimulus, Area
 from .utils import util_merge, util_associate, union
 
@@ -33,22 +33,16 @@ class AssemblyTuple(UniquelyIdentifiable):
     group merge ( a1 | a2 | .. | a_n >> area) and other group operations.
     """
 
-    @staticmethod
-    def assemblytuple_hash(assemblies):
-        # we now allow AssemblyTuples to be unique by the hash of the tuple of the
-        # sorted hashes of their content assemblies
-        return hash(tuple(sorted(map(lambda x: x._uid, assemblies))))
-
     def __new__(cls, *assemblies):
-        return UniquelyIdentifiable.__new__(cls, uid=AssemblyTuple.assemblytuple_hash(assemblies))
+        # We now allow AssemblyTuples to be unique by the hash of the tuple of the
+        # sorted hashes of their content assemblies
+        return UniquelyIdentifiable.__new__(cls, uid=set_hash(assemblies))
 
-    def __init__(self, *assemblies: Assembly, **kwargs):
+    def __init__(self, *assemblies: Assembly):
         """
         :param assemblies: the set of assemblies in the tuple
         """
-
-        # asserting tuple not empty, and that all object are projectable.
-
+        # Asserting tuple not empty, and that all object are projectable.
         if len(assemblies) == 0:
             raise IndexError("Assembly tuple is empty")
 
@@ -56,14 +50,9 @@ class AssemblyTuple(UniquelyIdentifiable):
             raise TypeError("Tried to initialize Assembly tuple with invalid object")
 
         UniquelyIdentifiable.__init__(self)
+        # TODO: Convert to set so no duplicates?
         self.assemblies: Tuple[Assembly, ...] = assemblies
 
-    # TODO: This is confusing, because I expect Assembly + Assembly = Assembly.
-    #       There are other solutions. Even just AssemblyTuple(ass1, ass2) >> area is
-    #       better, but I'm sure you can do better than that.
-    # RESPONSE: we think the syntax ass1 + ass2 >> area is cool and conveys the meaning of the action
-    # and the syntax you recommended (AssemblyTuple(ass1, ass2) >> area) is still usable in this implementation
-    # if someone prefers.
     def __add__(self, other: AssemblyTuple) -> AssemblyTuple:
         """
         In the context of AssemblyTuples, + creates a new AssemblyTuple containing the members
@@ -72,7 +61,6 @@ class AssemblyTuple(UniquelyIdentifiable):
         :param other: the other AssemblyTuple we add
         :returns: the new AssemblyTuple
         """
-
         if not isinstance(other, AssemblyTuple):
             raise TypeError("Assemblies can be concatenated only to assemblies")
         return AssemblyTuple(*(self.assemblies + other.assemblies))
@@ -127,14 +115,9 @@ class Assembly(UniquelyIdentifiable):
     """
     _default_reader: Reader = ReadRecursive
 
-    @staticmethod
-    def assembly_hash(area, parents):
-        # we sort the list so that the order in the list of parents doesnt matter
-        return hash((area, *sorted(parents, key=hash)))
-
     def __new__(cls, parents: Iterable[Projectable], area: Area, initial_recipes: Iterable[BrainRecipe] = None,
                 reader: str = 'default'):
-        return UniquelyIdentifiable.__new__(cls, uid=Assembly.assembly_hash(area, parents))
+        return UniquelyIdentifiable.__new__(cls, uid=hash((area, set_hash(parents))))
 
     def __init__(self, parents: Iterable[Projectable], area: Area,
                  initial_recipes: Iterable[BrainRecipe] = None, reader: Reader = None):
@@ -200,7 +183,7 @@ class Assembly(UniquelyIdentifiable):
         :param area: the area in which the new assembly is going to be created
         :returns: resulting projected assembly
         """
-        if not isinstance(area, Area) and area in brain.recipe.areas:
+        if not isinstance(area, Area):
             raise TypeError("Projection target must be an Area in the Brain")
 
         return util_merge((self,), area, brain=brain)  # project was actually just this line
@@ -213,6 +196,7 @@ class Assembly(UniquelyIdentifiable):
         :param target: the area into which we project
         :returns: the new assembly that was created
         """
+        # TODO: No need for error since it already appears in project
         if not isinstance(target, Area):
             raise TypeError("Assembly must be projected onto an area")
         return self.project(target)
