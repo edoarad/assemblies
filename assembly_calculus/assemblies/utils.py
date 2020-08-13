@@ -6,11 +6,12 @@ This helps assembly.py be less bloated
 from __future__ import annotations
 from itertools import product
 from random import sample
-from typing import List, Tuple, TYPE_CHECKING, Dict
-from ..brain import Stimulus, Area
+from typing import List, Tuple, TYPE_CHECKING, Dict, Union
+from ..brain import Area
 
 if TYPE_CHECKING:
     from ..brain import Brain
+    from .assembly import Assembly, AssemblyTuple
 
 
 # TODO: change random sampling to performance sampling
@@ -43,7 +44,6 @@ def activate_assemblies(assemblies: Tuple[Assembly, ...], *, brain: Brain):
 
 
 def util_associate(a: Tuple[Assembly, ...], b: Tuple[Assembly, ...], *, brain: Brain) -> None:
-    # TODO: it's not the right logic
     """
     Associates two lists of assemblies, by strengthening each bond in the
     corresponding bipartite graph.
@@ -59,7 +59,7 @@ def util_associate(a: Tuple[Assembly, ...], b: Tuple[Assembly, ...], *, brain: B
     """
     pairs = product(a, b)
     for x, y in pairs:
-        util_merge((x, y), x.area, brain)
+        util_merge((x, y), x.area, brain=brain)
 
 
 def util_merge(assemblies: Tuple[Assembly, ...], area: Area, *, brain: Brain = None):
@@ -102,3 +102,15 @@ def util_merge(assemblies: Tuple[Assembly, ...], area: Area, *, brain: Brain = N
         merged_assembly.trigger_reader_update_hook(brain=brain)
     merged_assembly.bind_like(*assemblies)
     return merged_assembly
+
+
+def union(obj1: Union[Assembly, AssemblyTuple], obj2: Union[Assembly, AssemblyTuple]):
+    from .assembly import Assembly, AssemblyTuple
+    """
+    this method is set as __or__ of both assembly classes and returns an
+    AssemblyTuple object which holds their union.
+    """
+    tuple1 = AssemblyTuple(obj1) if isinstance(obj1, Assembly) else obj1
+    tuple2 = AssemblyTuple(obj2) if isinstance(obj2, Assembly) else obj2
+    # We still support the '+' syntax for assembly tuples.
+    return tuple1 + tuple2

@@ -7,14 +7,13 @@ from .reader import Reader
 from .assembly_readers.read_recursive import ReadRecursive
 from ..utils import Recordable, ImplicitResolution, Bindable, UniquelyIdentifiable
 from ..brain import Stimulus, Area
-from .utils import util_merge, util_associate, activate_assemblies
+from .utils import util_merge, util_associate, union
 
 if TYPE_CHECKING:  # TODO: this is not needed. It's better to always import them.
     # Response: Sadly we need to do it to avoid cyclic imports,
     #           So I use TYPE_CHECKING for typing only imports
     from ..brain import Brain
     from ..brain import BrainRecipe
-
 
 """
 Standard python 3.8 typing
@@ -23,14 +22,15 @@ and top level assemblies with no parents (i.e stimuli)
 """
 Projectable = Union['Assembly', Stimulus]
 
-#TODO: add uniqelyidentifyable
+
+# TODO: add uniqelyidentifyable
 @Recordable(('merge', True), 'associate',
             resolution=ImplicitResolution(
                 lambda instance, name: Bindable.implicitly_resolve_many(instance.assemblies, name, False), 'recording'))
 class AssemblyTuple(object):
     """
     Assembly tuple is used as an intermediate structure to support syntax such as
-    group merge ( a1 + a2 + .. + a_n >> area) and other group operations.
+    group merge ( a1 | a2 | .. | a_n >> area) and other group operations.
     """
 
     def __init__(self, *assemblies: Assembly):
@@ -45,8 +45,6 @@ class AssemblyTuple(object):
             raise TypeError("Tried to initialize Assembly tuple with invalid object")
 
         self.assemblies: Tuple[Assembly, ...] = assemblies
-
-
 
     # TODO: This is confusing, because I expect Assembly + Assembly = Assembly.
     #       There are other solutions. Even just AssemblyTuple(ass1, ass2) >> area is
@@ -70,7 +68,7 @@ class AssemblyTuple(object):
     def merge(self, area: Area, *, brain: Brain = None):
         """
         can be used by user with >> or directly by:
-        (ass1 + ass2).merge( ... ) or AssemblyTuple(list of assemblies).merge( ... )
+        (ass1 | ass2).merge( ... ) or AssemblyTuple(list of assemblies).merge( ... )
         """
         brain = brain or Bindable[Assembly].implicitly_resolve_many(self.assemblies, 'brain', False)[1]
         return util_merge(self.assemblies, area, brain=brain)
@@ -78,7 +76,7 @@ class AssemblyTuple(object):
     def associate(self, other: AssemblyTuple, *, brain: Brain = None):
         """
         as of now has no syntactic sugar, so use by:
-        (ass1 + ass2).associate( *another AssemblyTuple ) within a recipe context.
+        (ass1 | ass2).associate( *another AssemblyTuple ) within a recipe context.
         """
         brain = brain or Bindable[Assembly].implicitly_resolve_many(self.assemblies + other.assemblies,
                                                                     'brain', False)[1]
@@ -87,7 +85,7 @@ class AssemblyTuple(object):
     def __rshift__(self, target_area: Area):
         """
         In the context of assemblies, >> symbolizes merge.
-        Example: (within a brain context) (a1+a2+a3)>>area
+        Example: (within a brain context) (a1|a2|a3)>>area
 
         :param target_area: the area we merge into
         :return: the new merged assembly
@@ -99,13 +97,13 @@ class AssemblyTuple(object):
     def __iter__(self):
         return iter(self.assemblies)
 
+    __or__ = union  # we now support the | operator for both Assembly and AssemblyTuple objects.
+
 
 # TODO: Better documentation for user-functions, add example usages w\ and w\o bindable
 @Recordable(('project', True), ('reciprocal_project', True))
 @Bindable('brain')
-class Assembly(UniquelyIdentifiable, AssemblyTuple):
-    # TODO: It makes no logical sense for Assembly to inherit AssemblyTuple.
-    # TODO: instead, they can inherit from a mutual `AssemblyOperator` class that defines the operators they both support
+class Assembly(UniquelyIdentifiable):
     # Response: An assembly is in particular a tuple of assemblies of length 1, they share many logical operations.
     # They share many properties, and in particular a singular assembly supports more operations.
     """
@@ -168,7 +166,8 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         for assembly in assemblies:
             # TODO: extract calculation to function with indicative name
             overlap[assembly] = len(
-                set(brain.winners[area]) & set(assembly.representative_neuron(preserve_brain=True, brain=brain))) / area.k
+                set(brain.winners[area]) & set(
+                    assembly.representative_neuron(preserve_brain=True, brain=brain))) / area.k
         return max(overlap.keys(), key=lambda x: overlap[x])  # TODO: return None below some threshold
 
     # TODO: Remove this (And in reader class)
@@ -193,20 +192,7 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         if not isinstance(area, Area) and area in brain.recipe.areas:
             raise TypeError("Projection target must be an Area in the Brain")
 
-        projected_assembly: Assembly = Assembly([self], area, initial_recipes=self.appears_in)
-        if brain is not None:
-            activate_assemblies([self], brain=brain)
-            # TODO: Is this OK? (To Edo)
-            brain.winners[area] = list()
-            brain.next_round({self.area: [area], area: [area]}, replace=True, iterations=brain.repeat)
-            projected_assembly.trigger_reader_update_hook(brain=brain)
-
-        # TODO: calling `bind_like` manually is error-prone because someone can forget it. can you make a decorator or a more automated way to do it?
-        # Response: This is the standard path defined in the Bindable API,
-        #           And "automation" will be quite weird, anyway this is used only a couple of times, and only in internal API
-        projected_assembly.bind_like(self)
-        return projected_assembly
-
+        return util_merge((self,), area, brain=brain)  # project was actually just this line
 
     def __rshift__(self, target: Area):
         """
@@ -237,8 +223,6 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
 
         return projected_assembly
 
-
-
     # TODO: lt and gt logic can be implemented using a common method
     # Response: True, but I think it is a tad more readable this way
     def __lt__(self, other: Assembly):
@@ -254,3 +238,5 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         :param other: the assembly we compare against
         """
         return isinstance(other, Assembly) and self in other.parents
+
+    __or__ = union
