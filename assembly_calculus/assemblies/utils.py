@@ -64,7 +64,6 @@ def util_associate(a: Tuple[Assembly, ...], b: Tuple[Assembly, ...], *, brain: B
 
 
 def util_merge(assemblies: Tuple[Assembly, ...], area: Area, *, brain: Brain = None):
-    from .assembly import Assembly  # we cannot import this for the rest of the file, circular import
     """
     Creates a new assembly with all input assemblies as parents.
     Practically creates a new assembly with one-directional links from parents
@@ -76,8 +75,10 @@ def util_merge(assemblies: Tuple[Assembly, ...], area: Area, *, brain: Brain = N
     :param area: the area into which we merge
     :returns: resulting merged assembly
     """
+    from .assembly import Assembly  # we cannot import this for the rest of the file, circular import
+
     # Response: Added area checks
-    if not isinstance(area, Area) and area in brain.recipe.areas:
+    if not isinstance(area, Area):
         raise TypeError("Project target must be an Area in the brain")
 
     merged_assembly: Assembly = Assembly(assemblies, area,

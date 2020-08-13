@@ -25,7 +25,6 @@ def test_projection():
         assembly_bf = assembly_b >> area_c
 
     for _ in range(25):
-        # TODO: (Tomer, from Yonatan) check this makes sense
         with bake(recipe, 0.1, Connectome, train_repeat=100, effective_repeat=1) as brain:
             for _ in range(brain.repeat):
                 fire_many(brain, [assembly_a], area_c)
@@ -52,8 +51,7 @@ def test_associate():
     with recipe:
         assembly_af = assembly_a >> area_c
         assembly_bf = assembly_b >> area_c
-        AssemblyTuple(assembly_af).associate(
-            AssemblyTuple(assembly_bf))
+        AssemblyTuple(assembly_af).associate(AssemblyTuple(assembly_bf))
 
     for _ in range(25):
         with bake(recipe, 0.1, Connectome, train_repeat=100, effective_repeat=1) as brain:
