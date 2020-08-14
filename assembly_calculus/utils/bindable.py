@@ -76,7 +76,9 @@ class Bindable(Generic[T]):
             # Decorate all non-protected functions
             if callable(bound_func) and (not func_name.startswith('_') or getattr(func, 'override_protection', False))\
                     and not isinstance(bound_func, staticmethod):
-                setattr(cls, func_name, implicit_resolution(func))
+                resolved_func = implicit_resolution(getattr(func, '_original_func', func))
+                setattr(resolved_func, '_original_func', func)
+                setattr(cls, func_name, resolved_func)
 
         # Update params to include previous bindings
         params: Tuple[str, ...] = tuple(set(getattr(cls, '_bindable_params', ()) + params))

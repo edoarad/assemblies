@@ -5,7 +5,7 @@ from typing import Iterable, Union, Tuple, TYPE_CHECKING, Set, Optional, Dict
 
 from .assembly_sampler import AssemblySampler
 from .assembly_samplers.recursive_sampler import RecursiveSampler
-from ..utils import Recordable, ImplicitResolution, Bindable, UniquelyIdentifiable, set_hash
+from ..utils import Recordable, ImplicitResolution, Bindable, UniquelyIdentifiable, set_hash, bindable_property
 from ..brain import Stimulus, Area
 from .utils import util_merge, util_associate, union
 
@@ -146,11 +146,15 @@ class Assembly(UniquelyIdentifiable):
         return self._sampler or Assembly._default_sampler
 
     @staticmethod
-    def set_default_sampler(smapler):
-        Assembly._default_sampler = smapler
+    def set_default_sampler(sampler):
+        Assembly._default_sampler = sampler
 
     def sample_neurons(self, preserve_brain=False, *, brain: Brain) -> Set[int, ...]:
         return set(self.sampler.sample_neurons(self, preserve_brain=preserve_brain, brain=brain))
+
+    @bindable_property
+    def representative_neurons(self, *, brain: Brain) -> Set[int, ...]:
+        return self.sample_neurons(brain=brain)
 
     def project(self, area: Area, *, brain: Brain = None) -> Assembly:
         """

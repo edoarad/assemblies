@@ -55,12 +55,13 @@ def test_associate():
 
     for _ in range(25):
         with bake(recipe, 0.1, Connectome, train_repeat=100, effective_repeat=1) as brain:
-            old_winners = assembly_b.sample_neurons(brain=brain)
+            old_winners = assembly_b.representative_neurons
+
             for _ in range(brain.repeat):
                 fire_many(brain, [assembly_a], area_c)
 
             # test that the winners of assembly_bf have changed
-            new_winners = assembly_b.sample_neurons(brain=brain)
+            new_winners = assembly_b.representative_neurons
             assert old_winners != new_winners, "the associated assembly is unaffected :("
 
         gc.collect()
