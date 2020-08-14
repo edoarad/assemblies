@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from typing import Iterable, Union, Tuple, TYPE_CHECKING, Set, Optional, Dict
 
-from .reader import Reader
-from .assembly_readers.read_recursive import ReadRecursive
+from .assembly_sampler import AssemblySampler
+from .assembly_samplers.recursive_sampler import RecursiveSampler
 from ..utils import Recordable, ImplicitResolution, Bindable, UniquelyIdentifiable, set_hash
 from ..brain import Stimulus, Area
 from .utils import util_merge, util_associate, union
@@ -111,21 +111,22 @@ class Assembly(UniquelyIdentifiable):
     in which it appears. An assembly is defined primarily by its parents - the assemblies
     and/or stimuli that were fired to create it.
     This class implements basic operations on assemblies (project, reciprocal_project,
-    merge and associate) by using a reader object, which interacts with the brain directly.
+    merge and associate) by using a AssemblySampler object, which interacts with the brain directly.
     """
-    _default_reader: Reader = ReadRecursive
+    _default_sampler: AssemblySampler = RecursiveSampler
 
     def __new__(cls, parents: Iterable[Projectable], area: Area, initial_recipes: Iterable[BrainRecipe] = None,
-                reader: str = 'default'):
+                sampler: AssemblySampler = None):
         return UniquelyIdentifiable.__new__(cls, uid=hash((area, set_hash(parents))))
 
     def __init__(self, parents: Iterable[Projectable], area: Area,
-                 initial_recipes: Iterable[BrainRecipe] = None, reader: Reader = None):
+                 initial_recipes: Iterable[BrainRecipe] = None, sampler: AssemblySampler = None):
         """
         :param parents: the Assemblies and/or Stimuli that were used to create the assembly
         :param area: an Area where the Assembly "lives"
         :param initial_recipes: an iterable containing every BrainRecipe in which the assembly appears
-        :param reader: name of a read driver pulled from assembly_readers. defaults to 'default'
+        :param sampler: a subclass of AssemblySampler that can sample what neurons should be fired in the next project
+                        operation
         """
 
         # We hash an assembly using its parents (sorted by id) and area
@@ -134,46 +135,22 @@ class Assembly(UniquelyIdentifiable):
 
         self.parents: Tuple[Projectable, ...] = tuple(parents)
         self.area: Area = area
-        self._reader = reader
+        self._sampler = sampler
         self.appears_in: Set[BrainRecipe] = set(initial_recipes or [])
         for recipe in self.appears_in:
             recipe.append(self)
 
     @property
-    def reader(self) -> Reader:
-        # property decorator means we can access this as assembly.reader
-        return self._reader or Assembly._default_reader
+    def sampler(self) -> AssemblySampler:
+        # property decorator means we can access this as assembly.sampler
+        return self._sampler or Assembly._default_sampler
 
     @staticmethod
-    def set_default_reader(reader):
-        Assembly._default_reader = reader
+    def set_default_sampler(smapler):
+        Assembly._default_sampler = smapler
 
-    def representative_neuron(self, preserve_brain=False, *, brain: Brain) -> Set[int, ...]:
-        # TODO: Change name of Reader to Identifier???
-        return set(self.reader.read(self, preserve_brain=preserve_brain, brain=brain))
-
-    @staticmethod
-    def read(area: Area, *, brain: Brain):
-        # TODO: Decouple read into different modules
-        assemblies: Set[Assembly] = brain.recipe.area_assembly_mapping[area]
-        overlap: Dict[Assembly, float] = {}
-        for assembly in assemblies:
-            # TODO: extract calculation to function with indicative name
-            overlap[assembly] = len(
-                set(brain.winners[area]) & set(
-                    assembly.representative_neuron(preserve_brain=True, brain=brain))) / area.k
-        return max(overlap.keys(), key=lambda x: overlap[x])  # TODO: return None below some threshold
-
-    # TODO: Remove this (And in reader class)
-    def trigger_reader_update_hook(self, *, brain: Brain):
-        """
-        some read_drivers may want to be notified on certain changes
-        we support this by calling this private function in key places (like project)
-        which then triggers the hook in the reader (if it implements it)
-        :param brain:
-        :return:
-        """
-        self.reader.update_hook(self, brain=brain)
+    def sample_neurons(self, preserve_brain=False, *, brain: Brain) -> Set[int, ...]:
+        return set(self.sampler.sample_neurons(self, preserve_brain=preserve_brain, brain=brain))
 
     def project(self, area: Area, *, brain: Brain = None) -> Assembly:
         """
@@ -214,8 +191,6 @@ class Assembly(UniquelyIdentifiable):
         """
         projected_assembly: Assembly = self.project(area, brain=brain)
         projected_assembly.project(self.area, brain=brain)
-        self.trigger_reader_update_hook(brain=brain)
-
         return projected_assembly
 
     # TODO: lt and gt logic can be implemented using a common method

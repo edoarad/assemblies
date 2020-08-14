@@ -1,11 +1,12 @@
 from __future__ import annotations
-from typing import Optional, Union, TYPE_CHECKING
+from typing import Optional, Union, TYPE_CHECKING, Dict, Set
 
 from ..utils import UniquelyIdentifiable, Bindable, bindable_property
 # TODO: remove type checking everywhere
 # Response: this is to avoid cyclic imports, I have (more) in-depth responses in some of the other files
 if TYPE_CHECKING:
     from .brain import Brain
+    from ..assemblies.assembly import Assembly
 
 
 @Bindable('brain')
@@ -27,8 +28,14 @@ class Area(UniquelyIdentifiable):
 
     @bindable_property
     def active_assembly(self, *, brain: Brain):
-        from ..assemblies import Assembly
-        return Assembly.read(self, brain=brain)
+        assemblies: Set[Assembly] = brain.recipe.area_assembly_mapping[self]
+        overlap: Dict[Assembly, float] = {}
+        for assembly in assemblies:
+            # TODO: extract calculation to function with indicative name
+            overlap[assembly] = len(
+                set(brain.winners[self]) & set(
+                    assembly.sample_neurons(preserve_brain=True, brain=brain))) / self.k
+        return max(overlap.keys(), key=lambda x: overlap[x])  # TODO: return None below some threshold
 
     def __repr__(self):
         return f"Area(n={self.n}, k={self.k}, beta={self.beta})"

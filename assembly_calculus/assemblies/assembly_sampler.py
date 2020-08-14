@@ -7,9 +7,9 @@ if TYPE_CHECKING:
     from ..brain import Brain
 
 
-class AssemblyIdentifier(ABC):
+class AssemblySampler(ABC):
 
     @staticmethod
     @abstractmethod
-    def representative_neurons(assembly: Assembly, preserve_brain: bool = False, *, brain: Brain):
+    def sample_neurons(assembly: Assembly, preserve_brain: bool = False, *, brain: Brain):
         pass

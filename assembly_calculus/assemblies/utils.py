@@ -33,10 +33,10 @@ def activate_assemblies(assemblies: Tuple[Assembly, ...], *, brain: Brain):
     area_neuron_mapping: Dict[Area, List[float]] = {ass.area: [] for ass in assemblies}
 
     # we save the amount of winners brain expects
-    read_result = list(assemblies[0].representative_neuron(brain=brain))
+    read_result = list(assemblies[0].sample_neurons(brain=brain))
     k = len(read_result)
     for ass in assemblies:
-        area_neuron_mapping[ass.area] += list(ass.representative_neuron(brain=brain))
+        area_neuron_mapping[ass.area] += list(ass.sample_neurons(brain=brain))
 
     # update winners for relevant areas in the connectome
     for source in area_neuron_mapping.keys():
@@ -99,8 +99,6 @@ def util_merge(assemblies: Tuple[Assembly, ...], area: Area, *, brain: Brain = N
         brain.winners[area] = list()
         brain.next_round(subconnectome={**{ass.area: [area] for ass in assemblies}, area: [area]}, replace=True,
                          iterations=brain.repeat)
-
-        merged_assembly.trigger_reader_update_hook(brain=brain)
     merged_assembly.bind_like(*assemblies)
     return merged_assembly
 
