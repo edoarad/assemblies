@@ -1,14 +1,13 @@
-from collections.abc import Mapping
 from functools import wraps, cached_property
-from typing import Optional, Any, Tuple, Dict, Set, Generic
+from types import MappingProxyType
+from typing import Optional, Any, Tuple, Dict, Set
 from inspect import Parameter
 
-from .class_manipulation import variables
 from .argument_manipulation import signature
-from .implicit_resolution import ImplicitResolution, implicit_property, T
+from .implicit_resolution import ImplicitResolution
 
 
-class Bindable(Generic[T]):
+class Bindable:
     """
     Bindable decorator for classes
     This enables auto-filling parameters into the class functions
@@ -29,35 +28,58 @@ class Bindable(Generic[T]):
         self.params: Tuple[str, ...] = params
 
     @staticmethod
-    def implicitly_resolve(instance: T, param_name: str) -> Tuple[bool, Optional[Any]]:
+    def bound_value(param_name: str, *instances, graceful_none: bool = True, graceful_discrepancy: bool = False):
         """
-        Attempt implicitly resolving a parameter, by checking if it was bound
-        :param instance:
-        :param param_name:
-        :return:
+        Attempts finding a common bound value in all instances of some parameter
+        :param param_name: Parameter to attempt finding bound values for
+        :param instances: Instances in which to search for bound value
+        :param graceful_none: Return None if the parameter is unbound in all instances
+        :param graceful_discrepancy: Return None if there are discrepancies in the bound value
+        :return: A common bound value (or None)
         """
-        _bound_params: Dict[str, Any] = getattr(instance, '_bound_params', {})
-        return param_name in _bound_params, _bound_params.get(param_name, None)
+        def single_bound_value(name: str, instance) -> Tuple[bool, Optional[Any]]:
+            bound_params: Dict[str, Any] = getattr(instance, 'bound_params', {})
+            return name in bound_params, bound_params.get(name, None)
 
-    @staticmethod
-    def implicitly_resolve_many(instances: Tuple[T], param_name: str, graceful: bool = True)\
-            -> Tuple[bool, Optional[Any]]:
-        """
-        Attempt implicitly resolving many parameters, by checking if they all share a common bound value
-        :param instances:
-        :param param_name:
-        :param graceful: Flag stating whether to throw an exception or to gracefully return nothing
-        :return:
-        """
-        _options: Tuple[Tuple[bool, Optional[Any]], ...] = tuple(Bindable.implicitly_resolve(instance, param_name)
+        _options: Tuple[Tuple[bool, Optional[Any]], ...] = tuple(single_bound_value(param_name, instance)
                                                                  for instance in instances)
         options: Set[Any] = set(implicit_value for found, implicit_value in _options if found)
-        if len(options) == 1:
-            return True, options.pop()
-        elif len(options) > 1 and not graceful:
-            raise Exception("Multiple different bound parameters for %s in the different instances" % param_name)
 
-        return False, None
+        if len(options) == 1 and all(found for found, _ in _options):
+            return options.pop()
+        elif any(not found for found, _ in _options):
+            if not graceful_none:
+                raise ValueError("Some instances miss a bound value for %s" % param_name)
+        elif len(options) > 1:
+            if not graceful_discrepancy:
+                raise ValueError("Multiple different bound values for %s in the different instances" % param_name)
+
+        return None
+
+    @staticmethod
+    def resolver(argument: str):
+        """Returns the resolver corresponding to some (bound) parameter"""
+        def resolve(self, *args, **kwargs):
+            return Bindable.bound_value(argument, self)
+
+        return resolve
+
+    @property
+    def implicit_resolution(self):
+        """The implicit resolution object corresponding to this bindable instance"""
+        return ImplicitResolution(**{param: Bindable.resolver(param) for param in self.params})
+
+    def cls(self, cls):
+        """Wrap a class to support binding the instance parameters"""
+        return Bindable.wrap_class(cls, self.params)
+
+    def method(self, function):
+        """Wrap a function to support fallback to bound instance values"""
+        return self.implicit_resolution(function)
+
+    def property(self, function):
+        """Wrap a function to support parameters from bound instance values"""
+        return property(self.method(function))
 
     @staticmethod
     def wrap_class(cls, params: Tuple[str, ...]):
@@ -67,19 +89,6 @@ class Bindable(Generic[T]):
         :param params: Parameters to allow binding for
         :return: Decorated class
         """
-        implicit_resolution: ImplicitResolution = ImplicitResolution(Bindable.implicitly_resolve, *params)
-        for func_name, (func, bound_func) in variables(cls).items():
-            # Check function is not reserved
-            if func_name in ('bind', 'unbind', 'bind_like', 'bound_params'):
-                continue
-
-            # Decorate all non-protected functions
-            if callable(bound_func) and (not func_name.startswith('_') or getattr(func, 'override_protection', False))\
-                    and not isinstance(bound_func, staticmethod):
-                resolved_func = implicit_resolution(getattr(func, '_original_func', func))
-                setattr(resolved_func, '_original_func', func)
-                setattr(cls, func_name, resolved_func)
-
         # Update params to include previous bindings
         params: Tuple[str, ...] = tuple(set(getattr(cls, '_bindable_params', ()) + params))
         setattr(cls, '_bindable_params', params)
@@ -95,7 +104,7 @@ class Bindable(Generic[T]):
         setattr(cls, '__init__', new_init)
 
         # Many possible bound parameters
-        def bind(self: T, **kwargs):
+        def bind(self, **kwargs):
             """Binds (the) parameters {0} to the instance"""
             problem: str = next((kwarg for kwarg in kwargs if kwarg not in params), None)
             if problem:
@@ -104,7 +113,7 @@ class Bindable(Generic[T]):
             for k, v in kwargs.items():
                 self._bound_params[k] = v
 
-        def bind_like(self: T, *others: T):
+        def bind_like(self, *others):
             """Binds this instance like another instance"""
             if len(others) == 0:
                 self._bound_params = {}
@@ -113,10 +122,10 @@ class Bindable(Generic[T]):
             self._bound_params = getattr(others[0], '_bound_params', {}).copy()
             for other in others[1:]:
                 for key, value in getattr(other, 'bound_params', {}).items():
-                    if key in self._bound_params and self._bound_params.get(key) != value:
+                    if key not in self._bound_params or self._bound_params.get(key) != value:
                         self._bound_params.pop(key)
 
-        def unbind(self: T, *names: str):
+        def unbind(self, *names: str):
             """Unbinds (the) parameters {0} from the instance, pass no names to unbind all"""
             problem: str = next((name for name in names if name not in params), None)
             if problem:
@@ -131,20 +140,7 @@ class Bindable(Generic[T]):
 
         @cached_property
         def bound_params(_self):
-            class Proxy(Mapping):
-                def __contains__(self, key: str):
-                    return key in getattr(_self, '_bound_params', {})
-
-                def __getitem__(self, key: str):
-                    return getattr(_self, '_bound_params', {})[key]
-
-                def __iter__(self):
-                    return iter(getattr(_self, '_bound_params', {}))
-
-                def __len__(self) -> int:
-                    return len(list(iter(self)))
-
-            return Proxy()
+            return MappingProxyType(getattr(_self, '_bound_params', {}))
 
         bind.__doc__ = bind.__doc__.format(params)
         unbind.__doc__ = unbind.__doc__.format(params)
@@ -164,17 +160,3 @@ class Bindable(Generic[T]):
         setattr(cls, 'bound_params', bound_params)
 
         return cls
-
-    def __call__(self, cls):
-        return self.wrap_class(cls, self.params)
-
-
-def bindable_property(function):
-    """Decorator declaring a function to become a property once all parameters are bound in the instance"""
-    return implicit_property(function)
-
-
-def protected_bindable(function):
-    """Decorator declaring to attempt looking for bound parameters of a protected function"""
-    setattr(function, 'override_protection', True)
-    return function

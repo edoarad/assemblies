@@ -1,15 +1,16 @@
 from __future__ import annotations
 from typing import Optional, Union, TYPE_CHECKING, Dict, Set
 
-from ..utils import UniquelyIdentifiable, Bindable, bindable_property
+from ..utils import UniquelyIdentifiable, bindable_brain
 # TODO: remove type checking everywhere
 # Response: this is to avoid cyclic imports, I have (more) in-depth responses in some of the other files
+
 if TYPE_CHECKING:
     from .brain import Brain
     from ..assemblies.assembly import Assembly
 
 
-@Bindable('brain')
+@bindable_brain.cls
 class Area(UniquelyIdentifiable):
     def __init__(self, n: int, k: Optional[int] = None, beta: float = 0.01):
         super(Area, self).__init__()
@@ -18,15 +19,15 @@ class Area(UniquelyIdentifiable):
         self.k: int = k or int(n ** 0.5)
 
     # TODO: return as a set?
-    @bindable_property
+    @bindable_brain.property
     def winners(self, *, brain: Brain):
         return brain.winners[self]
 
-    @bindable_property
+    @bindable_brain.property
     def support(self, *, brain: Brain):
         return brain.support[self]
 
-    @bindable_property
+    @bindable_brain.property
     def active_assembly(self, *, brain: Brain):
         assemblies: Set[Assembly] = brain.recipe.area_assembly_mapping[self]
         overlap: Dict[Assembly, float] = {}

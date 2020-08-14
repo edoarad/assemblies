@@ -25,7 +25,7 @@ def test_projection():
         assembly_bf = assembly_b >> area_c
 
     for _ in range(25):
-        with bake(recipe, 0.1, Connectome, train_repeat=100, effective_repeat=1) as brain:
+        with bake(recipe, 0.1, Connectome, train_repeat=0, effective_repeat=1) as brain:
             for _ in range(brain.repeat):
                 fire_many(brain, [assembly_a], area_c)
 
@@ -35,6 +35,7 @@ def test_projection():
 
 
 def test_associate():
+    # TODO: Avoid code duplication?
     protecc_ram(0.75)
 
     stim_a = Stimulus(100)
@@ -62,6 +63,6 @@ def test_associate():
 
             # test that the winners of assembly_bf have changed
             new_winners = assembly_b.representative_neurons
-            assert old_winners != new_winners, "the associated assembly is unaffected :("
+            assert old_winners == new_winners, "the associated assembly is unaffected :("
 
         gc.collect()

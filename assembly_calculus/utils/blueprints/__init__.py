@@ -1,2 +1,2 @@
 from .recording import Recording
-from .recordable import Recordable
+from .recordable import attach_recording, record_method
