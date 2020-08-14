@@ -7,13 +7,9 @@ if TYPE_CHECKING:
     from ..brain import Brain
 
 
-class Reader(ABC):
+class AssemblyIdentifier(ABC):
 
     @staticmethod
     @abstractmethod
-    def read(assembly: Assembly, preserve_brain: bool = False, *, brain: Brain):
-        pass
-
-    @staticmethod
-    def update_hook(assembly: Assembly, *, brain: Brain):
+    def representative_neurons(assembly: Assembly, preserve_brain: bool = False, *, brain: Brain):
         pass

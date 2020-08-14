@@ -22,20 +22,31 @@ def fire_many(brain: Brain, projectables: Iterable[Projectable], area: Area, pre
     :param area: the area into which the objects are projected
     :param preserve_brain: a boolean deteremining whether we want the brain to be changed in the process
     """
-    from ..assemblies import Projectable, Assembly
-
     # TODO: `plasticity_status`, `disable_plasticity` are not defined in `ABCConnectome`
     # TODO 2: instead of keeping `original_plasticity` and restoring, this is a classic use for context! (for example: `with brain.disable_plasticity():` )
     # TODO 3: try to split the sub-steps of this function to smaller functions
-    # climb up the parent tree:
     original_plasticity = brain.connectome.plasticity
-    changed_areas: Dict[Area, List[int]] = {}
     if preserve_brain:
         brain.connectome.plasticity = False
+    # construct the firing hierarchy
+    layers = construct_firing_order(projectables, area)
+    # now, fire each layer:\
+    changed_areas = fire_layered_areas(brain, layers, preserve_brain)
+    if not original_plasticity:
+        brain.connectome.plasticity = True
+    return changed_areas
 
+
+def construct_firing_order(projectables: Projectable, area: Area) -> List[Dict[Projectable, List[Area]]]:
+    """
+
+    :param projectables: a list of projectable objects to be projected
+    :param area: the area into which the objects are projected
+    :return: firing order of the areas in the a
+    """
+    from ..assemblies import Projectable, Assembly
     # initialize layers with the lowest level in the tree
     layers: List[Dict[Projectable, List[Area]]] = [{projectable: [area] for projectable in projectables}]
-
     # climb upwards until the current layers' parents are all stimuli (so there's no more climbing)
     while any(isinstance(projectable, Assembly) for projectable in layers[-1]):
         prev_layer: Iterable[Assembly] = (ass for ass in layers[-1].keys() if not isinstance(ass, Stimulus))
@@ -49,9 +60,13 @@ def fire_many(brain: Brain, projectables: Iterable[Projectable], area: Area, pre
 
     # reverse the layers list to fire all parents the top to the original assemblies we've entered
     layers = layers[::-1]
+    return layers
 
-    # now, fire each layer:
-    for layer in layers:
+
+def fire_layered_areas(brain: Brain, firing_order: List[Dict[Projectable, List[Area]]], preserve_brain: bool):
+    from ..assemblies import Projectable, Assembly
+    changed_areas: Dict[Area, List[int]] = {}
+    for layer in firing_order:
         stimuli_mappings: Dict[Stimulus, List[Area]] = {stim: areas
                                                         for stim, areas in
                                                         layer.items() if isinstance(stim, Stimulus)}
@@ -70,8 +85,6 @@ def fire_many(brain: Brain, projectables: Iterable[Projectable], area: Area, pre
                         changed_areas[area] = brain.winners[area]
 
         brain.next_round(subconnectome=mapping, replace=True)   # fire this layer of objects
-    if not original_plasticity:
-        brain.connectome.plasticity = True
     return changed_areas
 
 

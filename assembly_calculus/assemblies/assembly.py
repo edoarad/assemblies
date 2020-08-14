@@ -4,8 +4,8 @@ from __future__ import annotations
 from typing import Iterable, Union, Tuple, TYPE_CHECKING, Set, Optional, Dict
 from itertools import product
 
-from .reader import Reader
-from .assembly_readers.read_recursive import ReadRecursive
+from .assembly_identifier import AssemblyIdentifier
+from .assembly_readers.recursive_identifier import RecursiveIdentifier
 from ..utils import Recordable, ImplicitResolution, Bindable, UniquelyIdentifiable
 from ..brain import Stimulus, Area
 
@@ -102,7 +102,7 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
     This class implements basic operations on assemblies (project, reciprocal_project,
     merge and associate) by using a reader object, which interacts with the brain directly.
     """
-    _default_reader: Reader = ReadRecursive
+    _default_assembly_identifier: AssemblyIdentifier = RecursiveIdentifier
 
     @staticmethod
     def assembly_hash(area, parents):
@@ -113,12 +113,12 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         return UniquelyIdentifiable.__new__(cls, uid=Assembly.assembly_hash(area, parents))
 
     def __init__(self, parents: Iterable[Projectable], area: Area,
-                 initial_recipes: Iterable[BrainRecipe] = None, reader: Reader = None):
+                 initial_recipes: Iterable[BrainRecipe] = None, assembly_identifier: AssemblyIdentifier = None):
         """
         :param parents: the Assemblies and/or Stimuli that were used to create the assembly
         :param area: an Area where the Assembly "lives"
         :param initial_recipes: an iterable containing every BrainRecipe in which the assembly appears
-        :param reader: name of a read driver pulled from assembly_readers. defaults to 'default'
+        :param assembly_identifier: name of a read driver pulled from assembly_readers. defaults to 'default'
         """
 
         # We hash an assembly using its parents (sorted by id) and area
@@ -128,22 +128,22 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
 
         self.parents: Tuple[Projectable, ...] = tuple(parents)
         self.area: Area = area
-        self._reader = reader
+        self._assembly_identifier = assembly_identifier
         self.appears_in: Set[BrainRecipe] = set(initial_recipes or [])
         for recipe in self.appears_in:
             recipe.append(self)
 
     @property
-    def reader(self) -> Reader:
-        return self._reader or Assembly._default_reader
+    def assembly_identifier(self) -> AssemblyIdentifier:
+        return self._assembly_identifier or Assembly._default_assembly_identifier
 
     @staticmethod
     def set_default_reader(reader):
-        Assembly._default_reader = reader
+        Assembly._default_assembly_identifier = reader
 
-    def representative_neuron(self, preserve_brain=False, *, brain: Brain) -> Set[int, ...]:
+    def representative_neurons(self, preserve_brain=False, *, brain: Brain) -> Set[int, ...]:
         # TODO: Change name of Reader to Identifier???
-        return set(self.reader.read(self, preserve_brain=preserve_brain, brain=brain))
+        return set(self.assembly_identifier.representative_neurons(self, preserve_brain=preserve_brain, brain=brain))
 
     @staticmethod
     def read(area: Area, *, brain: Brain):
@@ -153,19 +153,8 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         for assembly in assemblies:
             # TODO: extract calculation to function with indicative name
             overlap[assembly] = len(
-                set(brain.winners[area]) & set(assembly.representative_neuron(preserve_brain=True, brain=brain))) / area.k
+                set(brain.winners[area]) & set(assembly.representative_neurons(preserve_brain=True, brain=brain))) / area.k
         return max(overlap.keys(), key=lambda x: overlap[x])  # TODO: return None below some threshold
-
-    # TODO: Remove this (And in reader class)
-    def trigger_reader_update_hook(self, *, brain: Brain):
-        """
-        some read_drivers may want to be notified on certain changes
-        we support this by calling this private function in key places (like project)
-        which then triggers the hook in the reader (if it implements it)
-        :param brain:
-        :return:
-        """
-        self.reader.update_hook(self, brain=brain)
 
     def project(self, area: Area, *, brain: Brain = None) -> Assembly:
         """
@@ -200,7 +189,7 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         # create a mapping from the areas to the neurons we want to fire
         area_neuron_mapping = {ass.area: [] for ass in assemblies}
         for ass in assemblies:
-            area_neuron_mapping[ass.area] = list(ass.representative_neuron(brain=brain))
+            area_neuron_mapping[ass.area] = list(ass.representative_neurons(brain=brain))
 
         # update winners for relevant areas in the connectome
         for source in area_neuron_mapping.keys():
