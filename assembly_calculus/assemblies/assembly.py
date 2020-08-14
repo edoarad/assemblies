@@ -154,7 +154,7 @@ class Assembly(UniquelyIdentifiable):
 
     @bindable_property
     def representative_neurons(self, *, brain: Brain) -> Set[int, ...]:
-        return self.sample_neurons(brain=brain)
+        return self.sample_neurons(preserve_brain=True, brain=brain)
 
     def project(self, area: Area, *, brain: Brain = None) -> Assembly:
         """
