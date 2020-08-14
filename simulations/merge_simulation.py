@@ -75,7 +75,6 @@ ax.set_xscale('log')
 plt.xlabel('t (Repeat Parameter)')
 plt.ylabel('Overlap %')
 
-
 ##################################################################################################################
 
 
@@ -98,7 +97,7 @@ for merge_stabilization, repeats in TESTS:
     recipe = BrainRecipe(area1, area2, area3, area4, stimulus, assembly1, assembly2)
     # Define assembly out of recipe,
     # that way merge can done manually!
-    assembly3 = (assembly1 + assembly2) >> area3
+    assembly3 = (assembly1 | assembly2) >> area3
 
     # Define brain "active" recipe
     with recipe:
@@ -124,20 +123,21 @@ for merge_stabilization, repeats in TESTS:
 
 
                 # Project assembly for the first time
-                (assembly1 + assembly2) >> area3
+                (assembly1 | assembly2) >> area3
                 # Store winners
                 first_winners = area3.winners
 
+                brain.winners[area3] = list()
+
                 # Project assembly for the second time
-                (assembly1 + assembly2) >> area3
+                (assembly1 | assembly2) >> area3
                 # Store winners
                 second_winners = area3.winners
 
                 # Compute the overlap between first and second projection winners
                 values.append(overlap(first_winners, second_winners) * 100)
 
-            # TODO: Is this necessary? if so, write why, o/w delete it.
-            # Response: Yes, helps my computer deal with the RAM usage
+            # helps my computer deal with the RAM usage (not neccesary)
             gc.collect()
 
         # Compute average overlap
