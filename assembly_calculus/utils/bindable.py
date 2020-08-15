@@ -1,4 +1,4 @@
-from functools import wraps, cached_property
+from functools import wraps
 from types import MappingProxyType
 from typing import Optional, Any, Tuple, Dict, Set
 from inspect import Parameter
@@ -138,7 +138,7 @@ class Bindable:
                 if name in self._bound_params:
                     self._bound_params.pop(name)
 
-        @cached_property
+        @property
         def bound_params(_self):
             return MappingProxyType(getattr(_self, '_bound_params', {}))
 
@@ -150,8 +150,6 @@ class Bindable:
                                                      [Parameter(name='self', kind=Parameter.POSITIONAL_OR_KEYWORD)] +
                                                      [Parameter(name=name, kind=Parameter.KEYWORD_ONLY)
                                                       for name in params])
-        # Set name for cached property
-        bound_params.__set_name__(cls, 'bound_params')
 
         # Add bind & unbind to the class
         setattr(cls, 'bind', bind)

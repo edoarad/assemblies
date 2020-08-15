@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from functools import cached_property
 from typing import Dict, Set, TYPE_CHECKING, List, Optional, Union, Type
 
 from .brain_recipe import BrainRecipe
@@ -104,11 +103,11 @@ class Brain(UniquelyIdentifiable):
         for sink in self.connectome.areas:
             self.disable(source, sink)
 
-    @cached_property
+    @property
     def winners(self):
         return self.connectome.winners
 
-    @cached_property
+    @property
     def support(self):
         # TODO: Implement
         return None
