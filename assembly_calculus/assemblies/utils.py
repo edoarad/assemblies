@@ -58,9 +58,12 @@ def util_associate(a: Tuple[Assembly, ...], b: Tuple[Assembly, ...], *, brain: B
     :param a: first list
     :param b: second list
     """
+    if len(a) == 0 or len(b) == 0:
+        raise IndexError("one side of associate is Empty!")
     pairs = product(a, b)
     for x, y in pairs:
-        util_merge((x, y), x.area, brain=brain)
+        activate_assemblies((x, y), brain=brain)
+        brain.next_round(subconnectome={x.area: [x.area]}, replace=True, iterations=brain.repeat)
 
 
 def util_merge(assemblies: Tuple[Assembly, ...], area: Area, *, brain: Brain = None):
@@ -110,6 +113,8 @@ def union(obj1: Union[Assembly, AssemblyTuple], obj2: Union[Assembly, AssemblyTu
     this method is set as __or__ of both assembly classes and returns an
     AssemblyTuple object which holds their union.
     """
+    if obj2 is ellipsis:
+        return AssemblyTuple(obj1)
     tuple1 = AssemblyTuple(obj1) if isinstance(obj1, Assembly) else obj1
     tuple2 = AssemblyTuple(obj2) if isinstance(obj2, Assembly) else obj2
     # We still support the '+' syntax for assembly tuples.
