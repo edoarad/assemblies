@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Set, Dict
 if TYPE_CHECKING:
-    from ..brain import Brain, Area
+    from assembly_calculus.brain import Brain, Area
 
 
 class FunctionTuple:
