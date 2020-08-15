@@ -113,7 +113,7 @@ def union(obj1: Union[Assembly, AssemblyTuple], obj2: Union[Assembly, AssemblyTu
     this method is set as __or__ of both assembly classes and returns an
     AssemblyTuple object which holds their union.
     """
-    if obj2 is ellipsis:
+    if obj2 is Ellipsis:
         return AssemblyTuple(obj1)
     tuple1 = AssemblyTuple(obj1) if isinstance(obj1, Assembly) else obj1
     tuple2 = AssemblyTuple(obj2) if isinstance(obj2, Assembly) else obj2
