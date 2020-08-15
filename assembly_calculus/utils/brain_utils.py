@@ -7,6 +7,7 @@ if TYPE_CHECKING:
     from ..assemblies import Projectable
 
 
+# TODO: Remove preserve_brain and do it in outer scope
 def fire_many(brain: Brain, projectables: Iterable[Projectable], area: Area, preserve_brain: bool = False):
     """
     This function works by creating a "Parent tree", (Which is actually a directed acyclic graph) first,
@@ -22,27 +23,26 @@ def fire_many(brain: Brain, projectables: Iterable[Projectable], area: Area, pre
     :param area: the area into which the objects are projected
     :param preserve_brain: a boolean deteremining whether we want the brain to be changed in the process
     """
-    # TODO: `plasticity_status`, `disable_plasticity` are not defined in `ABCConnectome`
     # TODO 2: instead of keeping `original_plasticity` and restoring, this is a classic use for context! (for example: `with brain.disable_plasticity():` )
-    # TODO 3: try to split the sub-steps of this function to smaller functions
+    # Response: We will use it if it is implemented for us, but out of our scope
     original_plasticity = brain.connectome.plasticity
     if preserve_brain:
         brain.connectome.plasticity = False
     # construct the firing hierarchy
     layers = construct_firing_order(projectables, area)
-    # now, fire each layer:\
-    changed_areas = fire_layered_areas(brain, layers, preserve_brain)
-    if not original_plasticity:
+    # now, fire each layer:
+    changed_areas = fire_layered_areas(brain, layers)
+    if preserve_brain and not original_plasticity:
         brain.connectome.plasticity = True
     return changed_areas
 
 
-def construct_firing_order(projectables: Projectable, area: Area) -> List[Dict[Projectable, List[Area]]]:
+def construct_firing_order(projectables: Iterable[Projectable], area: Area) -> List[Dict[Projectable, List[Area]]]:
     """
-
+    Construct the "firing hierarchy", by going up the "parenthood" tree
     :param projectables: a list of projectable objects to be projected
     :param area: the area into which the objects are projected
-    :return: firing order of the areas in the a
+    :return: Layered firing tree
     """
     from ..assemblies import Projectable, Assembly
     # initialize layers with the lowest level in the tree
@@ -63,8 +63,14 @@ def construct_firing_order(projectables: Projectable, area: Area) -> List[Dict[P
     return layers
 
 
-def fire_layered_areas(brain: Brain, firing_order: List[Dict[Projectable, List[Area]]], preserve_brain: bool):
-    from ..assemblies import Projectable, Assembly
+def fire_layered_areas(brain: Brain, firing_order: List[Dict[Projectable, List[Area]]]):
+    """
+    Fire layers of projectables one by one
+    :param brain: Brain in which to to fire
+    :param firing_order: Layers of projectables, and corresponding areas (to fire into)
+    :return: Original winners of affected areas
+    """
+    from ..assemblies import Assembly
     changed_areas: Dict[Area, List[int]] = {}
     for layer in firing_order:
         stimuli_mappings: Dict[Stimulus, List[Area]] = {stim: areas
@@ -78,13 +84,13 @@ def fire_layered_areas(brain: Brain, firing_order: List[Dict[Projectable, List[A
             assembly_mapping[ass.area] = assembly_mapping.get(ass.area, []) + areas
 
         mapping = {**stimuli_mappings, **assembly_mapping}
-        if preserve_brain:
-            for areas in mapping.values():
-                for area in areas:
-                    if area not in changed_areas:
-                        changed_areas[area] = brain.winners[area]
+        for areas in mapping.values():
+            for area in areas:
+                if area not in changed_areas:
+                    changed_areas[area] = brain.winners[area]
 
         brain.next_round(subconnectome=mapping, replace=True)   # fire this layer of objects
+
     return changed_areas
 
 
@@ -92,6 +98,9 @@ def fire_layered_areas(brain: Brain, firing_order: List[Dict[Projectable, List[A
 #       This is because it is very likely that changes will be made that will make
 #       this function behave poorly - perhaps not remember to revert some structure
 #       will be added later on. It would be a bitch to debug.
+# Response: API Team can move this to brain.py (their choice)
+#           We chose not to do as a content manager for efficiency
+#           If an efficient content manager will be implemented, of course we will use it (again, out of our scope)
 def revert_changes(brain: Brain, *changed_areas: Dict[Area, List[int]]):
     """
     Changes the winners of areas in the given brain as dictated in the changed_areas dictionary

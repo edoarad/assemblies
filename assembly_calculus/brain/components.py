@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Optional, Union, TYPE_CHECKING, Dict, Set
 
-from ..utils import UniquelyIdentifiable, bindable_brain
+from ..utils import UniquelyIdentifiable, bindable_brain, overlap
 # TODO: remove type checking everywhere
 # Response: this is to avoid cyclic imports, I have (more) in-depth responses in some of the other files
 
@@ -12,6 +12,9 @@ if TYPE_CHECKING:
 
 @bindable_brain.cls
 class Area(UniquelyIdentifiable):
+    # This selection was arbitrary, please let us know if you prefer some other constant
+    THRESHOLD: float = 0.5
+
     def __init__(self, n: int, k: Optional[int] = None, beta: float = 0.01):
         super(Area, self).__init__()
         self.beta: float = beta
@@ -28,15 +31,14 @@ class Area(UniquelyIdentifiable):
         return brain.support[self]
 
     @bindable_brain.property
-    def active_assembly(self, *, brain: Brain):
+    def active_assembly(self, *, brain: Brain) -> Optional[Assembly]:
         assemblies: Set[Assembly] = brain.recipe.area_assembly_mapping[self]
-        overlap: Dict[Assembly, float] = {}
+        overlaps: Dict[Assembly, float] = {}
         for assembly in assemblies:
-            # TODO: extract calculation to function with indicative name
-            overlap[assembly] = len(
-                set(brain.winners[self]) & set(
-                    assembly.sample_neurons(preserve_brain=True, brain=brain))) / self.k
-        return max(overlap.keys(), key=lambda x: overlap[x])  # TODO: return None below some threshold
+            overlaps[assembly] = overlap(brain.winners[self], assembly.sample_neurons(preserve_brain=True, brain=brain))
+
+        maximal_assembly = max(overlaps.keys(), key=lambda x: overlaps[x])
+        return maximal_assembly if overlaps[maximal_assembly] > Area.THRESHOLD else None
 
     def __repr__(self):
         return f"Area(n={self.n}, k={self.k}, beta={self.beta})"

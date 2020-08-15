@@ -8,7 +8,7 @@ from .assembly_samplers.recursive_sampler import RecursiveSampler
 from ..utils import ImplicitResolution, Bindable, UniquelyIdentifiable, set_hash, attach_recording, record_method, \
     bindable_brain
 from ..brain import Stimulus, Area
-from .utils import util_merge, util_associate, union
+from .utils import util_project, util_associate, union
 
 if TYPE_CHECKING:  # TODO: this is not needed. It's better to always import them.
     # Response: Sadly we need to do it to avoid cyclic imports,
@@ -27,7 +27,7 @@ Projectable = Union['Assembly', Stimulus]
 class AssemblyTuple(UniquelyIdentifiable):
     """
     Assembly tuple is used as an intermediate structure to support syntax such as
-    group merge ( a1 | a2 | .. | a_n >> area) and other group operations.
+    assemblies merge (a1 | a2 | .. | a_n) >> area and other assemblies operations.
     """
 
     def __new__(cls, *assemblies):
@@ -37,7 +37,7 @@ class AssemblyTuple(UniquelyIdentifiable):
 
     def __init__(self, *assemblies: Assembly):
         """
-        :param assemblies: the set of assemblies in the tuple
+        :param assemblies: The set of assemblies in the tuple
         """
         # Asserting tuple not empty, and that all object are projectable.
         if len(assemblies) == 0:
@@ -47,19 +47,20 @@ class AssemblyTuple(UniquelyIdentifiable):
             raise TypeError("Tried to initialize Assembly tuple with invalid object")
 
         UniquelyIdentifiable.__init__(self)
-        # TODO: Convert to set so no duplicates?
-        self.assemblies: Tuple[Assembly, ...] = assemblies
+        # Remove duplicates
+        self.assemblies: Tuple[Assembly, ...] = tuple(set(assemblies))
 
     def __add__(self, other: AssemblyTuple) -> AssemblyTuple:
         """
         In the context of AssemblyTuples, + creates a new AssemblyTuple containing the members
         of both parts.
 
-        :param other: the other AssemblyTuple we add
-        :returns: the new AssemblyTuple
+        :param other: Other AssemblyTuple we add
+        :returns: Union AssemblyTuple
         """
         if not isinstance(other, AssemblyTuple):
             raise TypeError("Assemblies can be concatenated only to assemblies")
+
         return AssemblyTuple(*(self.assemblies + other.assemblies))
 
     @record_method(lambda self, area, **_: Bindable.bound_value('recording', *self), execute_anyway=True)
@@ -69,21 +70,21 @@ class AssemblyTuple(UniquelyIdentifiable):
         can be used by user with >> or directly by:
         (ass1 | ass2).merge( ... ) or AssemblyTuple(list of assemblies).merge( ... )
         """
-        return util_merge(self.assemblies, area, brain=brain)
+        return util_project(self.assemblies, area, brain=brain)
 
     @record_method(lambda self, other, **_: Bindable.bound_value('recording', *self, *other), execute_anyway=False)
     @ImplicitResolution(brain=lambda self, other, **_: Bindable.bound_value('brain', *self, *other))
     def associate(self, other: AssemblyTuple, *, brain: Brain):
         """
         as of now has no syntactic sugar, so use by:
-        (ass1 | ass2).associate( *another AssemblyTuple ) within a recipe context.
+        (ass1 | ass2).associate(another AssemblyTuple).
         """
         return util_associate(self.assemblies, other.assemblies, brain=brain)
 
     def __rshift__(self, target_area: Area):
         """
         In the context of assemblies, >> symbolizes merge.
-        Example: (within a brain context) (a1|a2|a3)>>area
+        Example: (within a brain context) (a1 | a2 | a3)>>area
 
         :param target_area: the area we merge into
         :return: the new merged assembly
@@ -102,8 +103,6 @@ class AssemblyTuple(UniquelyIdentifiable):
 @attach_recording
 @bindable_brain.cls
 class Assembly(UniquelyIdentifiable):
-    # Response: An assembly is in particular a tuple of assemblies of length 1, they share many logical operations.
-    # They share many properties, and in particular a singular assembly supports more operations.
     """
     A representation of an assembly of neurons that can be binded to a specific brain
     in which it appears. An assembly is defined primarily by its parents - the assemblies
@@ -124,9 +123,8 @@ class Assembly(UniquelyIdentifiable):
         :param area: an Area where the Assembly "lives"
         :param initial_recipes: an iterable containing every BrainRecipe in which the assembly appears
         :param sampler: a subclass of AssemblySampler that can sample what neurons should be fired in the next project
-                        operation
+                        operation (which are the assemblies' representative neurons, used to perform read operations)
         """
-
         # We hash an assembly using its parents (sorted by id) and area
         # this way equivalent assemblies have the same id.
         UniquelyIdentifiable.__init__(self)
@@ -145,10 +143,18 @@ class Assembly(UniquelyIdentifiable):
 
     @staticmethod
     def set_default_sampler(sampler):
+        """
+        :param sampler: New default assembly sampler
+        """
         Assembly._default_sampler = sampler
 
     @bindable_brain.method
     def sample_neurons(self, preserve_brain=False, *, brain: Brain) -> Set[int, ...]:
+        """
+        :param preserve_brain: Boolean flag determining whether or not to have side effects on the brain
+        :param brain: Brain from which to sample assembly
+        :return: The set of neurons representing the assembly (at the current point of time)
+        """
         return set(self.sampler.sample_neurons(self, preserve_brain=preserve_brain, brain=brain))
 
     @bindable_brain.property
@@ -160,26 +166,23 @@ class Assembly(UniquelyIdentifiable):
     def project(self, area: Area, *, brain: Brain = None) -> Assembly:
         """
         Projects an assembly into an area.
-
-        :param brain: the brain in which the projection happens
+        :param brain: Should be supplied automatically by context (with brain / with recipe)
         :param area: the area in which the new assembly is going to be created
         :returns: resulting projected assembly
         """
         if not isinstance(area, Area):
             raise TypeError("Projection target must be an Area in the Brain")
-        return util_merge((self,), area, brain=brain)  # project was actually just this line
+
+                                                         # TODO: Eyal what is this line?
+        return util_project((self,), area, brain=brain)  # project was actually just this line
 
     def __rshift__(self, target: Area):
         """
         In the context of assemblies, >> represents project.
-        Example: a >> A (a is an assembly, A is an area)
-
+        Example: assembly >> Area
         :param target: the area into which we project
         :returns: the new assembly that was created
         """
-        # TODO: No need for error since it already appears in project
-        if not isinstance(target, Area):
-            raise TypeError("Assembly must be projected onto an area")
         return self.project(target)
 
     @record_method(execute_anyway=False)
@@ -192,9 +195,10 @@ class Assembly(UniquelyIdentifiable):
         b = a.reciprocal_project(someArea)
         (now b.area = someArea, and b and a are strongly linked)
         :param area: the area into which we project
-        :param brain: should be supplied by the context of usage, NOT manually by user
+        :param brain: Should be supplied automatically by context (with brain / with recipe)
         :returns: Resulting projected assembly
         """
+
         projected_assembly: Assembly = self.project(area, brain=brain)
         projected_assembly.project(self.area, brain=brain)
         return projected_assembly

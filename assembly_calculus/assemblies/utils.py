@@ -6,7 +6,7 @@ This helps assembly.py be less bloated
 from __future__ import annotations
 from itertools import product
 from random import sample
-from typing import List, Tuple, TYPE_CHECKING, Dict, Union
+from typing import List, Tuple, TYPE_CHECKING, Dict, Union, Iterable
 from ..brain import Area
 
 if TYPE_CHECKING:
@@ -33,15 +33,12 @@ def activate_assemblies(assemblies: Tuple[Assembly, ...], *, brain: Brain):
     # create a mapping from the areas to the neurons we want to fire
     area_neuron_mapping: Dict[Area, List[float]] = {ass.area: [] for ass in assemblies}
 
-    # we save the amount of winners brain expects
-    read_result = list(assemblies[0].sample_neurons(brain=brain))
-    k = len(read_result)
     for ass in assemblies:
         area_neuron_mapping[ass.area] += list(ass.sample_neurons(brain=brain))
 
     # update winners for relevant areas in the connectome
     for source in area_neuron_mapping.keys():
-        brain.winners[source] = sample(area_neuron_mapping[source], k=k)  # choose randomly out of winners
+        brain.winners[source] = sample(area_neuron_mapping[source], k=source.k)  # choose randomly out of winners
 
 
 def util_associate(a: Tuple[Assembly, ...], b: Tuple[Assembly, ...], *, brain: Brain) -> None:
@@ -60,13 +57,15 @@ def util_associate(a: Tuple[Assembly, ...], b: Tuple[Assembly, ...], *, brain: B
     """
     if len(a) == 0 or len(b) == 0:
         raise IndexError("one side of associate is Empty!")
-    pairs = product(a, b)
+
+    pairs: Iterable[Tuple[Assembly, Assembly]] = product(a, b)
     for x, y in pairs:
+        # TODO: We aren't very sure about this implementation, it seems quite funky
         activate_assemblies((x, y), brain=brain)
         brain.next_round(subconnectome={x.area: [x.area]}, replace=True, iterations=brain.repeat)
 
 
-def util_merge(assemblies: Tuple[Assembly, ...], area: Area, *, brain: Brain = None):
+def util_project(assemblies: Tuple[Assembly, ...], area: Area, *, reciprocal: bool = False, brain: Brain = None):
     """
     Creates a new assembly with all input assemblies as parents.
     Practically creates a new assembly with one-directional links from parents
@@ -75,6 +74,7 @@ def util_merge(assemblies: Tuple[Assembly, ...], area: Area, *, brain: Brain = N
 
     :param brain: the brain in which the merge occurs (again, passed from AssemblyTuple)
     :param assemblies: the parents of the new merged assembly
+    :param reciprocal boolean flag indicating whether to create backwards relations as well
     :param area: the area into which we merge
     :returns: resulting merged assembly
     """
@@ -101,8 +101,12 @@ def util_merge(assemblies: Tuple[Assembly, ...], area: Area, *, brain: Brain = N
 
         # TODO: Is this OK? (To Edo)
         brain.winners[area] = list()
-        brain.next_round(subconnectome={**{ass.area: [area] for ass in assemblies}, area: [area]}, replace=True,
-                         iterations=brain.repeat)
+        subconnectome = {**{ass.area: [area] for ass in assemblies}, area: [area]}
+        if reciprocal:
+            subconnectome[area] = list({ass.area for ass in assemblies} | {area})
+
+        brain.next_round(subconnectome=subconnectome, replace=True, iterations=brain.repeat)
+
     merged_assembly.bind_like(*assemblies)
     return merged_assembly
 
