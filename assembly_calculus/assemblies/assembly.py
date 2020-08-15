@@ -212,6 +212,7 @@ class Assembly(UniquelyIdentifiable):
         if brain is not None:
             activate([self], brain=brain)
             brain.winners[area] = list()
+            # TODO: Edo, what about self edges? they make assebmlies merge with eachother automatically???
             brain.next_round(subconnectome={self.area: [area], area: [area]}, replace=True, iterations=brain.repeat)
 
         projected_assembly.bind_like(self)
