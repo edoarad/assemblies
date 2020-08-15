@@ -78,6 +78,7 @@ def test_associate():
 
     with_associate = average_overlap(recipe)
 
+    print(with_associate, no_associate)
     assert with_associate > no_associate * 1.5, "Associate does not associate"
 
 
