@@ -1,11 +1,12 @@
 from __future__ import annotations
 # Allows forward declarations and such :)
 
-from typing import Iterable, Union, Tuple, TYPE_CHECKING, Set, Optional, Dict
+from typing import Iterable, Union, Tuple, TYPE_CHECKING, Set
 
-from .reader import Reader
-from .assembly_readers.read_recursive import ReadRecursive
-from ..utils import Recordable, ImplicitResolution, Bindable, UniquelyIdentifiable, set_hash
+from .assembly_sampler import AssemblySampler
+from .assembly_samplers.recursive_sampler import RecursiveSampler
+from ..utils import ImplicitResolution, Bindable, UniquelyIdentifiable, set_hash, attach_recording, record_method, \
+    bindable_brain
 from ..brain import Stimulus, Area
 from .utils import util_merge, util_associate, union
 
@@ -23,10 +24,6 @@ and top level assemblies with no parents (i.e stimuli)
 Projectable = Union['Assembly', Stimulus]
 
 
-# TODO: add uniqelyidentifyable
-@Recordable(('merge', True), 'associate',
-            resolution=ImplicitResolution(
-                lambda instance, name: Bindable.implicitly_resolve_many(instance.assemblies, name, False), 'recording'))
 class AssemblyTuple(UniquelyIdentifiable):
     """
     Assembly tuple is used as an intermediate structure to support syntax such as
@@ -65,21 +62,22 @@ class AssemblyTuple(UniquelyIdentifiable):
             raise TypeError("Assemblies can be concatenated only to assemblies")
         return AssemblyTuple(*(self.assemblies + other.assemblies))
 
+    @record_method(lambda self, area, **_: Bindable.bound_value('recording', *self), execute_anyway=True)
+    @ImplicitResolution(brain=lambda self, area, **_: Bindable.bound_value('brain', *self))
     def merge(self, area: Area, *, brain: Brain = None):
         """
         can be used by user with >> or directly by:
         (ass1 | ass2).merge( ... ) or AssemblyTuple(list of assemblies).merge( ... )
         """
-        brain = brain or Bindable[Assembly].implicitly_resolve_many(self.assemblies, 'brain', False)[1]
         return util_merge(self.assemblies, area, brain=brain)
 
-    def associate(self, other: AssemblyTuple, *, brain: Brain = None):
+    @record_method(lambda self, other, **_: Bindable.bound_value('recording', *self, *other), execute_anyway=False)
+    @ImplicitResolution(brain=lambda self, other, **_: Bindable.bound_value('brain', *self, *other))
+    def associate(self, other: AssemblyTuple, *, brain: Brain):
         """
         as of now has no syntactic sugar, so use by:
         (ass1 | ass2).associate( *another AssemblyTuple ) within a recipe context.
         """
-        brain = brain or Bindable[Assembly].implicitly_resolve_many(self.assemblies + other.assemblies,
-                                                                    'brain', False)[1]
         return util_associate(self.assemblies, other.assemblies, brain=brain)
 
     def __rshift__(self, target_area: Area):
@@ -101,8 +99,8 @@ class AssemblyTuple(UniquelyIdentifiable):
 
 
 # TODO: Better documentation for user-functions, add example usages w\ and w\o bindable
-@Recordable(('project', True), ('reciprocal_project', True))
-@Bindable('brain')
+@attach_recording
+@bindable_brain.cls
 class Assembly(UniquelyIdentifiable):
     # Response: An assembly is in particular a tuple of assemblies of length 1, they share many logical operations.
     # They share many properties, and in particular a singular assembly supports more operations.
@@ -111,21 +109,22 @@ class Assembly(UniquelyIdentifiable):
     in which it appears. An assembly is defined primarily by its parents - the assemblies
     and/or stimuli that were fired to create it.
     This class implements basic operations on assemblies (project, reciprocal_project,
-    merge and associate) by using a reader object, which interacts with the brain directly.
+    merge and associate) by using a AssemblySampler object, which interacts with the brain directly.
     """
-    _default_reader: Reader = ReadRecursive
+    _default_sampler: AssemblySampler = RecursiveSampler
 
     def __new__(cls, parents: Iterable[Projectable], area: Area, initial_recipes: Iterable[BrainRecipe] = None,
-                reader: str = 'default'):
+                sampler: AssemblySampler = None):
         return UniquelyIdentifiable.__new__(cls, uid=hash((area, set_hash(parents))))
 
     def __init__(self, parents: Iterable[Projectable], area: Area,
-                 initial_recipes: Iterable[BrainRecipe] = None, reader: Reader = None):
+                 initial_recipes: Iterable[BrainRecipe] = None, sampler: AssemblySampler = None):
         """
         :param parents: the Assemblies and/or Stimuli that were used to create the assembly
         :param area: an Area where the Assembly "lives"
         :param initial_recipes: an iterable containing every BrainRecipe in which the assembly appears
-        :param reader: name of a read driver pulled from assembly_readers. defaults to 'default'
+        :param sampler: a subclass of AssemblySampler that can sample what neurons should be fired in the next project
+                        operation
         """
 
         # We hash an assembly using its parents (sorted by id) and area
@@ -134,47 +133,30 @@ class Assembly(UniquelyIdentifiable):
 
         self.parents: Tuple[Projectable, ...] = tuple(parents)
         self.area: Area = area
-        self._reader = reader
+        self._sampler = sampler
         self.appears_in: Set[BrainRecipe] = set(initial_recipes or [])
         for recipe in self.appears_in:
             recipe.append(self)
 
     @property
-    def reader(self) -> Reader:
-        # property decorator means we can access this as assembly.reader
-        return self._reader or Assembly._default_reader
+    def sampler(self) -> AssemblySampler:
+        # property decorator means we can access this as assembly.sampler
+        return self._sampler or Assembly._default_sampler
 
     @staticmethod
-    def set_default_reader(reader):
-        Assembly._default_reader = reader
+    def set_default_sampler(sampler):
+        Assembly._default_sampler = sampler
 
-    def representative_neuron(self, preserve_brain=False, *, brain: Brain) -> Set[int, ...]:
-        # TODO: Change name of Reader to Identifier???
-        return set(self.reader.read(self, preserve_brain=preserve_brain, brain=brain))
+    @bindable_brain.method
+    def sample_neurons(self, preserve_brain=False, *, brain: Brain) -> Set[int, ...]:
+        return set(self.sampler.sample_neurons(self, preserve_brain=preserve_brain, brain=brain))
 
-    @staticmethod
-    def read(area: Area, *, brain: Brain):
-        # TODO: Decouple read into different modules
-        assemblies: Set[Assembly] = brain.recipe.area_assembly_mapping[area]
-        overlap: Dict[Assembly, float] = {}
-        for assembly in assemblies:
-            # TODO: extract calculation to function with indicative name
-            overlap[assembly] = len(
-                set(brain.winners[area]) & set(
-                    assembly.representative_neuron(preserve_brain=True, brain=brain))) / area.k
-        return max(overlap.keys(), key=lambda x: overlap[x])  # TODO: return None below some threshold
+    @bindable_brain.property
+    def representative_neurons(self, *, brain: Brain) -> Set[int, ...]:
+        return self.sample_neurons(preserve_brain=True, brain=brain)
 
-    # TODO: Remove this (And in reader class)
-    def trigger_reader_update_hook(self, *, brain: Brain):
-        """
-        some read_drivers may want to be notified on certain changes
-        we support this by calling this private function in key places (like project)
-        which then triggers the hook in the reader (if it implements it)
-        :param brain:
-        :return:
-        """
-        self.reader.update_hook(self, brain=brain)
-
+    @record_method(execute_anyway=True)
+    @bindable_brain.method
     def project(self, area: Area, *, brain: Brain = None) -> Assembly:
         """
         Projects an assembly into an area.
@@ -185,7 +167,6 @@ class Assembly(UniquelyIdentifiable):
         """
         if not isinstance(area, Area):
             raise TypeError("Projection target must be an Area in the Brain")
-
         return util_merge((self,), area, brain=brain)  # project was actually just this line
 
     def __rshift__(self, target: Area):
@@ -201,6 +182,8 @@ class Assembly(UniquelyIdentifiable):
             raise TypeError("Assembly must be projected onto an area")
         return self.project(target)
 
+    @record_method(execute_anyway=False)
+    @bindable_brain.method
     def reciprocal_project(self, area: Area, *, brain: Brain = None) -> Assembly:
         """
         Reciprocally projects an assembly into an area,
@@ -214,8 +197,6 @@ class Assembly(UniquelyIdentifiable):
         """
         projected_assembly: Assembly = self.project(area, brain=brain)
         projected_assembly.project(self.area, brain=brain)
-        self.trigger_reader_update_hook(brain=brain)
-
         return projected_assembly
 
     # TODO: lt and gt logic can be implemented using a common method

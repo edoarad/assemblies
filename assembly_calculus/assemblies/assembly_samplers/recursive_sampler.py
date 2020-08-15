@@ -1,5 +1,5 @@
 from __future__ import annotations
-from ..reader import Reader
+from ..assembly_sampler import AssemblySampler
 from ...utils.brain_utils import fire_many, revert_changes
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from ...brain import Brain
 
 
-class ReadRecursive(Reader):
+class RecursiveSampler(AssemblySampler):
     """
     A class representing a reader that obtains information about an assembly using the 'read' method.
     The method works by recursively firing areas from the top of the parent tree of the assembly,
@@ -16,7 +16,7 @@ class ReadRecursive(Reader):
     """
 
     @staticmethod
-    def read(assembly: Assembly, preserve_brain: bool = False, *, brain: Brain):
+    def sample_neurons(assembly: Assembly, preserve_brain: bool = False, *, brain: Brain):
         # TODO: verify this reader makes sense
         """
         Read the winners from given assembly in given brain recursively using fire_many

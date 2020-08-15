@@ -144,7 +144,6 @@ class Brain(UniquelyIdentifiable):
 
 
 # TODO: document
-# TODO 2: typehint `connectome_cls`
 # TODO 3: is it crucial to get `connectome_cls` or can we get a connectome object?
 # TODO 4: make names clearer: train_repeat -> recipe_repeat, effective_repeat -> something clearer?
 # TODO 5: should this be a method of `BrainRecipe`?
