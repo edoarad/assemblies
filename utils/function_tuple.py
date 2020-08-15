@@ -1,17 +1,10 @@
-from __future__ import annotations
-from typing import TYPE_CHECKING, Set, Dict
-if TYPE_CHECKING:
-    from assembly_calculus.brain import Brain, Area
-
-
 class FunctionTuple:
 
-    def __init__(self, read_methods=None):
-        self.functions = read_methods
+    def __init__(self, *functions):
+        self.functions = list(functions)
 
-    # TODO: Maybe change to args, kwargs?
-    def __call__(self, area: Area, *, brain: Brain):
-        return [function(area, brain=brain) for function in self.functions]
+    def __call__(self, *args, **kwargs):
+        return [function(*args, **kwargs) for function in self.functions]
 
     def append(self, functions):
         self.functions += functions
@@ -21,4 +14,4 @@ class FunctionTuple:
         return function
 
     def index(self, function):
-        return self.functions.find(function)
+        return self.functions.index(function)
