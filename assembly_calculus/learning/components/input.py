@@ -156,7 +156,6 @@ class InputStimuli:
 	def _generate_input_bits(self, brain: Brain, stimulus_k: int, areas: List[Area], override) -> List[InputBitStimuli]:
 		input_bits = []
 		for bit, area in enumerate(areas):
-			area = area
 			self._validate_area(brain, area)
 			if override and bit in override:
 				stimulus_0 = override[bit][0]
@@ -166,6 +165,6 @@ class InputStimuli:
 				stimulus_1 = Stimulus(stimulus_k)
 			brain.add_stimulus(stimulus_0)
 			brain.add_stimulus(stimulus_1)
-			input_bits.append(InputBitStimuli(stimulus_0, stimulus_1, list(area)))
+			input_bits.append(InputBitStimuli(stimulus_0, stimulus_1, [area]))
 
 		return input_bits
