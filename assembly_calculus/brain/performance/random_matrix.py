@@ -1,6 +1,7 @@
-from brain.performance.multithreaded_rng import *
+from .multithreaded_rng import MultithreadedRNG
 
 import numpy as np
+
 
 # TODO: seems unused, remove
 class RandomMatrix(object):

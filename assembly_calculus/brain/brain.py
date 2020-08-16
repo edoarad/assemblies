@@ -4,18 +4,18 @@ from collections import defaultdict
 from functools import cached_property
 from typing import Dict, Set, TYPE_CHECKING, List, Optional, Union
 
+from .brain_recipe import BrainRecipe
 from .components import BrainPart, Stimulus
-from brain.connectome.abc_connectome import ABCConnectome
-from brain.components import Area, UniquelyIdentifiable
+from .connectome.abc_connectome import ABCConnectome
+from ..utils import UniquelyIdentifiable
 # TODO: imports should happen in any case
+# Response: Trying to avoid cyclic imports, if it is important we can figure out the minimal amount of
+#           such imports to avoid a cycle, but it makes it a bit more clear this way in my opinion
 if TYPE_CHECKING:
-	from .brain_recipe import BrainRecipe
-	from assemblies import Assembly
+	from ..assemblies import Assembly
 
 
 class Brain(UniquelyIdentifiable):
-	# TODO: is T used?
-	T = 10
 	"""
 	Represents a simulated brain, with it's connectome which holds the areas, stimuli, and all the synapse weights.
 	The brain updates by selecting a subgraph of stimuli and areas, and activating only those connections.

@@ -1,6 +1,6 @@
 import numpy as np
 
-from brain.performance.multithreaded.multithreaded import multithreaded
+from .. import multithreaded
 
 # TODO: this file is not used, remove
 

@@ -1,7 +1,7 @@
 from typing import Iterable, Dict, List
 
-from assemblies.assembly_fun import Projectable, Assembly
-from brain import Brain, Area, Stimulus
+from .assembly import Projectable, Assembly
+from ..brain import Brain, Area, Stimulus
 
 
 def fire_many(brain: Brain, projectables: Iterable[Projectable], area: Area, preserve_brain: bool = False):
@@ -23,10 +23,10 @@ def fire_many(brain: Brain, projectables: Iterable[Projectable], area: Area, pre
     # TODO 2: instead of keeping `original_plasticity` and restoring, this is a classic use for context! (for example: `with brain.disable_plasticity():` )
     # TODO 3: try to split the sub-steps of this function to smaller functions
     # climb up the parent tree:
-    original_plasticity = brain.connectome.plasticity_status
+    original_plasticity = brain.connectome.plasticity
     changed_areas: Dict[Area, List[int]] = {}
     if preserve_brain:
-        brain.connectome.disable_plasticity()
+        brain.connectome.plasticity = False
 
     # initialize layers with the lowest level in the tree
     layers: List[Dict[Projectable, List[Area]]] = [{projectable: [area] for projectable in projectables}]
@@ -63,7 +63,7 @@ def fire_many(brain: Brain, projectables: Iterable[Projectable], area: Area, pre
                     changed_areas[area] = area.winners
         brain.next_round(mapping)   # fire this layer of objects
     if not original_plasticity:
-        brain.connectome.enable_plasticity()
+        brain.connectome.plasticity = True
     return changed_areas
 
 # TODO: This function should belong to brain.py, and probably implemented otherwise.

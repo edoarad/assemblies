@@ -8,10 +8,10 @@ from collections import defaultdict
 from wrapt import ObjectProxy
 import scipy.sparse as sp
 
+from .abc_connectome import ABCConnectome
 from ..performance import MultithreadedRNG
 from ..performance import RandomMatrix
 from ..components import Area, BrainPart, Stimulus, Connection
-from .abc_connectome import ABCConnectome
 
 
 class NonLazyConnectomeRandomMatrix(ABCConnectome):

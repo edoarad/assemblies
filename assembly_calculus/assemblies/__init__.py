@@ -1,1 +1,2 @@
-from .assembly_fun import Assembly
+from .assembly import Assembly
+from .utils import fire_many

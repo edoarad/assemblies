@@ -1,8 +1,12 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
 import sys
 from pathlib import Path
 import importlib
 import re
-from brain import Brain
+
+if TYPE_CHECKING:
+    from ..brain import Brain
 
 
 class ReadDriver:
@@ -26,7 +30,14 @@ class ReadDriver:
         for path in readers.iterdir():
             if not (path.is_file() and path.suffix == '.py'):
                 continue
-            m = importlib.import_module(f'{readers.name}.{path.stem}')
+            # Yonatan: This is a hack to fix import issues (we moved to relative imports as to help with
+            #          re-structuring
+            # TODO: Anyways we want to move to an import mechanism that doesn't involve such hacks
+            #       I recommend creating a metaclass automatically registering whoever subclasses it,
+            #       and provide an abstract class AssemblyReader that has that metaclass
+            #       allowing whoever wants to create a reader, to just subclass it and implement the abstract methods
+            #       (From Yonatan, let's talk about it Tomer?)
+            m = importlib.import_module(f'..{readers.name}.{path.stem}', __name__)
             for name in m.__dict__:
                 val = m.__dict__[name]
                 if not (re.match('Read*', name) and 'name' in val.__dict__.keys()):

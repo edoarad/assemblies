@@ -1,0 +1,2 @@
+Warning: no ram protection (possibly you are on windows)
+Writing simulation to C:\Users\user\Documents\My Documents\Git Experiments\assemblies\simulations\artifacts\988bcaf3-8201-4ee9-bf5a-f6abab746c7d

@@ -1,15 +1,17 @@
 from __future__ import annotations
 from typing import List, Union, TYPE_CHECKING, Dict, Optional, Set
 
-from assemblies.assembly_fun import Assembly
-from brain.components import Area, Stimulus, BrainPart
-from utils.blueprints.recording import Recording
+from .components import Area, Stimulus, BrainPart
+from ..utils import Recording
+
 if TYPE_CHECKING:
-    from brain import Brain
+    from .brain import Brain
+    from ..assemblies import Assembly
 
 
 class BrainRecipe:
     # TODO: Union[BrainPart, Assembly] is used many times. Maybe use a parent class instead that both will inherit?
+    # Yonatan: Please define this as a type. Find a name and define X = Union[BrainPart, Assembly]
     def __init__(self, *parts: Union[BrainPart, Assembly]):
         # TODO: document
         self.areas: Set[Area] = set()
@@ -37,6 +39,8 @@ class BrainRecipe:
 
     # TODO: rename `part` - Assembly is not a part
     def append(self, part: Union[Assembly, BrainPart]):
+        from ..assemblies import Assembly
+
         if isinstance(part, Area):
             self._add_area(part)
         elif isinstance(part, Stimulus):

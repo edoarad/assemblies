@@ -2,7 +2,6 @@ import multiprocessing
 import concurrent.futures
 
 from typing import Callable, Any
-import functools
 
 
 def __identity__(x):
