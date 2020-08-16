@@ -1,5 +1,4 @@
 from __future__ import annotations
-import math
 from typing import Optional, Union, TYPE_CHECKING
 
 from ..utils import UniquelyIdentifiable, Bindable, bindable_property
@@ -15,10 +14,7 @@ class Area(UniquelyIdentifiable):
         super(Area, self).__init__()
         self.beta: float = beta
         self.n: int = n
-        self.k: int = k if k is not None else int(n ** 0.5)
-
-        if k == 0:
-            self.k = math.sqrt(n)
+        self.k: int = k or int(n ** 0.5)
 
     # TODO: return as a set?
     @bindable_property

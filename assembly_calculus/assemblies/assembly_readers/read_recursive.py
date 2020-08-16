@@ -1,19 +1,19 @@
-from ...brain import Brain
-from ..assembly import Assembly
-from ..utils import fire_many, revert_changes
+from __future__ import annotations
+from ..reader import Reader
+from ...utils.brain_utils import fire_many, revert_changes
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from ..assembly import Assembly
+    from ...brain import Brain
 
 
-# TODO: Mention explicitly where and how this is used. Very unclear, especially since it can't be
-#       found using the IDE.
-class ReadRecursive:
+class ReadRecursive(Reader):
     """
     A class representing a reader that obtains information about an assembly using the 'read' method.
     The method works by recursively firing areas from the top of the parent tree of the assembly,
     and examining which neurons were fired.
     Note: This is the default read driver.
     """
-
-    name = 'default'
 
     @staticmethod
     def read(assembly: Assembly, preserve_brain: bool = False, *, brain: Brain):

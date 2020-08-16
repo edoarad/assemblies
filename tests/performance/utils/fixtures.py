@@ -1,4 +1,4 @@
-from brain import Stimulus, Area, Connectome, Brain
+from assembly_calculus.brain import Stimulus, Area, Connectome, Brain
 import functools
 import math
 import pytest

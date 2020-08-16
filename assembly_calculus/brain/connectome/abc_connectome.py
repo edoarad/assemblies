@@ -4,16 +4,8 @@ from __future__ import annotations  # import annotations from later version of p
 from abc import ABCMeta, abstractmethod
 from typing import Dict, List, Tuple, Optional, TypeVar, Mapping, Generic, Callable, Any
 
-from wrapt import ObjectProxy  # Needed to pip install
-
 from ..components import BrainPart, Area, Stimulus, Connection  # imports shouldn't depend on dir
                                                                 # structure. find an alternative
-
-
-# The wrapt library implements easy to use wrapper objects, which delegates everything to the object you are
-# using. It's very convenient to use (it can be used exactly in the same way).
-# More info and examples:
-# https://wrapt.readthedocs.io/en/latest/wrappers.html
 
 
 K_co = TypeVar('K_co', covariant=True)
@@ -26,10 +18,10 @@ class MappingProxy(Generic[K_co, V_contra]):
         self._setter = setter
 
     def __getitem__(self, key: K_co):
-        return self._getter(key)
+        return self._getter(key).copy()
 
     def __setitem__(self, key: K_co, value: V_contra):
-        self._setter(key, value)
+        self._setter(key, value.copy())
 
 
 # TODO: find a better name than ABCConnectome. something that other researches can understand.

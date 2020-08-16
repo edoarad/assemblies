@@ -47,6 +47,8 @@ class BrainRecipe:
             self._add_stimulus(part)
         elif isinstance(part, Assembly):
             self._add_assembly(part)
+        else:
+            raise ValueError("Invalid part")
 
     def extend(self, *parts: Union[Assembly, BrainPart]):
         for part in parts:

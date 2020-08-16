@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from collections import namedtuple
 
-from learning.components.data_set.data_point import DataPoint
+from assembly_calculus.learning.components.data_set.data_point import DataPoint
 
 
 DataSets = namedtuple('DataSets', ['training_set', 'test_set'])

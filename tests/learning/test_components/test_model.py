@@ -1,8 +1,8 @@
-from learning.components.data_set.constructors import create_data_set_from_list
-from learning.components.errors import InputSizeMismatch
+from assembly_calculus.learning.components.data_set.constructors import create_data_set_from_list
+from assembly_calculus.learning.components.errors import InputSizeMismatch
 
-from learning.components.model import LearningModel
-from tests.test_components.learning_component_test_base import LearningComponentTestBase
+from assembly_calculus.learning.components.model import LearningModel
+from tests.learning.test_components.learning_component_test_base import LearningComponentTestBase
 
 
 class TestLearningModel(LearningComponentTestBase):

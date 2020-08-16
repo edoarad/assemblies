@@ -1,8 +1,8 @@
 from pprint import pformat
 from typing import Union, List, Dict, Tuple
 
-from brain import Brain
-from learning.components.errors import MissingArea, MissingStimulus, MaxAttemptsToGenerateStimuliReached
+from assembly_calculus.brain import Brain
+from assembly_calculus.learning.components.errors import MissingArea, MissingStimulus, MaxAttemptsToGenerateStimuliReached
 
 AUTO_GENERATED_STIMULUS_NAME_FORMAT = "__s_{area_name}_{input_bit_value}{postfix}"
 AUTO_GENERATED_STIMULUS_NAME_POSTFIX = "_({})"

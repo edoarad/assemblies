@@ -1,8 +1,8 @@
 from unittest import TestCase
 
-from learning.components.errors import MissingArea, MissingStimulus, MaxAttemptsToGenerateStimuliReached
-from learning.components.input import InputStimuli, InputBitStimuli, MAX_ATTEMPTS
-from non_lazy_brain import NonLazyBrain
+from assembly_calculus.learning.components.errors import MissingArea, MissingStimulus, MaxAttemptsToGenerateStimuliReached
+from assembly_calculus.learning.components.input import InputStimuli, InputBitStimuli, MAX_ATTEMPTS
+from non_lazy_brain import NonLazyBrain 
 
 
 class InputTests(TestCase):

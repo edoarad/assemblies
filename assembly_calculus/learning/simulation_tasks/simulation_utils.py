@@ -3,12 +3,12 @@ from math import log, ceil
 from typing import Union, List, Callable
 
 from brain import Brain
-from learning.components.data_set.constructors import create_training_set_from_list, \
+from assembly_calculus.learning.components.data_set.constructors import create_training_set_from_list, \
     create_explicit_mask_from_list, create_data_set_from_list
-from learning.components.data_set.data_set import DataSet
-from learning.components.input import InputStimuli
-from learning.components.sequence import LearningSequence
-from learning.simulation_tasks.strategy import Strategy
+from assembly_calculus.learning.components.data_set.data_set import DataSet
+from assembly_calculus.learning.components.input import InputStimuli
+from assembly_calculus.learning.components.sequence import LearningSequence
+from assembly_calculus.learning.simulation_tasks.strategy import Strategy
 from non_lazy_brain import NonLazyBrain
 
 

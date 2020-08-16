@@ -1,9 +1,11 @@
-from __future__ import annotations  # TODO: remove this allover, we are using python 3
-# Response: It actually allows forward declarations and such :)
+from __future__ import annotations
+# Allows forward declarations and such :)
+
 from typing import Iterable, Union, Tuple, TYPE_CHECKING, Set, Optional, Dict
 from itertools import product
 
-from .read_driver import ReadDriver  # TODO: It shouldn't depend on directory structure.
+from .reader import Reader
+from .assembly_readers.read_recursive import ReadRecursive
 from ..utils import Recordable, ImplicitResolution, Bindable, UniquelyIdentifiable
 from ..brain import Stimulus, Area
 
@@ -85,6 +87,7 @@ class AssemblyTuple(object):
         return iter(self.assemblies)
 
 
+# TODO: Better documentation for user-functions, add example usages w\ and w\o bindable
 @Recordable(('project', True), ('reciprocal_project', True))
 @Bindable('brain')
 class Assembly(UniquelyIdentifiable, AssemblyTuple):
@@ -99,9 +102,18 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
     This class implements basic operations on assemblies (project, reciprocal_project,
     merge and associate) by using a reader object, which interacts with the brain directly.
     """
+    _default_reader: Reader = ReadRecursive
+
+    @staticmethod
+    def assembly_hash(area, parents):
+        return hash((area, *sorted(parents, key=hash)))
+
+    def __new__(cls, parents: Iterable[Projectable], area: Area, initial_recipes: Iterable[BrainRecipe] = None,
+                reader: str = 'default'):
+        return UniquelyIdentifiable.__new__(cls, uid=Assembly.assembly_hash(area, parents))
 
     def __init__(self, parents: Iterable[Projectable], area: Area,
-                 initial_recipes: Iterable[BrainRecipe] = None, reader: str = 'default'):
+                 initial_recipes: Iterable[BrainRecipe] = None, reader: Reader = None):
         """
         :param parents: the Assemblies and/or Stimuli that were used to create the assembly
         :param area: an Area where the Assembly "lives"
@@ -111,34 +123,40 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
 
         # We hash an assembly using its parents (sorted by id) and area
         # this way equivalent assemblies have the same id.
-        UniquelyIdentifiable.__init__(self, uid=hash((area, *sorted(parents, key=hash))))
+        UniquelyIdentifiable.__init__(self)
         AssemblyTuple.__init__(self, self)
 
         self.parents: Tuple[Projectable, ...] = tuple(parents)
         self.area: Area = area
-        self.reader = ReadDriver(reader)
+        self._reader = reader
         self.appears_in: Set[BrainRecipe] = set(initial_recipes or [])
         for recipe in self.appears_in:
             recipe.append(self)
 
-    # TODO: this name is not indicative. Perhaps change to something like to_representative_neuron_subset.
-    # Response: We will add this in the documentation, to_representative_neuron_subset is simply too long
-    # TODO: reader.read is _very_ confusing with Assembly.read. Rename reader.
-    def identify(self, preserve_brain=False, *, brain: Brain) -> Set[int, ...]:
-        return set(self.reader.read(self, brain, preserve_brain=preserve_brain))
+    @property
+    def reader(self) -> Reader:
+        return self._reader or Assembly._default_reader
+
+    @staticmethod
+    def set_default_reader(reader):
+        Assembly._default_reader = reader
+
+    def representative_neuron(self, preserve_brain=False, *, brain: Brain) -> Set[int, ...]:
+        # TODO: Change name of Reader to Identifier???
+        return set(self.reader.read(self, preserve_brain=preserve_brain, brain=brain))
 
     @staticmethod
     def read(area: Area, *, brain: Brain):
+        # TODO: Decouple read into different modules
         assemblies: Set[Assembly] = brain.recipe.area_assembly_mapping[area]
         overlap: Dict[Assembly, float] = {}
         for assembly in assemblies:
             # TODO: extract calculation to function with indicative name
             overlap[assembly] = len(
-                set(area.winners) & set(assembly.identify(preserve_brain=True, brain=brain))) / area.k
+                set(brain.winners[area]) & set(assembly.representative_neuron(preserve_brain=True, brain=brain))) / area.k
         return max(overlap.keys(), key=lambda x: overlap[x])  # TODO: return None below some threshold
 
-    # TODO 4: there is no existing reader with `update_hook`. either make such reader and test the code using it, or remove all update_hook usages
-    # TODO: Yonatan: Let's just remove this
+    # TODO: Remove this (And in reader class)
     def trigger_reader_update_hook(self, *, brain: Brain):
         """
         some read_drivers may want to be notified on certain changes
@@ -147,16 +165,9 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         :param brain:
         :return:
         """
-        self.reader.update_hook(brain, self)
+        self.reader.update_hook(self, brain=brain)
 
-    # TODO: throughout bindable classes, users might error and give the brain parameter even if the object is binded.
-    #       Is this a problem? can you help the user not make any mistakes?
-    # Response: This is a feature by design, and allows regular code to ignore explicit binding
-    #           (needed to function properly). An inexperienced user should never pass the brain parameter explicitly,
-    #           so this shouldn't happen anyway.
-    # TODO: add option to manually change the assemblies' recipes
-    # Response: To avoid bugs, this assembly is added to all recipes it can be used in
-    def project(self, area: Area, *, brain: Brain = None, iterations: Optional[int] = None) -> Assembly:
+    def project(self, area: Area, *, brain: Brain = None) -> Assembly:
         """
         Projects an assembly into an area.
 
@@ -169,16 +180,10 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
 
         projected_assembly: Assembly = Assembly([self], area, initial_recipes=self.appears_in)
         if brain is not None:
-            neurons = self.identify(brain=brain)
-
-            brain.connectome.winners[self.area] = list(neurons)
-
-            # Replace=True for better performance
-            # TODO: is it only for better performance? it seems to affect correctness
-            # Response: Yes it also affects operation, but you & I (Yonatan) discussed this
-            #           And this is the implementation you requested.
-            brain.next_round({self.area: [area], area: [area]}, replace=True, iterations=iterations or brain.repeat)
-
+            Assembly._activate_assemblies([self], brain=brain)
+            # TODO: Is this OK? (To Edo)
+            brain.winners[area] = list()
+            brain.next_round({self.area: [area], area: [area]}, replace=True, iterations=brain.repeat)
             projected_assembly.trigger_reader_update_hook(brain=brain)
 
         # TODO: calling `bind_like` manually is error-prone because someone can forget it. can you make a decorator or a more automated way to do it?
@@ -186,6 +191,20 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         #           And "automation" will be quite weird, anyway this is used only a couple of times, and only in internal API
         projected_assembly.bind_like(self)
         return projected_assembly
+
+    @staticmethod
+    def _activate_assemblies(assemblies, *, brain: Brain):
+        """to prevent code duplication, this function does the common thing
+        of taking a list of assemblies and creating a dictionary from area to neurons (of the
+        assemblies) to set as winners"""
+        # create a mapping from the areas to the neurons we want to fire
+        area_neuron_mapping = {ass.area: [] for ass in assemblies}
+        for ass in assemblies:
+            area_neuron_mapping[ass.area] = list(ass.representative_neuron(brain=brain))
+
+        # update winners for relevant areas in the connectome
+        for source in area_neuron_mapping.keys():
+            brain.winners[source] = area_neuron_mapping[source]
 
     def __rshift__(self, target: Area):
         """
@@ -230,10 +249,6 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         if not isinstance(area, Area) and area in brain.recipe.areas:
             raise TypeError("Project target must be an Area in the brain")
 
-        # TODO 2: check documentation of `intersection` - it seems to be an instance method that works here by chance!
-        # Response: In the official documentation they actually mention it
-        #           - https://docs.python.org/3/library/stdtypes.html#frozenset.intersection
-        #           They probably forgot to update this in the source code?
         merged_assembly: Assembly = Assembly(assemblies, area,
                                              initial_recipes=set.intersection(*[x.appears_in for x in assemblies]))
         # TODO: this is actually a way to check if we're in "binded" or "non binded" state.
@@ -247,20 +262,11 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         #           In my opinion, this class should be designed as if binding does not exist, and binding is
         #           purely a syntactic sugar that makes the usage easier
         if brain is not None:
-            # create a mapping from the areas to the neurons we want to fire
-            area_neuron_mapping = {ass.area: [] for ass in assemblies}
-            for ass in assemblies:
-                # TODO: What happens if we merge assemblies that are already in the same area?
-                # Response: We take their union, I think this is an OK generalization?
-                area_neuron_mapping[ass.area] = list(
-                    ass.identify(brain=brain))
+            Assembly._activate_assemblies(assemblies, brain=brain)
 
-            # update winners for relevant areas in the connectome
-            for source in area_neuron_mapping.keys():
-                brain.connectome.winners[source] = area_neuron_mapping[source]
-
-            # Replace=True for better performance
-            brain.next_round(subconnectome={source: [area] for source in area_neuron_mapping}, replace=True,
+            # TODO: Is this OK? (To Edo)
+            brain.winners[area] = list()
+            brain.next_round(subconnectome={**{ass.area: [area] for ass in assemblies}, area: [area]}, replace=True,
                              iterations=brain.repeat)
 
             merged_assembly.trigger_reader_update_hook(brain=brain)
@@ -292,7 +298,6 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
     def __lt__(self, other: Assembly):
         """
         Checks that other is a child assembly of self.
-
         :param other: the assembly we compare against
         """
         return isinstance(other, Assembly) and other in self.parents
@@ -300,7 +305,6 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
     def __gt__(self, other: Assembly):
         """
         Checks if self is a child assembly of other.
-
         :param other: the assembly we compare against
         """
         return isinstance(other, Assembly) and self in other.parents
