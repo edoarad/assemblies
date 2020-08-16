@@ -1,8 +1,8 @@
 import math
 from contextlib import contextmanager
 
-from ...brain import Brain
-from ...brain.components import OutputArea
+from ...brain import Brain, OutputArea
+
 from ..brain_modes import BrainLearningMode
 from .configurations import LearningConfigurations
 from .data_set.data_set import DataSet
@@ -109,7 +109,7 @@ class LearningModel:
             for iteration in self._sequence:
                 # Getting the projection parameters, after formatting the input stimuli if any are in the iteration
                 projection_parameters = iteration.format(self._input_stimuli, input_number)
-                self._brain.project(**projection_parameters)
+                self._brain.next_round(**projection_parameters)
 
     def _validate_input_number(self, input_number: int) -> None:
         """
