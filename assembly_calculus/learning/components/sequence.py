@@ -2,8 +2,7 @@ from enum import Enum
 from itertools import chain
 from typing import List, Dict, Optional, Callable, Union
 
-from ...brain import Brain
-from ...brain.components import Area, OutputArea
+from ...brain import Brain, Area, OutputArea
 from .errors import MissingArea, SequenceRunNotInitializedOrInMidRun, SequenceFinalizationError, \
     MissingStimulus
 from .sequence_components.connections_graph import ConnectionsGraph
@@ -105,7 +104,7 @@ class LearningSequence:
         finalizing the sequence before initial running. The sequence cannot be edited after that
         """
         output_area = self._connections_graph.verify_single_output_area()
-        self._output_area = self._brain.output_areas[output_area]
+        self._output_area = self._brain.connectome.output_areas[output_area]
         self._connections_graph.verify_inputs_are_connected_to_output()
 
     def initialize_run(self, number_of_cycles=float('inf')) -> None:
