@@ -8,9 +8,11 @@ from networkx import DiGraph, has_path, draw, draw_networkx_edge_labels, get_nod
 
 from assembly_calculus.brain import Brain
 from assembly_calculus.brain.components import Area, OutputArea
-from assembly_calculus.learning.components.errors import MissingArea, SequenceRunNotInitializedOrInMidRun, NoPathException, \
+
+
+from ..input import InputStimuli
+from ..errors import MissingArea, SequenceRunNotInitializedOrInMidRun, NoPathException, \
     IllegalOutputAreasException, SequenceFinalizationError, MissingStimulus, InputStimuliMisused
-from assembly_calculus.learning.components.input import InputStimuli
 
 
 class Iteration:

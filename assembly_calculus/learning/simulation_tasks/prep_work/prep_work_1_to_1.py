@@ -2,9 +2,9 @@ from collections import defaultdict
 from contextlib import contextmanager
 from tabulate import tabulate
 
-from learning.components.data_set.constructors import create_training_set_from_list, \
+from ...components.data_set.constructors import create_training_set_from_list, \
     create_explicit_mask_from_list, create_data_set_from_list
-from learning.brain_modes import BrainLearningMode
+from ...brain_modes import BrainLearningMode
 from non_lazy_brain import NonLazyBrain
 
 
