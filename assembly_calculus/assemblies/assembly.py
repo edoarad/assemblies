@@ -2,7 +2,7 @@ from __future__ import annotations
 # Allows forward declarations and such :)
 from collections import defaultdict
 from itertools import product, chain
-from typing import Iterable, Union, Tuple, TYPE_CHECKING, Set
+from typing import Iterable, Union, Tuple, TYPE_CHECKING, Set, Type
 
 from .assembly_sampler import AssemblySampler
 from .assembly_samplers.recursive_sampler import RecursiveSampler
@@ -144,14 +144,14 @@ class Assembly(UniquelyIdentifiable):
     This class implements basic operations on assemblies (project, reciprocal_project,
     merge and associate) by using a AssemblySampler object, which interacts with the brain directly.
     """
-    _default_sampler: AssemblySampler = RecursiveSampler
+    _default_sampler: Type[AssemblySampler] = RecursiveSampler
 
     def __new__(cls, parents: Iterable[Projectable], area: Area, initial_recipes: Iterable[BrainRecipe] = None,
                 sampler: AssemblySampler = None):
         return UniquelyIdentifiable.__new__(cls, uid=hash((area, set_hash(parents))))
 
     def __init__(self, parents: Iterable[Projectable], area: Area,
-                 initial_recipes: Iterable[BrainRecipe] = None, sampler: AssemblySampler = None):
+                 initial_recipes: Iterable[BrainRecipe] = None, sampler: Type[AssemblySampler] = None):
         """
         :param parents: the Assemblies and/or Stimuli that were used to create the assembly
         :param area: an Area where the Assembly "lives"
@@ -171,7 +171,7 @@ class Assembly(UniquelyIdentifiable):
             recipe.append(self)
 
     @property
-    def sampler(self) -> AssemblySampler:
+    def sampler(self) -> Type[AssemblySampler]:
         # property decorator means we can access this as assembly.sampler
         return self._sampler or Assembly._default_sampler
 
@@ -271,5 +271,10 @@ class Assembly(UniquelyIdentifiable):
         :param other: the assembly we compare against
         """
         return isinstance(other, Assembly) and self in other.parents
+
+    def __repr__(self):
+        return f"Assembly(parents=[%s], area=%s, sampler=%s)" %\
+               (", ".join(parent.instance_name for parent in self.parents), self.area.instance_name,
+                self.sampler.__name__)
 
     __or__ = union

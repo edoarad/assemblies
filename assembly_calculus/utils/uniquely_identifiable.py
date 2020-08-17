@@ -2,6 +2,8 @@ from __future__ import annotations
 from typing import Dict, Any
 from weakref import ref
 
+from .instance_name import RememberInitName
+
 
 class NoInitMeta(type):
     def __call__(cls, *args, **kwargs):
@@ -12,7 +14,7 @@ class NoInitMeta(type):
         return obj
 
 
-class UniquelyIdentifiable(metaclass=NoInitMeta):
+class UniquelyIdentifiable(RememberInitName, metaclass=NoInitMeta):
     """
     This class represents objects that are uniquely identifiable, objects that should be identified by instance
     and not by their properties.
@@ -32,6 +34,7 @@ class UniquelyIdentifiable(metaclass=NoInitMeta):
             return super(UniquelyIdentifiable, cls).__new__(cls)
 
     def __init__(self, *args, **kwargs):
+        super(UniquelyIdentifiable, self).__init__()
         self._done = True
 
     def __hash__(self):
@@ -44,3 +47,6 @@ class UniquelyIdentifiable(metaclass=NoInitMeta):
         uid = getattr(self, '_uid', None)
         if uid is not None:
             del UniquelyIdentifiable.custom_uids[uid]
+
+    def __str__(self):
+        return "%s(name=%s)" % (self.__class__.__name__, self.instance_name)

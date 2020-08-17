@@ -4,9 +4,8 @@ This helps assembly.py be less bloated
 """
 
 from __future__ import annotations
-from itertools import product
 from random import sample
-from typing import List, Tuple, TYPE_CHECKING, Dict, Union, Iterable
+from typing import List, TYPE_CHECKING, Dict, Union, Iterable
 from ..brain import Area
 
 if TYPE_CHECKING:
