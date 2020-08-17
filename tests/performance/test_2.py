@@ -6,14 +6,6 @@ import numpy as np
 # ____// NON LAZY TESTS //____
 
 
-'''def bothbrains(func):
-    @functools.wraps(func)
-    def wrapper():
-        func(NonLazyBrain)
-        func(LazyBrain)
-    return wrapper'''
-
-
 def test_area_in_brain():
     """test for non lazy connectome"""
     brain = NonLazyConnectomeOriginal(p=0, initialize=True)
@@ -146,32 +138,3 @@ def test_project_different_k():
     brain.add_stimulus(s)
     brain.project({s: [a], a: [b]})
 
-
-'''
-def test_project_area_winners():
-    """test for lazy brain"""
-    brain = LazyBrain(p=0.01)
-    brain.add_area(name='a', n=10000, k=100, beta=0.05)
-    brain.add_area(name='b', n=10000, k=100, beta=0.05)
-    brain.add_stimulus(name='s', k=100)
-
-    brain.project({'s': ['a']}, {})
-    brain.project({'s': ['a']}, {'a': ['b']})
-
-    a = brain.areas['a']
-    b = brain.areas['b']
-    assert len(a.winners) == a.k
-    assert len(set(a.winners)) == a.k
-    assert len(b.winners) == b.k
-    assert len(set(b.winners)) == b.k
-
-
-def test_project_num_first_winners_lazy():
-    """test for lazy brain"""
-    brain = LazyBrain(p=0.5)
-    brain.add_area(name='a', n=50, k=7, beta=0.1)
-    brain.add_area(name='b', n=50, k=7, beta=0.1)
-    brain.add_stimulus(name='s', k=7)
-    brain.project({'s': ['a']}, {})
-    assert brain.areas['a'].num_first_winners == 7
-'''
