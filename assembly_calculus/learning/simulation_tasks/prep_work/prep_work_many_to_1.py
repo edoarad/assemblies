@@ -5,8 +5,8 @@ from functools import reduce
 from tabulate import tabulate
 from tqdm import tqdm
 
-from learning.brain_modes import BrainLearningMode
-from learning.components.data_set.constructors import create_training_set_from_list, \
+from ...brain_modes import BrainLearningMode
+from ...components.data_set.constructors import create_training_set_from_list, \
     create_explicit_mask_from_list, create_data_set_from_callable
 from non_lazy_brain import NonLazyBrain
 

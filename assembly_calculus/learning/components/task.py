@@ -1,9 +1,9 @@
-from brain import Brain
-from assembly_calculus.learning.components.data_set.lib.training_set import TrainingSet
-from assembly_calculus.learning.components.errors import ItemNotInitialized
-from assembly_calculus.learning.components.input import InputStimuli
-from assembly_calculus.learning.components.sequence import LearningSequence
-from assembly_calculus.learning.components.model import LearningModel
+from ...brain import Brain
+from .data_set.lib.training_set import TrainingSet
+from .errors import ItemNotInitialized
+from .input import InputStimuli
+from .sequence import LearningSequence
+from .model import LearningModel
 
 # TODO: remove this class. I don't think we need to wrap LearningModel
 

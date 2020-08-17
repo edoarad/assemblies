@@ -1,16 +1,15 @@
 import math
-from collections import namedtuple
 from contextlib import contextmanager
 
-from assembly_calculus.brain import Brain
-from assembly_calculus.brain.components import OutputArea
-from assembly_calculus.learning.brain_modes import BrainLearningMode
-from assembly_calculus.learning.components.configurations import LearningConfigurations
-from assembly_calculus.learning.components.data_set.data_set import DataSet
-from assembly_calculus.learning.components.errors import InputSizeMismatch, InputStimuliAndSequenceMismatch
-from assembly_calculus.learning.components.input import InputStimuli
-from assembly_calculus.learning.components.sequence import LearningSequence
-from assembly_calculus.learning.components.test_results import TestResults
+from ...brain import Brain, OutputArea
+
+from ..brain_modes import BrainLearningMode
+from .configurations import LearningConfigurations
+from .data_set.data_set import DataSet
+from .errors import InputSizeMismatch, InputStimuliAndSequenceMismatch
+from .input import InputStimuli
+from .sequence import LearningSequence
+from .test_results import TestResults
 
 
 class LearningModel:
@@ -110,7 +109,7 @@ class LearningModel:
             for iteration in self._sequence:
                 # Getting the projection parameters, after formatting the input stimuli if any are in the iteration
                 projection_parameters = iteration.format(self._input_stimuli, input_number)
-                self._brain.project(**projection_parameters)
+                self._brain.next_round(**projection_parameters)
 
     def _validate_input_number(self, input_number: int) -> None:
         """

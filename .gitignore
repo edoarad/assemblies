@@ -2,5 +2,6 @@
 .idea/
 .pytest_cache/
 **/__pycache__/
+
 simulations/artifacts/
 venv/

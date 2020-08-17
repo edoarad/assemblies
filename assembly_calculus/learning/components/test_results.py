@@ -1,7 +1,7 @@
 from enum import Enum, auto
 from typing import List
 
-from assembly_calculus.learning.components.data_set.data_point import DataPoint
+from .data_set.data_point import DataPoint
 
 
 # TODO: Handle case of non-binary return values (can throw non-implemented error)
