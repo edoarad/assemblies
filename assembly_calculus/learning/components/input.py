@@ -132,7 +132,7 @@ class InputStimuli:
 
 		for area in areas:
 			if not isinstance(area, Area):
-				raise TypeError(f"Area name must be a string or a list of strings, "
+				raise TypeError(f"Area must have type Area, "
 				                f"got {type(area).__name__} instead.")
 			if area not in brain.connectome.areas:
 				raise MissingArea(str(area))

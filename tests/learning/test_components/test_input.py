@@ -2,46 +2,58 @@ from unittest import TestCase
 
 from assembly_calculus.learning.components.errors import MissingArea, MissingStimulus, MaxAttemptsToGenerateStimuliReached
 from assembly_calculus.learning.components.input import InputStimuli, InputBitStimuli, MAX_ATTEMPTS
-from non_lazy_brain import NonLazyBrain 
+#from non_lazy_brain import NonLazyBrain 
+from assembly_calculus.brain import Brain
+from assembly_calculus.brain.connectome import Connectome
+from assembly_calculus.brain.components import Area, Stimulus, OutputArea
 
+A,B,C = None, None, None
 
 class InputTests(TestCase):
     def setUp(self) -> None:
+        global A,B,C
         self.n = 100
         self.k = 10
-        self.brain = NonLazyBrain(p=0.1)
-        self.brain.add_area('A', self.n, self.k, beta=0.05)
-        self.brain.add_area('B', self.n, self.k, beta=0.05)
-        self.brain.add_area('C', self.n, self.k, beta=0.05)
-        self.brain.add_stimulus('s0', self.k)
-        self.brain.add_stimulus('s1', self.k)
-        self.brain.add_stimulus('s2', self.k)
-        self.brain.add_output_area('Output')
+        self.beta = 0.05
+        #self.brain = NonLazyBrain(p=0.1)
+        self.brain = Brain(Connectome(p=0.1, initialize=True))
+        A = Area(self.n, self.k, self.beta)
+        self.brain.add_area(A)
+        B = Area(self.n, self.k, self.beta)
+        self.brain.add_area(B)
+        C = Area(self.n, self.k, self.beta)
+        self.brain.add_area(C)
+        
+        self.brain.add_stimulus(Stimulus(self.n, self.beta))
+        self.brain.add_stimulus(Stimulus(self.n, self.beta))
+        self.brain.add_stimulus(Stimulus(self.n, self.beta))
+        #self.brain.add_output_area('Output')
+        self.brain.add_area(OutputArea(self.n, self.beta))
 
     def test_input_stimuli_generates_list_of_input_bit_stimuli_objects_from_single_areas(self):
-        input_stimuli = InputStimuli(self.brain, self.k, 'A', 'B', 'C')
+        input_stimuli = InputStimuli(self.brain, self.k, A, B, C)
 
         self.assertEqual(3, len(input_stimuli))
         for i in range(len(input_stimuli)):
             self.assertIsInstance(input_stimuli[i], InputBitStimuli)
 
-        self.assertListEqual(['A'], input_stimuli[0].target_areas)
-        self.assertListEqual(['B'], input_stimuli[1].target_areas)
-        self.assertListEqual(['C'], input_stimuli[2].target_areas)
+        self.assertListEqual([A], input_stimuli[0].target_areas)
+        self.assertListEqual([B], input_stimuli[1].target_areas)
+        self.assertListEqual([C], input_stimuli[2].target_areas)
 
     def test_input_stimuli_generates_list_of_input_bit_stimuli_objects_from_complex_areas(self):
-        input_stimuli = InputStimuli(self.brain, self.k, 'A', 'B', ['A', 'B'], 'C', ['A', 'C'], ['A', 'B', 'C'])
+        input_stimuli = InputStimuli(self.brain, self.k, A, B, [A, B], C, [A, C], [A, B, C])
 
         self.assertEqual(6, len(input_stimuli))
         for i in range(len(input_stimuli)):
             self.assertIsInstance(input_stimuli[i], InputBitStimuli)
 
-        self.assertListEqual(['A'], input_stimuli[0].target_areas)
-        self.assertListEqual(['B'], input_stimuli[1].target_areas)
-        self.assertListEqual(['A', 'B'], input_stimuli[2].target_areas)
-        self.assertListEqual(['C'], input_stimuli[3].target_areas)
-        self.assertListEqual(['A', 'C'], input_stimuli[4].target_areas)
-        self.assertListEqual(['A', 'B', 'C'], input_stimuli[5].target_areas)
+        self.assertListEqual([A], input_stimuli[0].target_areas)
+        self.assertListEqual([B], input_stimuli[1].target_areas)
+        self.assertListEqual([A, B], input_stimuli[2].target_areas)
+        self.assertListEqual([C], input_stimuli[3].target_areas)
+        self.assertListEqual([A, C], input_stimuli[4].target_areas)
+        self.assertListEqual([A, B, C], input_stimuli[5].target_areas)
 
     def test_input_stimuli_generates_list_of_input_bit_stimuli_objects_from_areas_with_override(self):
         input_stimuli = InputStimuli(self.brain, self.k, 'A', 'B', ['A', 'B'], override={0: ('s0', 's1')})
@@ -55,8 +67,9 @@ class InputTests(TestCase):
         self.assertListEqual(['A', 'B'], input_stimuli[2].target_areas)
 
     def test_input_stimuli_with_non_existent_area_raises(self):
-        self.assertRaises(MissingArea, InputStimuli, self.brain, self.k, 'A', 'B', 'Non-Existent')
-        self.assertRaises(MissingArea, InputStimuli, self.brain, self.k, 'A', ['B', 'Non-Existent'])
+        Non_Existent = Area(self.n, self.k, self.beta)
+        self.assertRaises(MissingArea, InputStimuli, self.brain, self.k, A, B, Non_Existent)
+        self.assertRaises(MissingArea, InputStimuli, self.brain, self.k, A, [B, Non_Existent])
 
     def test_input_stimuli_with_non_existent_override_stimulus_raises(self):
         self.assertRaises(MissingStimulus, InputStimuli, self.brain, self.k, 'A', 'B', override={1: ('s0', 's-non-existent')})

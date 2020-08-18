@@ -1,0 +1,2 @@
+Writing simulation to /home/user/assemblies/assembly_calculus/simulations/artifacts/4ab40c22-c921-4575-a1e6-ecd93f0324a0
+Beginning simulation with merge_stabilization=1, t=1:

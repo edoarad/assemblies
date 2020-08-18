@@ -1,11 +1,7 @@
 from collections import namedtuple
 from typing import Mapping, Tuple, List
 
-<<<<<<< HEAD
-from utils.argument_manipulation import argument_restrict
-=======
-from ..argument_manipulation import argument_restrict
->>>>>>> 7979a85f041c4038fcd39399ebcd030dc22cffad
+from assembly_calculus.utils.argument_manipulation import argument_restrict
 
 
 class Recording:

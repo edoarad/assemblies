@@ -1,0 +1,26 @@
+Traceback (most recent call last):
+  File "/home/user/.pyenv/versions/3.8.0/lib/python3.8/runpy.py", line 192, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/home/user/.pyenv/versions/3.8.0/lib/python3.8/runpy.py", line 85, in _run_code
+    exec(code, run_globals)
+  File "/home/user/assemblies/assembly_calculus/simulations/assemblies_merge.py", line 115, in <module>
+    with bake(recipe, 0.1, Connectome, train_repeat=t, effective_repeat=3) as brain:
+  File "/home/user/assemblies/assembly_calculus/brain/brain.py", line 153, in bake
+    brain = Brain(connectome_cls(p), recipe=recipe, repeat=train_repeat)
+  File "/home/user/assemblies/assembly_calculus/utils/uniquely_identifiable.py", line 10, in __call__
+    obj.__init__(*args, **kwargs)
+  File "/home/user/assemblies/assembly_calculus/brain/brain.py", line 44, in __init__
+    self.add_area(area)
+  File "/home/user/assemblies/assembly_calculus/brain/brain.py", line 73, in add_area
+    self.connectome.add_area(area)
+  File "/home/user/assemblies/assembly_calculus/brain/connectome/connectome.py", line 52, in add_area
+    self._initialize_parts([area])
+  File "/home/user/assemblies/assembly_calculus/brain/connectome/connectome.py", line 74, in _initialize_parts
+    self._initialize_connection(other, part)
+  File "/home/user/assemblies/assembly_calculus/brain/connectome/connectome.py", line 85, in _initialize_connection
+    synapses = self.rng.multi_generate(area.n, part.n, self.p).reshape((part.n, area.n), order='F')
+  File "/home/user/assemblies/assembly_calculus/brain/performance/multithreaded/multithreaded.py", line 35, in __call__
+    params = self._params(self._threads, *args, **kwargs)
+  File "/home/user/assemblies/assembly_calculus/brain/performance/multithreaded_rng.py", line 32, in _multi_params
+    out = np.empty((height, width))
+MemoryError: Unable to allocate 7.63 MiB for an array with shape (1000, 1000) and data type float64
