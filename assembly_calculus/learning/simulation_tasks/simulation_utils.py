@@ -40,7 +40,7 @@ class SimulationUtils:
         pass
 
     @abstractmethod
-    def create_sequence(self, brain: Brain) -> LearningSequence:
+    def create_sequence(self, brain: Brain, input_stimuli: InputStimuli) -> LearningSequence:
         """
         Creating the learning sequence that was found most efficient for learning
         """
@@ -116,18 +116,19 @@ class SimpleSimulationUtils(SimulationUtils):
     def create_input_stimuli(self, brain: Brain, k: int) -> InputStimuli:
         return InputStimuli(brain, k, *tuple(['A'] * self.input_size), verbose=False)
 
-    def create_sequence(self, brain: Brain) -> LearningSequence:
-        sequence = LearningSequence(brain)
+    def create_sequence(self, brain: Brain, input_stimuli: InputStimuli) -> LearningSequence:
+        sequence = LearningSequence(brain, input_stimuli)
 
         # All stimuli fire to area 'A'
-        input_bits_to_areas = {i: ['A'] for i in range(self.input_size)}
-        sequence.add_iteration(input_bits_to_areas=input_bits_to_areas, areas_to_areas={})
+        input_bits = list(range(self.input_size))
+        sequence.add_iteration(input_bits=input_bits)
 
-        sequence.add_iteration(input_bits_to_areas=input_bits_to_areas, areas_to_areas={'A': ['A']}, consecutive_runs=2)
+        sequence.add_iteration(input_bits=input_bits, areas_to_areas={'A': ['A']}, consecutive_runs=2)
 
-        sequence.add_iteration(input_bits_to_areas={}, areas_to_areas={'A': ['Output']})
+        sequence.add_iteration(areas_to_areas={'A': ['Output']})
 
         return sequence
+
 
 
 class LayeredSimulationUtils(SimulationUtils):
@@ -166,31 +167,31 @@ class LayeredSimulationUtils(SimulationUtils):
     def create_input_stimuli(self, brain: Brain, k: int) -> InputStimuli:
         return InputStimuli(brain, k, *tuple(self._name(i) for i in range(self.input_size)), verbose=False)
 
-    def create_sequence(self, brain: Brain) -> LearningSequence:
-        sequence = LearningSequence(brain)
+    def create_sequence(self, brain: Brain, input_stimuli: InputStimuli) -> LearningSequence:
+        sequence = LearningSequence(brain, input_stimuli)
 
         # The first input bit fires to the first area, the second fires to the second area, etc
-        input_bits_to_areas = {i: [self._name(i)] for i in range(self.input_size)}
-        sequence.add_iteration(input_bits_to_areas=input_bits_to_areas, areas_to_areas={})
+        input_bits = list(range(self.input_size))
+        sequence.add_iteration(input_bits=input_bits, areas_to_areas={})
 
         area_layers = self._split_to_area_layers(brain)
 
         # Every first-layer area (i.e. all areas connected directly to stimuli) fires at itself
         areas_to_areas = {area: [area] for area in area_layers[0]}
-        sequence.add_iteration(input_bits_to_areas=input_bits_to_areas, areas_to_areas=areas_to_areas, consecutive_runs=2)
+        sequence.add_iteration(input_bits=input_bits, areas_to_areas=areas_to_areas, consecutive_runs=2)
 
         for layer in range(self.brain_layers - 1):
             # Every 2 'consecutive' areas fire at an area of the next layer
             areas_to_areas = {area: [area_layers[layer + 1][idx // 2]] for idx, area in enumerate(area_layers[layer])}
-            sequence.add_iteration(input_bits_to_areas={}, areas_to_areas=areas_to_areas)
+            sequence.add_iteration(areas_to_areas=areas_to_areas)
 
             # In addition to the previous iteration, every area of the next layer fires at itself
             areas_to_areas = dict(areas_to_areas, **{area: [area] for area in area_layers[layer + 1]})
-            sequence.add_iteration(input_bits_to_areas={}, areas_to_areas=areas_to_areas, consecutive_runs=2)
+            sequence.add_iteration(areas_to_areas=areas_to_areas, consecutive_runs=2)
 
         # The last later fires at the output
         areas_to_areas = {area: ['Output'] for area in area_layers[-1]}
-        sequence.add_iteration(input_bits_to_areas={}, areas_to_areas=areas_to_areas)
+        sequence.add_iteration(areas_to_areas=areas_to_areas)
 
         return sequence
 
