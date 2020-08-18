@@ -25,8 +25,13 @@ class RecursiveSampler(AssemblySampler):
         :param brain: the brain object
         :return: the winners as read from the area that we've fired up
         """
-        changed_areas = fire_many(brain, assembly.parents, assembly.area, preserve_brain)
+        original_plasticity = brain.connectome.plasticity
+        if preserve_brain:
+            brain.connectome.plasticity = False
+        changed_areas = fire_many(brain, assembly.parents, assembly.area)
         read_value = brain.winners[assembly.area]
         if preserve_brain:
             revert_changes(brain, changed_areas)
+        if preserve_brain:
+            brain.connectome.plasticity = original_plasticity
         return read_value

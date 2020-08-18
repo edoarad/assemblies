@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+from itertools import chain
 from typing import Iterable, Dict, List, TYPE_CHECKING
 
 from ..brain import Brain, Area, Stimulus
@@ -8,7 +10,7 @@ if TYPE_CHECKING:
 
 
 # TODO: Remove preserve_brain and do it in outer scope
-def fire_many(brain: Brain, projectables: Iterable[Projectable], area: Area, preserve_brain: bool = False):
+def fire_many(brain: Brain, projectables: Iterable[Projectable], area: Area):
     """
     This function works by creating a "Parent tree", (Which is actually a directed acyclic graph) first,
     and then by going from the top layer, which will consist of stimuli, and traversing down the tree
@@ -25,15 +27,10 @@ def fire_many(brain: Brain, projectables: Iterable[Projectable], area: Area, pre
     """
     # TODO 2: instead of keeping `original_plasticity` and restoring, this is a classic use for context! (for example: `with brain.disable_plasticity():` )
     # Response: We will use it if it is implemented for us, but out of our scope
-    original_plasticity = brain.connectome.plasticity
-    if preserve_brain:
-        brain.connectome.plasticity = False
     # construct the firing hierarchy
     layers = construct_firing_order(projectables, area)
     # now, fire each layer:
     changed_areas = fire_layered_areas(brain, layers)
-    if preserve_brain and not original_plasticity:
-        brain.connectome.plasticity = True
     return changed_areas
 
 
@@ -88,6 +85,10 @@ def fire_layered_areas(brain: Brain, firing_order: List[Dict[Projectable, List[A
             for area in areas:
                 if area not in changed_areas:
                     changed_areas[area] = brain.winners[area]
+
+        targets = chain(*mapping.values())
+        for target in targets:
+            mapping[target] = mapping.get(target, []) + [target]
 
         brain.next_round(subconnectome=mapping, replace=True)   # fire this layer of objects
 
