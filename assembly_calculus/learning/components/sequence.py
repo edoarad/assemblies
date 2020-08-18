@@ -4,7 +4,7 @@ from assembly_calculus import Stimulus
 from assembly_calculus.brain import Area, Brain, BrainPart, OutputArea
 from assembly_calculus.learning.components.errors import MissingArea, SequenceRunNotInitializedOrInMidRun, SequenceFinalizationError, \
 	MissingStimulus
-
+from assembly_calculus.learning.components.input import InputStimuli
 from assembly_calculus.learning.components.sequence_components.connections_graph import ConnectionsGraph
 from assembly_calculus.learning.components.sequence_components.iteration import Iteration
 from assembly_calculus.learning.components.sequence_components.iteration_configuration import IterationConfiguration
@@ -25,7 +25,7 @@ class LearningSequence:
 	connections graph representing the projections in the sequence.
 	"""
 
-	def __init__(self, brain: Brain):
+	def __init__(self, brain: Brain, input_stimuli: InputStimuli):
 		"""
 		Create a new empty sequence.
 
@@ -34,8 +34,11 @@ class LearningSequence:
 		iterations will added).
 
 		:param brain: the brain object
+		:param input_stimuli: the input stimuli object defining the mapping
+		between input bits and their representing pair of stimuli.
 		"""
 		self._brain = brain
+		self._input_stimuli = input_stimuli
 
 		# Representing the given sequence as a graph, for connectivity checking
 		self._connections_graph = ConnectionsGraph()
@@ -173,13 +176,22 @@ class LearningSequence:
 				self._connections_graph.add_connection(source_node, area_node, consecutive_runs,
 				                                       self.number_of_iterations)
 
+	def _process_input_bits(self, input_bits: List[int]) -> Dict[int, List[str]]:
+		"""
+		Generate a mapping of input bits to their connected areas from the given input bits.
+		:param input_bits: a list of bits in the input that should fire to their defined areas
+		:return: a mapping between input bit and it's areas as defined in the input stimuli mapping.
+		"""
+		return {input_bit: self._input_stimuli[input_bit].target_areas
+				for input_bit in input_bits}
+
 	def add_iteration(self, subconnectome: Dict[BrainPart, Set[BrainPart]],
-	                  input_bits_to_areas: Dict[int, List[BrainPart]] = None,
+	                  input_bits: List[int] = None,
 	                  consecutive_runs: int = 1) -> None:
 		"""
 		Adding an iteration to the learning sequence, consisting of firing stimuli/areas and fired-at areas/output areas
 		:param subconnectome: a mapping between a stimulus/area and the areas/output areas it fires to
-		:param input_bits_to_areas: a mapping between a bit in the input and the areas it's stimuli fire to
+		:param input_bits: a list of bits in the input that should fire to their defined areas
 		:param consecutive_runs: the number of consecutive times this iteration is sent (for projection) before moving
 			to the next iteration
 		"""
@@ -189,8 +201,11 @@ class LearningSequence:
 		if subconnectome:
 			self._validate_and_add_connections(subconnectome, consecutive_runs)
 
-		if input_bits_to_areas:
+		if input_bits:
+			input_bits_to_areas = self._process_input_bits(input_bits)
 			self._validate_and_add_connections(input_bits_to_areas, consecutive_runs)
+		else:
+			input_bits_to_areas = None
 
 		new_iteration = Iteration(subconnectome=subconnectome,
 		                          input_bits_to_areas=input_bits_to_areas,
