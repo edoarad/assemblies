@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from typing import Dict, Set, TYPE_CHECKING, List, Optional, Union, Type
+from contextlib import contextmanager
 
 from .brain_recipe import BrainRecipe
 from .components import BrainPart, Stimulus, Area
@@ -113,8 +114,24 @@ class Brain(UniquelyIdentifiable):
         # TODO: Implement
         return None
 
+    @contextmanager
     def temporary_plasticity(self, mode: bool):
-        pass
+        original_plasticity: bool = self.connectome.plasticity
+        self.connectome.plasticity = mode
+        yield self
+        self.connectome.plasticity = original_plasticity
+
+    @contextmanager
+    def freeze(self, freeze: bool = True):
+        if not freeze:
+            yield self
+            return
+
+        original_winners = {area: self.winners[area].copy() for area in self.recipe.areas}
+        with self.temporary_plasticity(mode=False):
+            yield self
+        for area in self.recipe.areas:
+            self.winners[area] = original_winners[area]
 
     def __enter__(self):
         current_ctx_stack: Dict[Union[BrainPart, Assembly], Optional[Brain]] = {}

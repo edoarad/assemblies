@@ -77,6 +77,7 @@ class AssemblyTuple(UniquelyIdentifiable):
         merged_assembly: Assembly = Assembly(self.assemblies, area,
                                              initial_recipes=set.intersection(*[x.appears_in for x in self]))
         if brain is not None:
+            brain.winners[area] = list()
             all_parents = list(chain(*(assembly.parents for assembly in self)))
             activate(all_parents, brain=brain)
 
@@ -107,6 +108,7 @@ class AssemblyTuple(UniquelyIdentifiable):
 
         area = areas.pop()
 
+        brain.winners[area] = list()
         pairs: Iterable[Tuple[Assembly, Assembly]] = product(self, other)
         for x, y in pairs:
             activate(x.parents + y.parents, brain=brain)
@@ -134,7 +136,6 @@ class AssemblyTuple(UniquelyIdentifiable):
     __or__ = union  # we now support the | operator for both Assembly and AssemblyTuple objects.
 
 
-# TODO: Better documentation for user-functions, add example usages w\ and w\o bindable
 @attach_recording
 @bindable_brain.cls
 class Assembly(UniquelyIdentifiable):
@@ -213,7 +214,6 @@ class Assembly(UniquelyIdentifiable):
         if brain is not None:
             activate([self], brain=brain)
             brain.winners[area] = list()
-            # TODO: Edo, what about self edges? they make assebmlies merge with eachother automatically???
             brain.next_round(subconnectome={self.area: [area], area: [area]}, replace=True, iterations=brain.repeat)
 
         projected_assembly.bind_like(self)
@@ -251,8 +251,6 @@ class Assembly(UniquelyIdentifiable):
         if brain is not None:
             activate(self.parents, brain=brain)
 
-            # TODO: Is this OK? (To Edo)
-            brain.winners[area] = list()
             subconnectome = {**{(parent.area if isinstance(parent, Assembly) else parent):
                                 [self.area] for parent in self.parents}, self.area: [area], area: [self.area]}
             brain.next_round(subconnectome=subconnectome, replace=True, iterations=brain.repeat * 20)

@@ -23,15 +23,11 @@ def fire_many(brain: Brain, projectables: Iterable[Projectable], area: Area):
     :param brain: the brain in which the firing happens
     :param projectables: a list of projectable objects to be projected
     :param area: the area into which the objects are projected
-    :param preserve_brain: a boolean deteremining whether we want the brain to be changed in the process
     """
-    # TODO 2: instead of keeping `original_plasticity` and restoring, this is a classic use for context! (for example: `with brain.disable_plasticity():` )
-    # Response: We will use it if it is implemented for us, but out of our scope
     # construct the firing hierarchy
     layers = construct_firing_order(projectables, area)
     # now, fire each layer:
-    changed_areas = fire_layered_areas(brain, layers)
-    return changed_areas
+    fire_layered_areas(brain, layers)
 
 
 def construct_firing_order(projectables: Iterable[Projectable], area: Area) -> List[Dict[Projectable, List[Area]]]:
@@ -65,10 +61,8 @@ def fire_layered_areas(brain: Brain, firing_order: List[Dict[Projectable, List[A
     Fire layers of projectables one by one
     :param brain: Brain in which to to fire
     :param firing_order: Layers of projectables, and corresponding areas (to fire into)
-    :return: Original winners of affected areas
     """
     from ..assemblies import Assembly
-    changed_areas: Dict[Area, List[int]] = {}
     for layer in firing_order:
         stimuli_mappings: Dict[Stimulus, List[Area]] = {stim: areas
                                                         for stim, areas in
@@ -81,36 +75,9 @@ def fire_layered_areas(brain: Brain, firing_order: List[Dict[Projectable, List[A
             assembly_mapping[ass.area] = assembly_mapping.get(ass.area, []) + areas
 
         mapping = {**stimuli_mappings, **assembly_mapping}
-        for areas in mapping.values():
-            for area in areas:
-                if area not in changed_areas:
-                    changed_areas[area] = brain.winners[area]
 
         targets = chain(*mapping.values())
         for target in targets:
             mapping[target] = mapping.get(target, []) + [target]
 
         brain.next_round(subconnectome=mapping, replace=True)   # fire this layer of objects
-
-    return changed_areas
-
-
-# TODO: This function should belong to brain.py, and probably implemented otherwise.
-#       This is because it is very likely that changes will be made that will make
-#       this function behave poorly - perhaps not remember to revert some structure
-#       will be added later on. It would be a bitch to debug.
-# Response: API Team can move this to brain.py (their choice)
-#           We chose not to do as a content manager for efficiency
-#           If an efficient content manager will be implemented, of course we will use it (again, out of our scope)
-def revert_changes(brain: Brain, *changed_areas: Dict[Area, List[int]]):
-    """
-    Changes the winners of areas in the given brain as dictated in the changed_areas dictionary
-    :param brain: a brain
-    :param changed_areas: a dictionary mapping between areas and their previous winners
-    """
-    changed_areas = changed_areas[::-1]
-    changes = changed_areas[0]
-    for change in changed_areas:
-        changes.update(change)
-    for area in changes:
-        brain.connectome.winners[area] = changes[area]

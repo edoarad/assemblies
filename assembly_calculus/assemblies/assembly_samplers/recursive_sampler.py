@@ -1,6 +1,6 @@
 from __future__ import annotations
 from ..assembly_sampler import AssemblySampler
-from ...utils.brain_utils import fire_many, revert_changes
+from ...utils.brain_utils import fire_many
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ..assembly import Assembly
@@ -25,13 +25,6 @@ class RecursiveSampler(AssemblySampler):
         :param brain: the brain object
         :return: the winners as read from the area that we've fired up
         """
-        original_plasticity = brain.connectome.plasticity
-        if preserve_brain:
-            brain.connectome.plasticity = False
-        changed_areas = fire_many(brain, assembly.parents, assembly.area)
-        read_value = brain.winners[assembly.area]
-        if preserve_brain:
-            revert_changes(brain, changed_areas)
-        if preserve_brain:
-            brain.connectome.plasticity = original_plasticity
-        return read_value
+        with brain.freeze(freeze=preserve_brain):
+            fire_many(brain, assembly.parents, assembly.area)
+            return brain.winners[assembly.area]
