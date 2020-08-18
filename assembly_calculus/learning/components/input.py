@@ -1,7 +1,7 @@
 from typing import Union, List, Dict, Tuple
 
 from ...brain import Brain, Stimulus, Area
-from assembly_calculus.learning.components.errors import MissingArea, MissingStimulus
+from assembly_calculus.learning.components.errors import MissingArea, MissingStimulus, MaxAttemptsToGenerateStimuliReached
 
 AUTO_GENERATED_STIMULUS_NAME_FORMAT = "__s_{area_name}_{input_bit_value}{postfix}"
 AUTO_GENERATED_STIMULUS_NAME_POSTFIX = "_({})"
@@ -69,7 +69,7 @@ class InputStimuli:
 	already in use. This limit can be changed if needed.
 	"""
 
-	def __init__(self, brain: Brain, stimulus_k: int, *areas: List[Area],
+	def __init__(self, brain: Brain, stimulus_k: int, *areas: Union[Area, List[Area]],
 	             override: Dict[int, Tuple[Stimulus, Stimulus]] = None, verbose=True) -> None:
 		"""
 		:param brain: the brain to create the input stimuli in.
@@ -153,11 +153,13 @@ class InputStimuli:
 			if stimulus not in brain.connectome.stimuli:
 				raise MissingStimulus(str(stimulus))
 
-	def _generate_input_bits(self, brain: Brain, stimulus_k: int, areas: List[Area], override) -> List[InputBitStimuli]:
+	def _generate_input_bits(self, brain: Brain, stimulus_k: int, areas: Union[Area, List[Area]], override) -> List[InputBitStimuli]:
 		input_bits = []
-		for bit, area in enumerate(areas):
-			self._validate_area(brain, area)
+		num_stimuli = 0
+		for bit, area_or_list in enumerate(areas):
+			self._validate_area(brain, area_or_list)
 			if override and bit in override:
+				self._validate_override_input_bit(brain, override[bit])
 				stimulus_0 = override[bit][0]
 				stimulus_1 = override[bit][1]
 			else:
@@ -165,6 +167,16 @@ class InputStimuli:
 				stimulus_1 = Stimulus(stimulus_k)
 			brain.add_stimulus(stimulus_0)
 			brain.add_stimulus(stimulus_1)
-			input_bits.append(InputBitStimuli(stimulus_0, stimulus_1, [area]))
+			num_stimuli += 1
+			if num_stimuli > MAX_ATTEMPTS:
+				raise MaxAttemptsToGenerateStimuliReached()
+
+
+			if isinstance(area_or_list, Area): 
+				area_list = [area_or_list]
+			else:
+				area_list = area_or_list
+
+			input_bits.append(InputBitStimuli(stimulus_0, stimulus_1, area_list))
 
 		return input_bits
