@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 @bindable_brain.cls
 class Area(UniquelyIdentifiable):
     # This selection was arbitrary, please let us know if you prefer some other constant
-    THRESHOLD: float = 0.5
+    THRESHOLD: float = 0.20
 
     def __init__(self, n: int, k: Optional[int] = None, beta: float = 0.01):
         super(Area, self).__init__()
@@ -23,8 +23,8 @@ class Area(UniquelyIdentifiable):
 
     # TODO: return as a set?
     @bindable_brain.property
-    def winners(self, *, brain: Brain):
-        return brain.winners[self]
+    def winners(self, *, brain: Brain) -> Set[int]:
+        return set(brain.winners[self])
 
     @bindable_brain.property
     def support(self, *, brain: Brain):

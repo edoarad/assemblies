@@ -1,14 +1,15 @@
 from __future__ import annotations
 # Allows forward declarations and such :)
-
-from typing import Iterable, Union, Tuple, TYPE_CHECKING, Set
+from collections import defaultdict
+from itertools import product, chain
+from typing import Iterable, Union, Tuple, TYPE_CHECKING, Set, Type, List
 
 from .assembly_sampler import AssemblySampler
 from .assembly_samplers.recursive_sampler import RecursiveSampler
 from ..utils import ImplicitResolution, Bindable, UniquelyIdentifiable, set_hash, attach_recording, record_method, \
     bindable_brain
 from ..brain import Stimulus, Area
-from .utils import util_project, util_associate, union
+from .utils import union, activate
 
 if TYPE_CHECKING:  # TODO: this is not needed. It's better to always import them.
     # Response: Sadly we need to do it to avoid cyclic imports,
@@ -70,7 +71,28 @@ class AssemblyTuple(UniquelyIdentifiable):
         can be used by user with >> or directly by:
         (ass1 | ass2).merge( ... ) or AssemblyTuple(list of assemblies).merge( ... )
         """
-        return util_project(self.assemblies, area, brain=brain)
+        if not isinstance(area, Area):
+            raise ValueError("Project target must be an Area in the brain")
+
+        merged_assembly: Assembly = Assembly(self.assemblies, area,
+                                             initial_recipes=set.intersection(*[x.appears_in for x in self]))
+        if brain is not None:
+            all_parents = list(chain(*(assembly.parents for assembly in self)))
+            activate(all_parents, brain=brain)
+
+            subconnectome = defaultdict(lambda: set())
+            for assembly in self:
+                for parent in assembly.parents:
+                    parent_area = parent if isinstance(parent, Stimulus) else parent.area
+                    subconnectome[parent_area].add(assembly.area)
+
+                subconnectome[assembly.area].add(area)
+                subconnectome[area].add(assembly.area)
+
+            brain.next_round(subconnectome=subconnectome, replace=True, iterations=brain.repeat * 20)
+
+        merged_assembly.bind_like(*self)
+        return merged_assembly
 
     @record_method(lambda self, other, **_: Bindable.bound_value('recording', *self, *other), execute_anyway=False)
     @ImplicitResolution(brain=lambda self, other, **_: Bindable.bound_value('brain', *self, *other))
@@ -79,7 +101,20 @@ class AssemblyTuple(UniquelyIdentifiable):
         as of now has no syntactic sugar, so use by:
         (ass1 | ass2).associate(another AssemblyTuple).
         """
-        return util_associate(self.assemblies, other.assemblies, brain=brain)
+        areas = set(map(lambda ass: ass.area, self + other))
+        if len(areas) > 1:
+            raise ValueError("All assemblies must reside in the same area")
+
+        area = areas.pop()
+
+        pairs: Iterable[Tuple[Assembly, Assembly]] = product(self, other)
+        for x, y in pairs:
+            activate(x.parents + y.parents, brain=brain)
+
+            parent_areas = list(set(map(lambda ass: ass.area, x.parents + y.parents)))
+            subconnectome = {**{parent_area: [area] for parent_area in parent_areas}}
+            # We compensate with more rounds, in order to avoid natural mixing (by removing self edge area: [area])
+            brain.next_round(subconnectome=subconnectome, replace=True, iterations=brain.repeat * 20)
 
     def __rshift__(self, target_area: Area):
         """
@@ -110,14 +145,14 @@ class Assembly(UniquelyIdentifiable):
     This class implements basic operations on assemblies (project, reciprocal_project,
     merge and associate) by using a AssemblySampler object, which interacts with the brain directly.
     """
-    _default_sampler: AssemblySampler = RecursiveSampler
+    _default_sampler: Type[AssemblySampler] = RecursiveSampler
 
     def __new__(cls, parents: Iterable[Projectable], area: Area, initial_recipes: Iterable[BrainRecipe] = None,
                 sampler: AssemblySampler = None):
         return UniquelyIdentifiable.__new__(cls, uid=hash((area, set_hash(parents))))
 
     def __init__(self, parents: Iterable[Projectable], area: Area,
-                 initial_recipes: Iterable[BrainRecipe] = None, sampler: AssemblySampler = None):
+                 initial_recipes: Iterable[BrainRecipe] = None, sampler: Type[AssemblySampler] = None):
         """
         :param parents: the Assemblies and/or Stimuli that were used to create the assembly
         :param area: an Area where the Assembly "lives"
@@ -137,7 +172,7 @@ class Assembly(UniquelyIdentifiable):
             recipe.append(self)
 
     @property
-    def sampler(self) -> AssemblySampler:
+    def sampler(self) -> Type[AssemblySampler]:
         # property decorator means we can access this as assembly.sampler
         return self._sampler or Assembly._default_sampler
 
@@ -173,8 +208,16 @@ class Assembly(UniquelyIdentifiable):
         if not isinstance(area, Area):
             raise TypeError("Projection target must be an Area in the Brain")
 
-                                                         # TODO: Eyal what is this line?
-        return util_project((self,), area, brain=brain)  # project was actually just this line
+        projected_assembly: Assembly = Assembly([self], area, initial_recipes=self.appears_in)
+
+        if brain is not None:
+            activate([self], brain=brain)
+            brain.winners[area] = list()
+            # TODO: Edo, what about self edges? they make assebmlies merge with eachother automatically???
+            brain.next_round(subconnectome={self.area: [area], area: [area]}, replace=True, iterations=brain.repeat)
+
+        projected_assembly.bind_like(self)
+        return projected_assembly
 
     def __rshift__(self, target: Area):
         """
@@ -198,9 +241,23 @@ class Assembly(UniquelyIdentifiable):
         :param brain: Should be supplied automatically by context (with brain / with recipe)
         :returns: Resulting projected assembly
         """
+        # Response: Added area checks
+        if not isinstance(area, Area):
+            raise TypeError("Project target must be an Area in the brain")
 
+        # To improve convergence rate we decided to first project (and stabilize assembly)
+        # and only then begin doing a reciprocal project
         projected_assembly: Assembly = self.project(area, brain=brain)
-        projected_assembly.project(self.area, brain=brain)
+        if brain is not None:
+            activate(self.parents, brain=brain)
+
+            # TODO: Is this OK? (To Edo)
+            brain.winners[area] = list()
+            subconnectome = {**{(parent.area if isinstance(parent, Assembly) else parent):
+                                [self.area] for parent in self.parents}, self.area: [area], area: [self.area]}
+            brain.next_round(subconnectome=subconnectome, replace=True, iterations=brain.repeat * 20)
+
+        projected_assembly.bind_like(self)
         return projected_assembly
 
     # TODO: lt and gt logic can be implemented using a common method
@@ -218,5 +275,10 @@ class Assembly(UniquelyIdentifiable):
         :param other: the assembly we compare against
         """
         return isinstance(other, Assembly) and self in other.parents
+
+    def __repr__(self):
+        return f"Assembly(parents=[%s], area=%s, sampler=%s)" %\
+               (", ".join(parent.instance_name for parent in self.parents), self.area.instance_name,
+                self.sampler.__name__)
 
     __or__ = union

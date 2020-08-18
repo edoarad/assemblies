@@ -51,7 +51,7 @@ class Brain(UniquelyIdentifiable):
     # TODO 6: performs a merge operation between `active_connectome` and `subconnectome`, and returns an undefined value.
     # TODO 6: please make it clearer and simplify the logic
     # TODO 7: replace=True by default
-    def next_round(self, subconnectome=None, replace=False, iterations=1):
+    def next_round(self, subconnectome=None, replace=True, iterations=1):
         # TODO 3: make next statement clearer
         if replace or subconnectome is None:
             _active_connectome = subconnectome or self.active_connectome
@@ -62,10 +62,11 @@ class Brain(UniquelyIdentifiable):
                 for dest in destinations:
                     _active_connectome[source].add(dest)
 
-        for _ in range(iterations - 1):
+        result = None
+        for _ in range(iterations):
             self.connectome.project(_active_connectome)
         # TODO 5: `project` in `Connectome` class has no `return` - what is expected to be returned here?
-        return self.connectome.project(_active_connectome)
+        return result
 
     def add_area(self, area: Area):
         self.recipe.append(area)
@@ -112,6 +113,9 @@ class Brain(UniquelyIdentifiable):
         # TODO: Implement
         return None
 
+    def temporary_plasticity(self, mode: bool):
+        pass
+
     def __enter__(self):
         current_ctx_stack: Dict[Union[BrainPart, Assembly], Optional[Brain]] = {}
 
@@ -147,7 +151,7 @@ class Brain(UniquelyIdentifiable):
 # TODO 4: make names clearer: train_repeat -> recipe_repeat, effective_repeat -> something clearer?
 # TODO 5: should this be a method of `BrainRecipe`?
 def bake(recipe: BrainRecipe, p: float, connectome_cls: Type[ABCConnectome],
-         train_repeat: int = 1000, effective_repeat: int = 3):
+         train_repeat: int = 10, effective_repeat: int = 3):
     brain = Brain(connectome_cls(p), recipe=recipe, repeat=train_repeat)
     recipe.initialize(brain)
     brain.repeat = effective_repeat
