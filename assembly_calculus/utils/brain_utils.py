@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+from itertools import chain
 from typing import Iterable, Dict, List, TYPE_CHECKING
 
 from ..brain import Brain, Area, Stimulus
@@ -32,8 +34,8 @@ def fire_many(brain: Brain, projectables: Iterable[Projectable], area: Area, pre
     layers = construct_firing_order(projectables, area)
     # now, fire each layer:
     changed_areas = fire_layered_areas(brain, layers)
-    if preserve_brain and not original_plasticity:
-        brain.connectome.plasticity = True
+    if preserve_brain:
+        brain.connectome.plasticity = original_plasticity
     return changed_areas
 
 
@@ -88,6 +90,10 @@ def fire_layered_areas(brain: Brain, firing_order: List[Dict[Projectable, List[A
             for area in areas:
                 if area not in changed_areas:
                     changed_areas[area] = brain.winners[area]
+
+        targets = chain(*mapping.values())
+        for target in targets:
+            mapping[target] = mapping.get(target, []) + [target]
 
         brain.next_round(subconnectome=mapping, replace=True)   # fire this layer of objects
 

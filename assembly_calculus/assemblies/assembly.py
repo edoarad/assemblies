@@ -2,7 +2,7 @@ from __future__ import annotations
 # Allows forward declarations and such :)
 from collections import defaultdict
 from itertools import product, chain
-from typing import Iterable, Union, Tuple, TYPE_CHECKING, Set, Type
+from typing import Iterable, Union, Tuple, TYPE_CHECKING, Set, Type, List
 
 from .assembly_sampler import AssemblySampler
 from .assembly_samplers.recursive_sampler import RecursiveSampler
@@ -89,7 +89,7 @@ class AssemblyTuple(UniquelyIdentifiable):
                 subconnectome[assembly.area].add(area)
                 subconnectome[area].add(assembly.area)
 
-            brain.next_round(subconnectome=subconnectome, replace=True, iterations=brain.repeat)
+            brain.next_round(subconnectome=subconnectome, replace=True, iterations=brain.repeat * 20)
 
         merged_assembly.bind_like(*self)
         return merged_assembly
@@ -112,8 +112,9 @@ class AssemblyTuple(UniquelyIdentifiable):
             activate(x.parents + y.parents, brain=brain)
 
             parent_areas = list(set(map(lambda ass: ass.area, x.parents + y.parents)))
-            subconnectome = {**{parent_area: [area] for parent_area in parent_areas}, area: [area]}
-            brain.next_round(subconnectome=subconnectome, replace=True, iterations=brain.repeat)
+            subconnectome = {**{parent_area: [area] for parent_area in parent_areas}}
+            # We compensate with more rounds, in order to avoid natural mixing (by removing self edge area: [area])
+            brain.next_round(subconnectome=subconnectome, replace=True, iterations=brain.repeat * 20)
 
     def __rshift__(self, target_area: Area):
         """
@@ -244,14 +245,17 @@ class Assembly(UniquelyIdentifiable):
         if not isinstance(area, Area):
             raise TypeError("Project target must be an Area in the brain")
 
-        projected_assembly: Assembly = Assembly([self], area, initial_recipes=self.appears_in)
+        # To improve convergence rate we decided to first project (and stabilize assembly)
+        # and only then begin doing a reciprocal project
+        projected_assembly: Assembly = self.project(area, brain=brain)
         if brain is not None:
             activate(self.parents, brain=brain)
 
             # TODO: Is this OK? (To Edo)
             brain.winners[area] = list()
-            subconnectome = {**{parent: [self.area] for parent in self.parents}, self.area: [area], area: [self.area]}
-            brain.next_round(subconnectome=subconnectome, replace=True, iterations=brain.repeat)
+            subconnectome = {**{(parent.area if isinstance(parent, Assembly) else parent):
+                                [self.area] for parent in self.parents}, self.area: [area], area: [self.area]}
+            brain.next_round(subconnectome=subconnectome, replace=True, iterations=brain.repeat * 20)
 
         projected_assembly.bind_like(self)
         return projected_assembly
