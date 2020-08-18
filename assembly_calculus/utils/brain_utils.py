@@ -9,7 +9,6 @@ if TYPE_CHECKING:
     from ..assemblies import Projectable
 
 
-# TODO: Remove preserve_brain and do it in outer scope
 def fire_many(brain: Brain, projectables: Iterable[Projectable], area: Area):
     """
     This function works by creating a "Parent tree", (Which is actually a directed acyclic graph) first,

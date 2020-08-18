@@ -51,7 +51,6 @@ class Brain(UniquelyIdentifiable):
     # TODO 6: this function is confusing: it depends on `replace` state, behaves differently if `subconnectome` is None or not,
     # TODO 6: performs a merge operation between `active_connectome` and `subconnectome`, and returns an undefined value.
     # TODO 6: please make it clearer and simplify the logic
-    # TODO 7: replace=True by default
     def next_round(self, subconnectome=None, replace=True, iterations=1):
         # TODO 3: make next statement clearer
         if replace or subconnectome is None:

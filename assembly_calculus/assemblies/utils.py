@@ -14,7 +14,6 @@ if TYPE_CHECKING:
 
 
 # TODO: change random sampling to performance sampling
-# TODO: get k from area
 def activate(projectables: Iterable[Projectable], *, brain: Brain):
     """to prevent code duplication, this function does the common thing
     of taking a list of assemblies and creating a dictionary from area to neurons (of the
