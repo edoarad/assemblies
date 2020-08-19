@@ -1,7 +1,7 @@
 from unittest import TestCase
 
-from assembly_calculus.learning.components.data_set.constructors import create_explicit_mask_from_list
-from assembly_calculus.learning.components.data_set.errors import MaskValueError, MaskIndexError
+from learning.components.data_set.constructors import create_explicit_mask_from_list
+from learning.components.data_set.errors import MaskValueError, MaskIndexError
 
 
 class TestMaskFromList(TestCase):

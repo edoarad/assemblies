@@ -2,9 +2,9 @@ from unittest import TestCase
 
 from parameterized import parameterized
 
-from learning.components.errors import SequenceRunNotInitializedOrInMidRun, IllegalOutputAreasException, NoPathException
-from learning.components.input import InputStimuli
-from learning.components.sequence import LearningSequence
+from assembly_calculus.learning.components.errors import SequenceRunNotInitializedOrInMidRun, IllegalOutputAreasException, NoPathException
+from assembly_calculus.learning.components.input import InputStimuli
+from assembly_calculus.learning.components.sequence import LearningSequence
 from tests.brain_test_utils import BrainTestUtils
 
 
