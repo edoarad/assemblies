@@ -1,6 +1,6 @@
 import random
 
-from assembly_calculus.learning.components.data_set.mask import Mask
+from learning.components.data_set.mask import Mask
 
 
 class LazyMask(Mask):

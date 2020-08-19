@@ -1,9 +1,9 @@
 import random
 
-from assembly_calculus.learning.components.data_set.data_point import DataPoint
-from assembly_calculus.learning.components.data_set.lib.basic_types.data_set_base import DataSetBase
-from assembly_calculus.learning.components.data_set.lib.basic_types.partial_data_set import PartialDataSet
-from assembly_calculus.learning.components.data_set.mask import Mask
+from learning.components.data_set.data_point import DataPoint
+from learning.components.data_set.lib.basic_types.data_set_base import DataSetBase
+from learning.components.data_set.lib.basic_types.partial_data_set import PartialDataSet
+from learning.components.data_set.mask import Mask
 
 
 class TrainingSet(PartialDataSet):
@@ -51,8 +51,8 @@ class TrainingSet(PartialDataSet):
     def __init__(self, base_data_set: DataSetBase, mask: Mask, length: int = None,
                  noise_probability: float = 0.) -> None:
         super().__init__(base_data_set, mask, noise_probability)
-        # TODO: add that it needs to be positive.
         assert type(length) == int, f'TrainingSet length must be an integer (got {length} of type {type(length)})'
+        assert length > 0, f'TrainingSet length must be a positive number (got {length})'
         self._length = length
         self._random = random.Random()
         self._shuffled_indices = self._get_training_indices()
