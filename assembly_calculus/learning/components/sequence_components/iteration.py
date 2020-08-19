@@ -32,6 +32,13 @@ class Iteration:
 	def _to_bits(input_value: int, size: int) -> Tuple[int, ...]:
 		return tuple(int(bit) for bit in bin(input_value)[2:].zfill(size))
 
+	@staticmethod
+	def _union(list1: list, list2: list):
+		"""
+		Union two lists and remove duplicates.
+		"""
+		return sorted(set(list1).union(list2))
+
 	def format(self, input_stimuli: InputStimuli, input_value: int) -> dict:
 		"""
 		Converting the Iteration object into project parameters, using the input definition
@@ -46,8 +53,8 @@ class Iteration:
 		for bit_index, areas in self.input_bits_to_areas.items():
 			if sorted(input_stimuli[bit_index].target_areas) != sorted(areas):
 				raise InputStimuliMisused(bit_index, input_stimuli[bit_index].target_areas, areas)
-			bit_value = input_value[bit_index]
 
-			project_parameters[input_stimuli[bit_index][bit_value]] += areas
+			stimulus = input_stimuli[bit_index][input_value[bit_index]]
+			project_parameters[stimulus] = self._union(project_parameters[stimulus], areas)
 
 		return project_parameters
