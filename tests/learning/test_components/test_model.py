@@ -1,4 +1,3 @@
-from assembly_calculus.learning.components.data_set.constructors import create_data_set_from_list
 from assembly_calculus.learning.components.errors import InputSizeMismatch
 
 from assembly_calculus.learning.components.model import LearningModel

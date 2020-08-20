@@ -2,7 +2,6 @@ from unittest import TestCase
 
 from parameterized import parameterized
 
-from assembly_calculus import Stimulus
 from assembly_calculus.learning.components.errors import SequenceRunNotInitializedOrInMidRun, \
 	IllegalOutputAreasException, NoPathException
 from assembly_calculus.learning.components.input import InputStimuli
