@@ -5,7 +5,7 @@ from parameterized import parameterized
 from assembly_calculus.learning.components.errors import SequenceRunNotInitializedOrInMidRun, IllegalOutputAreasException, NoPathException
 from assembly_calculus.learning.components.input import InputStimuli
 from assembly_calculus.learning.components.sequence import LearningSequence
-from tests.brain_test_utils import BrainTestUtils
+from tests.learning.brain_test_utils import BrainTestUtils
 
 
 class TestLearningSequence(TestCase):

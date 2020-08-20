@@ -1,20 +1,20 @@
 from contextlib import contextmanager
-from typing import Union, Type
-from assembly_calculus.brain.components import OutputArea
+from typing import Union, List
+
+from assembly_calculus import Area, Stimulus
+from assembly_calculus.brain import Brain, OutputArea, BrainRecipe
 from assembly_calculus.utils import value_or_default
 
 
 class BrainTestUtils(object):
 
-    def __init__(self, lazy: bool, default_p=0.1, default_area_size=1000, default_winners_size=100,
-                 default_stimulus_size=300, beta=0.1):
-        self.lazy = lazy
-
-        self.P = default_p
-        self.area_size = default_area_size
-        self.winners_size = default_winners_size
-        self.stimulus_size = default_stimulus_size
-        self.beta = beta
+    def __init__(self, default_p=0.1, area_size=1000, default_winners_size=100, stimulus_size=300,
+                 beta=0.1):
+        self.P: float = default_p
+        self.area_size: int = area_size
+        self.winners_size: int = default_winners_size
+        self.stimulus_size: int = stimulus_size
+        self.beta: float = beta
         self._init_data()
 
     def __getattr__(self, item):
@@ -25,44 +25,25 @@ class BrainTestUtils(object):
             stimulus_index = int(item[4:])
             return self.brain.stimuli[self._stimuli[stimulus_index]]
 
-    @property
-    def _brain_init_function(self) -> Type[Union[LazyBrain, NonLazyBrain]]:
-        return LazyBrain if self.lazy else NonLazyBrain
-
-    @property
-    def name_iterator(self):
-        def iterator():
-            name = 'A'
-            while 1:
-                yield name
-                name = chr(ord(name) + 1)
-        return iterator
-
     def _init_data(self):
-        self.brain = None
+        self.brain: Brain = None
         # Area names, ordered by their creation time
-        self._areas = []
-        self.output_area = None
+        self._areas: List[Area] = []
+        self.output_area: OutputArea = None
         # Stimuli names, order by their creation time
-        self._stimuli = []
+        self._stimuli: List[Stimulus] = []
 
     def create_brain(self, number_of_areas, p=None, area_size=None, winners_size=None, beta=None,
                      add_output_area=False, number_of_stimuli=0, stimulus_size=None) -> Union[LazyBrain, NonLazyBrain]:
         self._init_data()
-
-        self.brain = self._brain_init_function(value_or_default(p, self.P))
-        area_name_iterator = self.name_iterator()
-        for i in range(1, number_of_areas + 1):
-            self._add_area(next(area_name_iterator), area_size, winners_size, beta)
-
-        stimulus_name_iterator = self.name_iterator()
-        for i in range(1, number_of_stimuli + 1):
-            self._add_stimulus(next(stimulus_name_iterator), stimulus_size)
-
+        areas = [Area(area_size, winners_size, beta) for _ in range(number_of_areas)]
+        stimuli = [Stimulus(stimulus_size) for _ in range(number_of_stimuli)]
+        output_area = []
         if add_output_area:
-            self.brain.add_output_area('output')
-            self.output_area = self.brain.output_areas['output']
-        return self.brain
+            output_area.append(OutputArea(area_size, beta))
+
+        BrainRecipe(*areas, *stimuli, *output_area)
+
 
     def create_and_stimulate_brain(self, number_of_areas, number_of_stimulated_areas=1,
                                    stimulus_size=None, p=None, area_size=None, winners_size=None, beta=None,
@@ -71,8 +52,9 @@ class BrainTestUtils(object):
 
         self.create_brain(number_of_areas=number_of_areas, p=p, area_size=area_size,
                           winners_size=winners_size, beta=beta, add_output_area=add_output_area)
-        self._add_stimulus('stimulus', stimulus_size)
 
+        stimulus = Stimulus(stimulus_size)
+        self._add_stimulus(stimulus)
         areas_to_stimulate = self._areas[:number_of_stimulated_areas]
         self.brain.project(area_to_area={}, stim_to_area={'stimulus': areas_to_stimulate})
         return self.brain
