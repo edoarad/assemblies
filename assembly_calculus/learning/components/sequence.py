@@ -2,7 +2,8 @@ from typing import List, Dict, Optional, Callable, Union, Set
 
 from assembly_calculus import Stimulus
 from assembly_calculus.brain import Area, Brain, BrainPart, OutputArea
-from assembly_calculus.learning.components.errors import MissingArea, SequenceRunNotInitializedOrInMidRun, SequenceFinalizationError, \
+from assembly_calculus.learning.components.errors import MissingArea, SequenceRunNotInitializedOrInMidRun, \
+	SequenceFinalizationError, \
 	MissingStimulus
 from assembly_calculus.learning.components.input import InputStimuli
 from assembly_calculus.learning.components.sequence_components.connections_graph import ConnectionsGraph
@@ -176,16 +177,16 @@ class LearningSequence:
 				self._connections_graph.add_connection(source_node, area_node, consecutive_runs,
 				                                       self.number_of_iterations)
 
-	def _process_input_bits(self, input_bits: List[int]) -> Dict[int, List[str]]:
+	def _process_input_bits(self, input_bits: List[int]) -> Dict[int, List[Area]]:
 		"""
 		Generate a mapping of input bits to their connected areas from the given input bits.
 		:param input_bits: a list of bits in the input that should fire to their defined areas
 		:return: a mapping between input bit and it's areas as defined in the input stimuli mapping.
 		"""
 		return {input_bit: self._input_stimuli[input_bit].target_areas
-				for input_bit in input_bits}
+		        for input_bit in input_bits}
 
-	def add_iteration(self, subconnectome: Dict[BrainPart, Set[BrainPart]],
+	def add_iteration(self, subconnectome: Dict[BrainPart, Set[BrainPart]] = None,
 	                  input_bits: List[int] = None,
 	                  consecutive_runs: int = 1) -> None:
 		"""

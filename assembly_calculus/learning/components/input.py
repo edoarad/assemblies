@@ -1,7 +1,8 @@
 from typing import Union, List, Dict, Tuple
 
 from ...brain import Brain, Stimulus, Area
-from assembly_calculus.learning.components.errors import MissingArea, MissingStimulus, MaxAttemptsToGenerateStimuliReached
+from assembly_calculus.learning.components.errors import MissingArea, MissingStimulus, \
+	MaxAttemptsToGenerateStimuliReached
 
 AUTO_GENERATED_STIMULUS_NAME_FORMAT = "__s_{area_name}_{input_bit_value}{postfix}"
 AUTO_GENERATED_STIMULUS_NAME_POSTFIX = "_({})"
@@ -135,7 +136,7 @@ class InputStimuli:
 				raise TypeError(f"Area must have type Area, "
 				                f"got {type(area).__name__} instead.")
 			if area not in brain.connectome.areas:
-				raise MissingArea(str(area))
+				raise MissingArea(repr(area))
 
 	@staticmethod
 	def _validate_override_input_bit(brain: Brain, override_input_bit: Tuple[Stimulus, Stimulus]) -> None:
@@ -153,7 +154,8 @@ class InputStimuli:
 			if stimulus not in brain.connectome.stimuli:
 				raise MissingStimulus(str(stimulus))
 
-	def _generate_input_bits(self, brain: Brain, stimulus_k: int, areas: Union[Area, List[Area]], override) -> List[InputBitStimuli]:
+	def _generate_input_bits(self, brain: Brain, stimulus_k: int, areas: Union[Area, List[Area]], override) -> List[
+		InputBitStimuli]:
 		input_bits = []
 		num_stimuli = 0
 		for bit, area_or_list in enumerate(areas):
@@ -171,8 +173,7 @@ class InputStimuli:
 			if num_stimuli > MAX_ATTEMPTS:
 				raise MaxAttemptsToGenerateStimuliReached()
 
-
-			if isinstance(area_or_list, Area): 
+			if isinstance(area_or_list, Area):
 				area_list = [area_or_list]
 			else:
 				area_list = area_or_list

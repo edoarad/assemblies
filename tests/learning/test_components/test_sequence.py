@@ -2,7 +2,8 @@ from unittest import TestCase
 
 from parameterized import parameterized
 
-from assembly_calculus.learning.components.errors import SequenceRunNotInitializedOrInMidRun, IllegalOutputAreasException, NoPathException
+from assembly_calculus.learning.components.errors import SequenceRunNotInitializedOrInMidRun, \
+	IllegalOutputAreasException, NoPathException
 from assembly_calculus.learning.components.input import InputStimuli
 from assembly_calculus.learning.components.sequence import LearningSequence
 from tests.learning.brain_test_utils import BrainTestUtils
@@ -10,449 +11,452 @@ from tests.learning.brain_test_utils import BrainTestUtils
 
 class TestLearningSequence(TestCase):
 
-    def setUp(self) -> None:
-        self.utils = BrainTestUtils(lazy=False)
-        self.brain = self.utils.create_brain(number_of_areas=5, number_of_stimuli=4, add_output_area=True)
+	def setUp(self) -> None:
+		self.utils = BrainTestUtils()
+		self.brain = self.utils.create_brain(number_of_areas=5, number_of_stimuli=4, add_output_area=True)
 
-    @parameterized.expand([
-        ('one_cycle', 1),
-        ('three_cycles', 3)
-    ])
-    def test_sequence_one_run_per_iteration(self, name, number_of_cycles):
-        input_stimuli = InputStimuli(self.brain, 100, 'A', 'B', verbose=False)
-        sequence = LearningSequence(self.brain, input_stimuli)
-        sequence.add_iteration(input_bits=[0, 1])
-        sequence.add_iteration(stimuli_to_areas={'A': ['A'], 'B': ['B']})
-        sequence.add_iteration(areas_to_areas={'A': ['C'], 'B': ['C']})
-        sequence.add_iteration(areas_to_areas={'C': ['output']})
+	@parameterized.expand([
+		(1,),
+		(3,)
+	])
+	def test_sequence_one_run_per_iteration(self, number_of_cycles):
+		area_a, area_b, area_c = self.brain.connectome.areas[:3]
+		stimulus_a, stimulus_b = self.brain.connectome.stimuli[:2]
+		input_stimuli = InputStimuli(self.brain, 100, area_a, area_b, verbose=False)
+		sequence = LearningSequence(self.brain, input_stimuli)
+		sequence.add_iteration(input_bits=[0, 1], subconnectome={})
+		sequence.add_iteration(subconnectome={stimulus_a: [area_a], stimulus_b: [area_b]})
+		sequence.add_iteration(subconnectome={area_a: [area_c], area_b: [area_c]})
+		sequence.add_iteration(areas_to_areas={area_c: [self.utils.output_area]})
 
-        expected_iterations = [
-            {
-                'stim_to_area':
-                    {
-                        input_stimuli[0][0]: ['A'],
-                        input_stimuli[1][0]: ['B']
-                    },
-                'area_to_area': {}
-            },
+		expected_iterations = [
+			{
+				'stim_to_area':
+					{
+						input_stimuli[0][0]: ['A'],
+						input_stimuli[1][0]: ['B']
+					},
+				'area_to_area': {}
+			},
 
-            {
-                'stim_to_area':
-                    {
-                        'A': ['A'],
-                        'B': ['B']
-                    },
-                'area_to_area': {}
-            },
+			{
+				'stim_to_area':
+					{
+						'A': ['A'],
+						'B': ['B']
+					},
+				'area_to_area': {}
+			},
 
-            {
-                'stim_to_area': {},
-                'area_to_area':
-                    {
-                        'A': ['C'],
-                        'B': ['C']
-                    }
-            },
+			{
+				'stim_to_area': {},
+				'area_to_area':
+					{
+						'A': ['C'],
+						'B': ['C']
+					}
+			},
 
-            {
-                'stim_to_area': {},
-                'area_to_area':
-                    {
-                        'C': ['output'],
-                    }
-            },
-        ]
-        expected_iterations = expected_iterations * number_of_cycles
+			{
+				'stim_to_area': {},
+				'area_to_area':
+					{
+						'C': ['output'],
+					}
+			},
+		]
+		expected_iterations = expected_iterations * number_of_cycles
 
-        sequence.initialize_run(number_of_cycles=number_of_cycles)
-        for idx, iteration in enumerate(sequence):
-            self.assertEqual(expected_iterations[idx], iteration.format(input_stimuli, 0))
+		sequence.initialize_run(number_of_cycles=number_of_cycles)
 
-    def test_sequence_multiple_consecutive_runs_per_iteration(self):
-        input_stimuli = InputStimuli(self.brain, 100, 'A', 'B', verbose=False)
-        sequence = LearningSequence(self.brain, input_stimuli)
-        sequence.add_iteration(input_bits=[0, 1], consecutive_runs=2)
-        sequence.add_iteration(stimuli_to_areas={'A': ['A'], 'B': ['B']}, consecutive_runs=2)
-        sequence.add_iteration(areas_to_areas={'A': ['C'], 'B': ['C']}, consecutive_runs=3)
-        sequence.add_iteration(areas_to_areas={'C': ['output']}, consecutive_runs=1)
+		for idx, iteration in enumerate(sequence):
+			self.assertEqual(expected_iterations[idx], iteration.format(input_stimuli, 0))
 
-        expected_iterations = [
-            {
-                'stim_to_area':
-                    {
-                        input_stimuli[0][0]: ['A'],
-                        input_stimuli[1][0]: ['B']
-                    },
-                'area_to_area': {}
-            },
-            {
-                'stim_to_area':
-                    {
-                        input_stimuli[0][0]: ['A'],
-                        input_stimuli[1][0]: ['B']
-                    },
-                'area_to_area': {}
-            },
+	def test_sequence_multiple_consecutive_runs_per_iteration(self):
+		input_stimuli = InputStimuli(self.brain, 100, 'A', 'B', verbose=False)
+		sequence = LearningSequence(self.brain, input_stimuli)
+		sequence.add_iteration(input_bits=[0, 1], consecutive_runs=2)
+		sequence.add_iteration(stimuli_to_areas={'A': ['A'], 'B': ['B']}, consecutive_runs=2)
+		sequence.add_iteration(areas_to_areas={'A': ['C'], 'B': ['C']}, consecutive_runs=3)
+		sequence.add_iteration(areas_to_areas={'C': ['output']}, consecutive_runs=1)
 
-            {
-                'stim_to_area':
-                    {
-                        'A': ['A'],
-                        'B': ['B']
-                    },
-                'area_to_area': {}
-            },
-            {
-                'stim_to_area':
-                    {
-                        'A': ['A'],
-                        'B': ['B']
-                    },
-                'area_to_area': {}
-            },
+		expected_iterations = [
+			{
+				'stim_to_area':
+					{
+						input_stimuli[0][0]: ['A'],
+						input_stimuli[1][0]: ['B']
+					},
+				'area_to_area': {}
+			},
+			{
+				'stim_to_area':
+					{
+						input_stimuli[0][0]: ['A'],
+						input_stimuli[1][0]: ['B']
+					},
+				'area_to_area': {}
+			},
 
-            {
-                'stim_to_area': {},
-                'area_to_area':
-                    {
-                        'A': ['C'],
-                        'B': ['C']
-                    }
-            },
-            {
-                'stim_to_area': {},
-                'area_to_area':
-                    {
-                        'A': ['C'],
-                        'B': ['C']
-                    }
-            },
-            {
-                'stim_to_area': {},
-                'area_to_area':
-                    {
-                        'A': ['C'],
-                        'B': ['C']
-                    }
-            },
+			{
+				'stim_to_area':
+					{
+						'A': ['A'],
+						'B': ['B']
+					},
+				'area_to_area': {}
+			},
+			{
+				'stim_to_area':
+					{
+						'A': ['A'],
+						'B': ['B']
+					},
+				'area_to_area': {}
+			},
 
-            {
-                'stim_to_area': {},
-                'area_to_area':
-                    {
-                        'C': ['output'],
-                    }
-            },
-        ]
+			{
+				'stim_to_area': {},
+				'area_to_area':
+					{
+						'A': ['C'],
+						'B': ['C']
+					}
+			},
+			{
+				'stim_to_area': {},
+				'area_to_area':
+					{
+						'A': ['C'],
+						'B': ['C']
+					}
+			},
+			{
+				'stim_to_area': {},
+				'area_to_area':
+					{
+						'A': ['C'],
+						'B': ['C']
+					}
+			},
 
-        sequence.initialize_run(number_of_cycles=1)
-        for idx, iteration in enumerate(sequence):
-            self.assertEqual(expected_iterations[idx], iteration.format(input_stimuli, 0))
+			{
+				'stim_to_area': {},
+				'area_to_area':
+					{
+						'C': ['output'],
+					}
+			},
+		]
 
-    def test_sequence_with_only_stimuli(self):
-        input_stimuli = InputStimuli(self.brain, 100, 'A', 'B', verbose=False)
-        sequence = LearningSequence(self.brain, input_stimuli)
-        sequence.add_iteration(stimuli_to_areas={'A': ['A'], 'B': ['B']})
-        sequence.add_iteration(areas_to_areas={'A': ['C'], 'B': ['C']})
-        sequence.add_iteration(areas_to_areas={'C': ['output']})
+		sequence.initialize_run(number_of_cycles=1)
+		for idx, iteration in enumerate(sequence):
+			self.assertEqual(expected_iterations[idx], iteration.format(input_stimuli, 0))
 
-        expected_iterations = [
-            {
-                'stim_to_area':
-                    {
-                        'A': ['A'],
-                        'B': ['B']
-                    },
-                'area_to_area': {}
-            },
+	def test_sequence_with_only_stimuli(self):
+		input_stimuli = InputStimuli(self.brain, 100, 'A', 'B', verbose=False)
+		sequence = LearningSequence(self.brain, input_stimuli)
+		sequence.add_iteration(stimuli_to_areas={'A': ['A'], 'B': ['B']})
+		sequence.add_iteration(areas_to_areas={'A': ['C'], 'B': ['C']})
+		sequence.add_iteration(areas_to_areas={'C': ['output']})
 
-            {
-                'stim_to_area': {},
-                'area_to_area':
-                    {
-                        'A': ['C'],
-                        'B': ['C']
-                    }
-            },
+		expected_iterations = [
+			{
+				'stim_to_area':
+					{
+						'A': ['A'],
+						'B': ['B']
+					},
+				'area_to_area': {}
+			},
 
-            {
-                'stim_to_area': {},
-                'area_to_area':
-                    {
-                        'C': ['output'],
-                    }
-            },
-        ]
+			{
+				'stim_to_area': {},
+				'area_to_area':
+					{
+						'A': ['C'],
+						'B': ['C']
+					}
+			},
 
-        sequence.initialize_run(number_of_cycles=1)
-        for idx, iteration in enumerate(sequence):
-            self.assertEqual(expected_iterations[idx], iteration.format(input_stimuli, 0))
+			{
+				'stim_to_area': {},
+				'area_to_area':
+					{
+						'C': ['output'],
+					}
+			},
+		]
 
-    def test_sequence_with_only_input_bits(self):
-        input_stimuli = InputStimuli(self.brain, 100, 'A', 'B', verbose=False)
-        sequence = LearningSequence(self.brain, input_stimuli)
-        sequence.add_iteration(input_bits=[0, 1])
-        sequence.add_iteration(areas_to_areas={'A': ['C'], 'B': ['C']})
-        sequence.add_iteration(areas_to_areas={'C': ['output']})
+		sequence.initialize_run(number_of_cycles=1)
+		for idx, iteration in enumerate(sequence):
+			self.assertEqual(expected_iterations[idx], iteration.format(input_stimuli, 0))
 
-        expected_iterations = [
-            {
-                'stim_to_area':
-                    {
-                        input_stimuli[0][0]: ['A'],
-                        input_stimuli[1][0]: ['B']
-                    },
-                'area_to_area': {}
-            },
+	def test_sequence_with_only_input_bits(self):
+		input_stimuli = InputStimuli(self.brain, 100, 'A', 'B', verbose=False)
+		sequence = LearningSequence(self.brain, input_stimuli)
+		sequence.add_iteration(input_bits=[0, 1])
+		sequence.add_iteration(areas_to_areas={'A': ['C'], 'B': ['C']})
+		sequence.add_iteration(areas_to_areas={'C': ['output']})
 
-            {
-                'stim_to_area': {},
-                'area_to_area':
-                    {
-                        'A': ['C'],
-                        'B': ['C']
-                    }
-            },
+		expected_iterations = [
+			{
+				'stim_to_area':
+					{
+						input_stimuli[0][0]: ['A'],
+						input_stimuli[1][0]: ['B']
+					},
+				'area_to_area': {}
+			},
 
-            {
-                'stim_to_area': {},
-                'area_to_area':
-                    {
-                        'C': ['output'],
-                    }
-            },
-        ]
+			{
+				'stim_to_area': {},
+				'area_to_area':
+					{
+						'A': ['C'],
+						'B': ['C']
+					}
+			},
 
-        sequence.initialize_run(number_of_cycles=1)
-        for idx, iteration in enumerate(sequence):
-            self.assertEqual(expected_iterations[idx], iteration.format(input_stimuli, 0))
+			{
+				'stim_to_area': {},
+				'area_to_area':
+					{
+						'C': ['output'],
+					}
+			},
+		]
 
-    def test_sequence_with_only_input_bits(self):
-        input_stimuli = InputStimuli(self.brain, 100, 'A', 'B', verbose=False)
-        sequence = LearningSequence(self.brain, input_stimuli)
-        sequence.add_iteration(input_bits=[0, 1])
-        sequence.add_iteration(areas_to_areas={'A': ['C'], 'B': ['C']})
-        sequence.add_iteration(areas_to_areas={'C': ['output']})
+		sequence.initialize_run(number_of_cycles=1)
+		for idx, iteration in enumerate(sequence):
+			self.assertEqual(expected_iterations[idx], iteration.format(input_stimuli, 0))
 
-        expected_iterations = [
-            {
-                'stim_to_area':
-                    {
-                        input_stimuli[0][0]: ['A'],
-                        input_stimuli[1][0]: ['B']
-                    },
-                'area_to_area': {}
-            },
+	def test_sequence_with_only_input_bits(self):
+		input_stimuli = InputStimuli(self.brain, 100, 'A', 'B', verbose=False)
+		sequence = LearningSequence(self.brain, input_stimuli)
+		sequence.add_iteration(input_bits=[0, 1])
+		sequence.add_iteration(areas_to_areas={'A': ['C'], 'B': ['C']})
+		sequence.add_iteration(areas_to_areas={'C': ['output']})
 
-            {
-                'stim_to_area': {},
-                'area_to_area':
-                    {
-                        'A': ['C'],
-                        'B': ['C']
-                    }
-            },
+		expected_iterations = [
+			{
+				'stim_to_area':
+					{
+						input_stimuli[0][0]: ['A'],
+						input_stimuli[1][0]: ['B']
+					},
+				'area_to_area': {}
+			},
 
-            {
-                'stim_to_area': {},
-                'area_to_area':
-                    {
-                        'C': ['output'],
-                    }
-            },
-        ]
+			{
+				'stim_to_area': {},
+				'area_to_area':
+					{
+						'A': ['C'],
+						'B': ['C']
+					}
+			},
 
-        sequence.initialize_run(number_of_cycles=1)
-        for idx, iteration in enumerate(sequence):
-            self.assertEqual(expected_iterations[idx], iteration.format(input_stimuli, 0))
+			{
+				'stim_to_area': {},
+				'area_to_area':
+					{
+						'C': ['output'],
+					}
+			},
+		]
 
-    def test_sequence_with_input_bits_and_stimuli_combines_the_dicts(self):
-        input_stimuli = InputStimuli(self.brain, 100, 'A', 'B', verbose=False, override={0: ('A', 'C')})
-        sequence = LearningSequence(self.brain, input_stimuli)
-        sequence.add_iteration(input_bits=[0, 1], stimuli_to_areas={'A': ['B'], 'B': ['C']})
-        sequence.add_iteration(areas_to_areas={'A': ['C'], 'B': ['C']})
-        sequence.add_iteration(areas_to_areas={'C': ['output']})
+		sequence.initialize_run(number_of_cycles=1)
+		for idx, iteration in enumerate(sequence):
+			self.assertEqual(expected_iterations[idx], iteration.format(input_stimuli, 0))
 
-        expected_iterations_00 = [
-            {
-                'stim_to_area':
-                    {
-                        'A': ['A', 'B'],
-                        input_stimuli[1][0]: ['B'],
-                        'B': ['C']
-                    },
-                'area_to_area': {}
-            },
+	def test_sequence_with_input_bits_and_stimuli_combines_the_dicts(self):
+		input_stimuli = InputStimuli(self.brain, 100, 'A', 'B', verbose=False, override={0: ('A', 'C')})
+		sequence = LearningSequence(self.brain, input_stimuli)
+		sequence.add_iteration(input_bits=[0, 1], stimuli_to_areas={'A': ['B'], 'B': ['C']})
+		sequence.add_iteration(areas_to_areas={'A': ['C'], 'B': ['C']})
+		sequence.add_iteration(areas_to_areas={'C': ['output']})
 
-            {
-                'stim_to_area': {},
-                'area_to_area':
-                    {
-                        'A': ['C'],
-                        'B': ['C']
-                    }
-            },
+		expected_iterations_00 = [
+			{
+				'stim_to_area':
+					{
+						'A': ['A', 'B'],
+						input_stimuli[1][0]: ['B'],
+						'B': ['C']
+					},
+				'area_to_area': {}
+			},
 
-            {
-                'stim_to_area': {},
-                'area_to_area':
-                    {
-                        'C': ['output'],
-                    }
-            },
-        ]
+			{
+				'stim_to_area': {},
+				'area_to_area':
+					{
+						'A': ['C'],
+						'B': ['C']
+					}
+			},
 
-        expected_iterations_01 = [
-            {
-                'stim_to_area':
-                    {
-                        'A': ['A', 'B'],
-                        input_stimuli[1][1]: ['B'],
-                        'B': ['C']
-                    },
-                'area_to_area': {}
-            },
+			{
+				'stim_to_area': {},
+				'area_to_area':
+					{
+						'C': ['output'],
+					}
+			},
+		]
 
-            {
-                'stim_to_area': {},
-                'area_to_area':
-                    {
-                        'A': ['C'],
-                        'B': ['C']
-                    }
-            },
+		expected_iterations_01 = [
+			{
+				'stim_to_area':
+					{
+						'A': ['A', 'B'],
+						input_stimuli[1][1]: ['B'],
+						'B': ['C']
+					},
+				'area_to_area': {}
+			},
 
-            {
-                'stim_to_area': {},
-                'area_to_area':
-                    {
-                        'C': ['output'],
-                    }
-            },
-        ]
+			{
+				'stim_to_area': {},
+				'area_to_area':
+					{
+						'A': ['C'],
+						'B': ['C']
+					}
+			},
 
-        expected_iterations_10 = [
-            {
-                'stim_to_area':
-                    {
-                        'C': ['A'],
-                        input_stimuli[1][0]: ['B'],
-                        'A': ['B'],
-                        'B': ['C'],
-                    },
-                'area_to_area': {}
-            },
+			{
+				'stim_to_area': {},
+				'area_to_area':
+					{
+						'C': ['output'],
+					}
+			},
+		]
 
-            {
-                'stim_to_area': {},
-                'area_to_area':
-                    {
-                        'A': ['C'],
-                        'B': ['C']
-                    }
-            },
+		expected_iterations_10 = [
+			{
+				'stim_to_area':
+					{
+						'C': ['A'],
+						input_stimuli[1][0]: ['B'],
+						'A': ['B'],
+						'B': ['C'],
+					},
+				'area_to_area': {}
+			},
 
-            {
-                'stim_to_area': {},
-                'area_to_area':
-                    {
-                        'C': ['output'],
-                    }
-            },
-        ]
+			{
+				'stim_to_area': {},
+				'area_to_area':
+					{
+						'A': ['C'],
+						'B': ['C']
+					}
+			},
 
-        expected_iterations_11 = [
-            {
-                'stim_to_area':
-                    {
-                        'C': ['A'],
-                        input_stimuli[1][1]: ['B'],
-                        'A': ['B'],
-                        'B': ['C'],
-                    },
-                'area_to_area': {}
-            },
+			{
+				'stim_to_area': {},
+				'area_to_area':
+					{
+						'C': ['output'],
+					}
+			},
+		]
 
-            {
-                'stim_to_area': {},
-                'area_to_area':
-                    {
-                        'A': ['C'],
-                        'B': ['C']
-                    }
-            },
+		expected_iterations_11 = [
+			{
+				'stim_to_area':
+					{
+						'C': ['A'],
+						input_stimuli[1][1]: ['B'],
+						'A': ['B'],
+						'B': ['C'],
+					},
+				'area_to_area': {}
+			},
 
-            {
-                'stim_to_area': {},
-                'area_to_area':
-                    {
-                        'C': ['output'],
-                    }
-            },
-        ]
+			{
+				'stim_to_area': {},
+				'area_to_area':
+					{
+						'A': ['C'],
+						'B': ['C']
+					}
+			},
 
-        sequence.initialize_run(number_of_cycles=1)
-        for idx, iteration in enumerate(sequence):
-            self.assertDictEqual(expected_iterations_00[idx], iteration.format(input_stimuli, 0))
+			{
+				'stim_to_area': {},
+				'area_to_area':
+					{
+						'C': ['output'],
+					}
+			},
+		]
 
-        sequence.initialize_run(number_of_cycles=1)
-        for idx, iteration in enumerate(sequence):
-            self.assertDictEqual(expected_iterations_01[idx], iteration.format(input_stimuli, 1))
+		sequence.initialize_run(number_of_cycles=1)
+		for idx, iteration in enumerate(sequence):
+			self.assertDictEqual(expected_iterations_00[idx], iteration.format(input_stimuli, 0))
 
-        sequence.initialize_run(number_of_cycles=1)
-        for idx, iteration in enumerate(sequence):
-            self.assertDictEqual(expected_iterations_10[idx], iteration.format(input_stimuli, 2))
+		sequence.initialize_run(number_of_cycles=1)
+		for idx, iteration in enumerate(sequence):
+			self.assertDictEqual(expected_iterations_01[idx], iteration.format(input_stimuli, 1))
 
-        sequence.initialize_run(number_of_cycles=1)
-        for idx, iteration in enumerate(sequence):
-            self.assertDictEqual(expected_iterations_11[idx], iteration.format(input_stimuli, 3))
+		sequence.initialize_run(number_of_cycles=1)
+		for idx, iteration in enumerate(sequence):
+			self.assertDictEqual(expected_iterations_10[idx], iteration.format(input_stimuli, 2))
 
-    def test_sequence_has_no_output_area(self):
-        input_stimuli = InputStimuli(self.brain, 100, 'A', 'B', verbose=False)
-        sequence = LearningSequence(self.brain, input_stimuli)
-        sequence.add_iteration(input_bits=[0, 1])
-        sequence.add_iteration(areas_to_areas={'A': ['C'], 'B': ['C']})
+		sequence.initialize_run(number_of_cycles=1)
+		for idx, iteration in enumerate(sequence):
+			self.assertDictEqual(expected_iterations_11[idx], iteration.format(input_stimuli, 3))
 
-        self.assertRaises(IllegalOutputAreasException, sequence.initialize_run, 1)
+	def test_sequence_has_no_output_area(self):
+		input_stimuli = InputStimuli(self.brain, 100, 'A', 'B', verbose=False)
+		sequence = LearningSequence(self.brain, input_stimuli)
+		sequence.add_iteration(input_bits=[0, 1])
+		sequence.add_iteration(areas_to_areas={'A': ['C'], 'B': ['C']})
 
-    def test_sequence_stimulus_has_no_path_to_output(self):
-        input_stimuli = InputStimuli(self.brain, 100, 'A', 'B', verbose=False)
-        sequence = LearningSequence(self.brain, input_stimuli)
-        # Input bit 0 has no path to the output area
-        sequence.add_iteration(stimuli_to_areas={'A': ['A'], 'B': ['B']})
-        sequence.add_iteration(areas_to_areas={'B': ['C']})
-        sequence.add_iteration(areas_to_areas={'C': ['output']})
+		self.assertRaises(IllegalOutputAreasException, sequence.initialize_run, 1)
 
-        self.assertRaises(NoPathException, sequence.initialize_run, 1)
+	def test_sequence_stimulus_has_no_path_to_output(self):
+		input_stimuli = InputStimuli(self.brain, 100, 'A', 'B', verbose=False)
+		sequence = LearningSequence(self.brain, input_stimuli)
+		# Input bit 0 has no path to the output area
+		sequence.add_iteration(stimuli_to_areas={'A': ['A'], 'B': ['B']})
+		sequence.add_iteration(areas_to_areas={'B': ['C']})
+		sequence.add_iteration(areas_to_areas={'C': ['output']})
 
-    def test_sequence_input_bit_has_no_path_to_output(self):
-        input_stimuli = InputStimuli(self.brain, 100, 'A', 'B', verbose=False)
-        sequence = LearningSequence(self.brain, input_stimuli)
-        # Input bit 0 has no path to the output area
-        sequence.add_iteration(input_bits=[0, 1])
-        sequence.add_iteration(areas_to_areas={'B': ['C']})
-        sequence.add_iteration(areas_to_areas={'C': ['output']})
+		self.assertRaises(NoPathException, sequence.initialize_run, 1)
 
-        self.assertRaises(NoPathException, sequence.initialize_run, 1)
+	def test_sequence_input_bit_has_no_path_to_output(self):
+		input_stimuli = InputStimuli(self.brain, 100, 'A', 'B', verbose=False)
+		sequence = LearningSequence(self.brain, input_stimuli)
+		# Input bit 0 has no path to the output area
+		sequence.add_iteration(input_bits=[0, 1])
+		sequence.add_iteration(areas_to_areas={'B': ['C']})
+		sequence.add_iteration(areas_to_areas={'C': ['output']})
 
-    def test_sequence_not_initialized(self):
-        input_stimuli = InputStimuli(self.brain, 100, 'A', 'B', verbose=False)
-        sequence = LearningSequence(self.brain, input_stimuli)
-        sequence.add_iteration(input_bits=[0, 1])
-        sequence.add_iteration(areas_to_areas={'A': ['C'], 'B': ['C']})
-        sequence.add_iteration(areas_to_areas={'C': ['output']})
+		self.assertRaises(NoPathException, sequence.initialize_run, 1)
 
-        # Iterating without initializing raises an error
-        with self.assertRaises(SequenceRunNotInitializedOrInMidRun):
-            for iteration in sequence:
-                self.assertIsNotNone(iteration)
+	def test_sequence_not_initialized(self):
+		input_stimuli = InputStimuli(self.brain, 100, 'A', 'B', verbose=False)
+		sequence = LearningSequence(self.brain, input_stimuli)
+		sequence.add_iteration(input_bits=[0, 1])
+		sequence.add_iteration(areas_to_areas={'A': ['C'], 'B': ['C']})
+		sequence.add_iteration(areas_to_areas={'C': ['output']})
 
-        # Initializing and starting to iterate
-        sequence.initialize_run(number_of_cycles=1)
-        for iteration in sequence:
-            break
+		# Iterating without initializing raises an error
+		with self.assertRaises(SequenceRunNotInitializedOrInMidRun):
+			for iteration in sequence:
+				self.assertIsNotNone(iteration)
 
-        # Iterating again without re-initializing raises an error
-        with self.assertRaises(SequenceRunNotInitializedOrInMidRun):
-            for iteration in sequence:
-                self.assertIsNotNone(iteration)
+		# Initializing and starting to iterate
+		sequence.initialize_run(number_of_cycles=1)
+		for iteration in sequence:
+			break
+
+		# Iterating again without re-initializing raises an error
+		with self.assertRaises(SequenceRunNotInitializedOrInMidRun):
+			for iteration in sequence:
+				self.assertIsNotNone(iteration)
