@@ -1,64 +1,86 @@
 import gc
-import string
-from itertools import product
-from typing import Tuple, Dict
 
-from assembly_calculus import BrainRecipe, Area, Stimulus, Assembly, Connectome, bake
-from assembly_calculus.utils.brain_utils import fire_many
-import pytest
-
+from assembly_calculus import Connectome, bake
+from assembly_calculus.utils import overlap
 from utils import protecc_ram
 
 
-@pytest.fixture
-def base_recipe() -> Tuple[BrainRecipe, Dict[str, Area], Dict[str, Stimulus], Dict[str, Assembly]]:
-    recipe = BrainRecipe()
-    stimuli = {f"stim_{c}": Stimulus(100) for c in string.ascii_lowercase[:10]}
-    areas = {f"area_{c}": Area(1000, 100) for c in string.ascii_lowercase[:10]}
-    recipe.extend(
-        *stimuli.values(), *areas.values()
-    )
-    return recipe, areas, stimuli, {}
+CERTAINTY_REPEAT = 25
 
 
-@pytest.fixture
-def test_recipe(base_recipe) -> Tuple[BrainRecipe, Dict[str, Area], Dict[str, Stimulus], Dict[str, Assembly]]:
-    recipe, areas, stimuli, _ = base_recipe
-    assemblies = {
-        f"assembly_{c}": Assembly((stimuli[f"stim_{c}"],), areas[f"area_{c}"])
-        for c in ('a', 'b', 'c', 'd', 'e')
-    }
-    recipe.extend(*assemblies.values())
-
-    return recipe, areas, stimuli, assemblies
-
-
-def test_projection(test_recipe):
+def test_projection(recipe, assembly_a, assembly_b, area_c):
     protecc_ram(0.75)
 
-    recipe: BrainRecipe
-    areas: Dict[str, Area]
-    stimuli: Dict[str, Stimulus]
-    assemblies: Dict[str, Assembly]
-    recipe, areas, stimuli, assemblies = test_recipe
+    with recipe:
+        assembly_ac = assembly_a >> area_c
+        assembly_bc = assembly_b >> area_c
 
-    assembly_a: Assembly
-    assembly_b: Assembly
-    assembly_a, assembly_b = (assemblies[f"assembly_{c}"] for c in ('a', 'b'))
+    for _ in range(CERTAINTY_REPEAT):
+        with bake(recipe, 0.1, Connectome, train_repeat=100, effective_repeat=3) as brain:
+            assembly_a >> area_c
+            assert area_c.active_assembly == assembly_ac, "Separate assemblies have merged :("
 
-    area_f: Area
-    area_f = areas["area_f"]
+            assembly_b >> area_c
+            assert area_c.active_assembly == assembly_bc, "Separate assemblies have merged :("
+
+        gc.collect()
+
+
+def test_associate(recipe, assembly_a, assembly_b, area_c):
+    def average_winners(assembly, times):
+        winners = set()
+        for _ in range(times):
+            winners.update(set(assembly.sample_neurons(preserve_brain=False)))
+        return winners
+
+    protecc_ram(0.75)
 
     with recipe:
-        assembly_af = assembly_a >> area_f
-        assembly_bf = assembly_b >> area_f
+        assembly_ac = assembly_a >> area_c
+        assembly_bc = assembly_b >> area_c
 
-    for _ in range(25):
-        # TODO: (Tomer, from Yonatan) check this makes sense
-        with bake(recipe, 0.1, Connectome, train_repeat=100, effective_repeat=1) as brain:
-            for _ in range(brain.repeat):
-                fire_many(brain, [assembly_a], area_f)
+    for _ in range(CERTAINTY_REPEAT):
+        with bake(recipe, 0.1, Connectome, train_repeat=10, effective_repeat=3) as brain:
+            winners_a = average_winners(assembly_ac, 5)
+            winners_b = average_winners(assembly_bc, 5)
+            assert overlap(winners_a, winners_b) <= 0.25, "Assemblies have associated without associate"
 
-            assert area_f.active_assembly == assembly_af, "Separate assemblies have merged :("
+        gc.collect()
+
+    with recipe:
+        (assembly_ac | ...).associate(assembly_bc | ...)
+
+    for _ in range(CERTAINTY_REPEAT):
+        with bake(recipe, 0.1, Connectome, train_repeat=10, effective_repeat=3) as brain:
+            winners_a = average_winners(assembly_ac, 5)
+            winners_b = average_winners(assembly_bc, 5)
+            assert overlap(winners_a, winners_b) > 0.25, "Assemblies haven't associated"
+
+        gc.collect()
+
+
+def test_merge(recipe, assembly_a, assembly_b, area_b, area_c):
+    protecc_ram(0.75)
+
+    for _ in range(CERTAINTY_REPEAT):
+        with bake(recipe, 0.1, Connectome, train_repeat=10, effective_repeat=3) as brain:
+            assembly_a >> area_c
+            brain.next_round(subconnectome={area_c: [area_b]}, replace=True, iterations=brain.repeat)
+
+            assert overlap(assembly_b.representative_neurons, area_b.winners) <= 0.10, \
+                "Assemblies formed bi-directional links without merge"
+
+        gc.collect()
+
+    with recipe:
+        (assembly_a | assembly_b) >> area_c
+
+    for _ in range(CERTAINTY_REPEAT):
+        with bake(recipe, 0.1, Connectome, train_repeat=10, effective_repeat=3) as brain:
+            assembly_a >> area_c
+            brain.next_round(subconnectome={area_c: [area_b]}, replace=True, iterations=brain.repeat)
+
+            assert overlap(assembly_b.representative_neurons, area_b.winners) > 0.10, \
+                "Assemblies haven't formed bi-directional links"
 
         gc.collect()
