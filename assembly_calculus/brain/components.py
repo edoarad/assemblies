@@ -1,34 +1,48 @@
 from __future__ import annotations
-from typing import Optional, Union, TYPE_CHECKING
+from typing import Optional, Union, TYPE_CHECKING, Dict, Set
 
-from ..utils import UniquelyIdentifiable, Bindable, bindable_property
-# TODO: remove type checking everywhere
-# Response: this is to avoid cyclic imports, I have (more) in-depth responses in some of the other files
+from ..utils import UniquelyIdentifiable, bindable_brain, overlap
+
 if TYPE_CHECKING:
     from .brain import Brain
+    from ..assemblies.assembly import Assembly
 
 
-@Bindable('brain')
+@bindable_brain.cls
 class Area(UniquelyIdentifiable):
+    THRESHOLD: float = 0.20
+
     def __init__(self, n: int, k: Optional[int] = None, beta: float = 0.01):
         super(Area, self).__init__()
         self.beta: float = beta
         self.n: int = n
         self.k: int = k or int(n ** 0.5)
 
-    # TODO: return as a set?
-    @bindable_property
-    def winners(self, *, brain: Brain):
-        return brain.winners[self]
+    @bindable_brain.property
+    def winners(self, *, brain: Brain) -> Set[int]:
+        return set(brain.winners[self])
 
-    @bindable_property
+    @bindable_brain.property
     def support(self, *, brain: Brain):
         return brain.support[self]
 
-    @bindable_property
-    def active_assembly(self, *, brain: Brain):
-        from ..assemblies import Assembly
-        return Assembly.read(self, brain=brain)
+    @bindable_brain.method
+    def read(self, *, preserve_brain: bool = True, brain: Brain) -> Optional[Assembly]:
+        """Returns the most activated assembly in the area"""
+        assemblies: Set[Assembly] = brain.recipe.area_assembly_mapping[self]
+        overlaps: Dict[Assembly, float] = {}
+        for assembly in assemblies:
+            overlaps[assembly] = overlap(brain.winners[self],
+                                         assembly.sample_neurons(preserve_brain=preserve_brain, brain=brain))
+
+        maximal_assembly = max(overlaps.keys(), key=lambda x: overlaps[x])
+        return maximal_assembly if overlaps[maximal_assembly] > Area.THRESHOLD else None
+
+    # TODO: use `read` terminology
+    # Response: Supports both
+    @bindable_brain.property
+    def active_assembly(self, *, brain: Brain) -> Optional[Assembly]:
+        return self.read(preserve_brain=True, brain=brain)
 
     def __repr__(self):
         return f"Area(n={self.n}, k={self.k}, beta={self.beta})"

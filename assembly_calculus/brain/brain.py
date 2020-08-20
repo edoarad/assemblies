@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from functools import cached_property
 from typing import Dict, Set, TYPE_CHECKING, List, Optional, Union, Type
+from contextlib import contextmanager
 
 from .brain_recipe import BrainRecipe
 from .components import BrainPart, Stimulus, Area
@@ -33,6 +33,7 @@ class Brain(UniquelyIdentifiable):
 
     def __init__(self, connectome: ABCConnectome, recipe: BrainRecipe = None, repeat: int = 1):
         # TODO: document __init__ parameters
+        # Response: TM Team
         super(Brain, self).__init__()
         self.repeat = repeat
         self.recipe = recipe or BrainRecipe()
@@ -51,8 +52,7 @@ class Brain(UniquelyIdentifiable):
     # TODO 6: this function is confusing: it depends on `replace` state, behaves differently if `subconnectome` is None or not,
     # TODO 6: performs a merge operation between `active_connectome` and `subconnectome`, and returns an undefined value.
     # TODO 6: please make it clearer and simplify the logic
-    # TODO 7: replace=True by default
-    def next_round(self, subconnectome=None, replace=False, iterations=1):
+    def next_round(self, subconnectome=None, replace=True, iterations=1):
         # TODO 3: make next statement clearer
         if replace or subconnectome is None:
             _active_connectome = subconnectome or self.active_connectome
@@ -63,10 +63,11 @@ class Brain(UniquelyIdentifiable):
                 for dest in destinations:
                     _active_connectome[source].add(dest)
 
-        for _ in range(iterations - 1):
+        result = None
+        for _ in range(iterations):
             self.connectome.project(_active_connectome)
         # TODO 5: `project` in `Connectome` class has no `return` - what is expected to be returned here?
-        return self.connectome.project(_active_connectome)
+        return result
 
     def add_area(self, area: Area):
         self.recipe.append(area)
@@ -75,7 +76,7 @@ class Brain(UniquelyIdentifiable):
 
     def add_stimulus(self, stimulus: Stimulus):
         self.recipe.append(stimulus)
-        return self.connectome.add_stimulus(stimulus)
+        self.connectome.add_stimulus(stimulus)
 
     def enable(self, source: BrainPart, dest: BrainPart = None):
         """
@@ -104,14 +105,33 @@ class Brain(UniquelyIdentifiable):
         for sink in self.connectome.areas:
             self.disable(source, sink)
 
-    @cached_property
+    @property
     def winners(self):
         return self.connectome.winners
 
-    @cached_property
+    @property
     def support(self):
         # TODO: Implement
         return None
+
+    @contextmanager
+    def temporary_plasticity(self, mode: bool):
+        original_plasticity: bool = self.connectome.plasticity
+        self.connectome.plasticity = mode
+        yield self
+        self.connectome.plasticity = original_plasticity
+
+    @contextmanager
+    def freeze(self, freeze: bool = True):
+        if not freeze:
+            yield self
+            return
+
+        original_winners = {area: self.winners[area].copy() for area in self.recipe.areas}
+        with self.temporary_plasticity(mode=False):
+            yield self
+        for area in self.recipe.areas:
+            self.winners[area] = original_winners[area]
 
     def __enter__(self):
         current_ctx_stack: Dict[Union[BrainPart, Assembly], Optional[Brain]] = {}
@@ -143,14 +163,17 @@ class Brain(UniquelyIdentifiable):
                 assembly.bind(brain=current_ctx_stack[assembly])
 
 
-# TODO: document
-# TODO 2: typehint `connectome_cls`
 # TODO 3: is it crucial to get `connectome_cls` or can we get a connectome object?
+# Response: This was the previous way to do it, we don't care if this will be changed to a connectome object
 # TODO 4: make names clearer: train_repeat -> recipe_repeat, effective_repeat -> something clearer?
+# Response: This is from the world of machine learning, in my opinion these are meaningful names.
+#           Training is the initialization and effective is the final.
 # TODO 5: should this be a method of `BrainRecipe`?
+# Response: To API Team, you can change this if you want
 def bake(recipe: BrainRecipe, p: float, connectome_cls: Type[ABCConnectome],
-         train_repeat: int = 1000, effective_repeat: int = 3):
+         train_repeat: int = 10, effective_repeat: int = 3):
+    """Bakes a brain from a recipe, adds all relevant brain parts and performs the initialization sequence"""
     brain = Brain(connectome_cls(p), recipe=recipe, repeat=train_repeat)
-    recipe.initialize(brain)
+    recipe.initialize_brain(brain)
     brain.repeat = effective_repeat
     return brain
