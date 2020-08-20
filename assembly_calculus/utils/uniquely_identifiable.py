@@ -6,6 +6,9 @@ from .instance_name import RememberInitName
 
 
 class NoInitMeta(type):
+    """
+    Metaclass that supports skipping init on creation of instance if _done flag is on
+    """
     def __call__(cls, *args, **kwargs):
         obj = cls.__new__(cls, *args, **kwargs)
         if not getattr(obj, '_done', False):

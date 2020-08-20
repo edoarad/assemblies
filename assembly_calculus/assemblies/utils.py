@@ -10,7 +10,12 @@ from ..brain import Area
 
 if TYPE_CHECKING:
     from ..brain import Brain
-    from .assembly import Assembly, AssemblyTuple, Projectable
+    from .assembly import Assembly, AssemblySet, Projectable
+
+
+def common_value(*values):
+    values = set(values)
+    return values.pop() if len(values) == 1 else None
 
 
 # TODO: change random sampling to performance sampling
@@ -40,15 +45,16 @@ def activate(projectables: Iterable[Projectable], *, brain: Brain):
         brain.winners[source] = sample(area_neuron_mapping[source], k=source.k)  # choose randomly out of winners
 
 
-def union(obj1: Union[Assembly, AssemblyTuple], obj2: Union[Assembly, AssemblyTuple]):
-    from .assembly import Assembly, AssemblyTuple
+def union(obj1: Union[Assembly, AssemblySet], obj2: Union[Assembly, AssemblySet]):
     """
     this method is set as __or__ of both assembly classes and returns an
     AssemblyTuple object which holds their union.
     """
+    from .assembly import Assembly, AssemblySet
+
     if obj2 is Ellipsis:
-        return AssemblyTuple(obj1)
-    tuple1 = AssemblyTuple(obj1) if isinstance(obj1, Assembly) else obj1
-    tuple2 = AssemblyTuple(obj2) if isinstance(obj2, Assembly) else obj2
+        return AssemblySet(obj1)
+    tuple1 = AssemblySet(obj1) if isinstance(obj1, Assembly) else obj1
+    tuple2 = AssemblySet(obj2) if isinstance(obj2, Assembly) else obj2
     # We still support the '+' syntax for assembly tuples.
-    return tuple1 + tuple2
+    return AssemblySet(*tuple1, *tuple2)

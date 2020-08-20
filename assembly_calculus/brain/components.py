@@ -10,8 +10,6 @@ if TYPE_CHECKING:
 
 @bindable_brain.cls
 class Area(UniquelyIdentifiable):
-    # This selection was arbitrary, please let us know if you prefer some other constant
-    # Response: it's ok
     THRESHOLD: float = 0.20
 
     def __init__(self, n: int, k: Optional[int] = None, beta: float = 0.01):
@@ -28,16 +26,23 @@ class Area(UniquelyIdentifiable):
     def support(self, *, brain: Brain):
         return brain.support[self]
 
-    # TODO: use `read` terminology
-    @bindable_brain.property
-    def active_assembly(self, *, brain: Brain) -> Optional[Assembly]:
+    @bindable_brain.method
+    def read(self, *, preserve_brain: bool = True, brain: Brain) -> Optional[Assembly]:
+        """Returns the most activated assembly in the area"""
         assemblies: Set[Assembly] = brain.recipe.area_assembly_mapping[self]
         overlaps: Dict[Assembly, float] = {}
         for assembly in assemblies:
-            overlaps[assembly] = overlap(brain.winners[self], assembly.sample_neurons(preserve_brain=True, brain=brain))
+            overlaps[assembly] = overlap(brain.winners[self],
+                                         assembly.sample_neurons(preserve_brain=preserve_brain, brain=brain))
 
         maximal_assembly = max(overlaps.keys(), key=lambda x: overlaps[x])
         return maximal_assembly if overlaps[maximal_assembly] > Area.THRESHOLD else None
+
+    # TODO: use `read` terminology
+    # Response: Supports both
+    @bindable_brain.property
+    def active_assembly(self, *, brain: Brain) -> Optional[Assembly]:
+        return self.read(preserve_brain=True, brain=brain)
 
     def __repr__(self):
         return f"Area(n={self.n}, k={self.k}, beta={self.beta})"

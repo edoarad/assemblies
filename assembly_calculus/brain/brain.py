@@ -33,6 +33,7 @@ class Brain(UniquelyIdentifiable):
 
     def __init__(self, connectome: ABCConnectome, recipe: BrainRecipe = None, repeat: int = 1):
         # TODO: document __init__ parameters
+        # Response: TM Team
         super(Brain, self).__init__()
         self.repeat = repeat
         self.recipe = recipe or BrainRecipe()
@@ -75,7 +76,7 @@ class Brain(UniquelyIdentifiable):
 
     def add_stimulus(self, stimulus: Stimulus):
         self.recipe.append(stimulus)
-        return self.connectome.add_stimulus(stimulus)
+        self.connectome.add_stimulus(stimulus)
 
     def enable(self, source: BrainPart, dest: BrainPart = None):
         """
@@ -162,13 +163,17 @@ class Brain(UniquelyIdentifiable):
                 assembly.bind(brain=current_ctx_stack[assembly])
 
 
-# TODO: document
 # TODO 3: is it crucial to get `connectome_cls` or can we get a connectome object?
+# Response: This was the previous way to do it, we don't care if this will be changed to a connectome object
 # TODO 4: make names clearer: train_repeat -> recipe_repeat, effective_repeat -> something clearer?
+# Response: This is from the world of machine learning, in my opinion these are meaningful names.
+#           Training is the initialization and effective is the final.
 # TODO 5: should this be a method of `BrainRecipe`?
+# Response: To API Team, you can change this if you want
 def bake(recipe: BrainRecipe, p: float, connectome_cls: Type[ABCConnectome],
          train_repeat: int = 10, effective_repeat: int = 3):
+    """Bakes a brain from a recipe, adds all relevant brain parts and performs the initialization sequence"""
     brain = Brain(connectome_cls(p), recipe=recipe, repeat=train_repeat)
-    recipe.initialize(brain)
+    recipe.initialize_brain(brain)
     brain.repeat = effective_repeat
     return brain

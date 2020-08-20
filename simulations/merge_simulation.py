@@ -137,7 +137,7 @@ for merge_stabilization, repeats in TESTS:
                 # Compute the overlap between first and second projection winners
                 values.append(overlap(first_winners, second_winners) * 100)
 
-            # helps my computer deal with the RAM usage (not neccesary)
+            # helps my computer deal with the RAM usage (not necessary)
             gc.collect()
 
         # Compute average overlap

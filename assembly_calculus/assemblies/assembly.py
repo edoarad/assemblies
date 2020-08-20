@@ -2,20 +2,22 @@ from __future__ import annotations
 # Allows forward declarations and such :)
 from collections import defaultdict
 from itertools import product, chain
-from typing import Iterable, Union, Tuple, TYPE_CHECKING, Set, Type, List
+from typing import Iterable, Union, Tuple, TYPE_CHECKING, Set, Type
 
 from .assembly_sampler import AssemblySampler
 from .assembly_samplers.recursive_sampler import RecursiveSampler
 from ..utils import ImplicitResolution, Bindable, UniquelyIdentifiable, set_hash, attach_recording, record_method, \
     bindable_brain
 from ..brain import Stimulus, Area
-from .utils import union, activate
+from .utils import union, activate, common_value
 
 if TYPE_CHECKING:
     from ..brain import Brain
     from ..brain import BrainRecipe
 
 # TODO: think about more elegant solutions than Union
+# Response: Union is a standard typing practice
+#           It fits the use-case, as we are building upon existing infrastructure
 """
 Standard python 3.8 typing
 Projectable is an umbrella type for regular assemblies 
@@ -24,8 +26,16 @@ and top level assemblies with no parents (i.e stimuli)
 Projectable = Union['Assembly', Stimulus]
 
 
-# TODO: this should be named `AssemblySet` because it does not allow duplicates, and does not keep order
-class AssemblyTuple(UniquelyIdentifiable):
+"""
+Magic constants
+"""
+PROJECT_REPEAT = 1
+MERGE_REPEAT = 20
+RECIPROCAL_PROJECT_REPEAT = MERGE_REPEAT
+ASSOCIATE_REPEAT = 20
+
+
+class AssemblySet(UniquelyIdentifiable):
     """
     Assembly tuple is used as an intermediate structure to support syntax such as
     assemblies merge (a1 | a2 | .. | a_n) >> area and other assemblies operations.
@@ -51,35 +61,25 @@ class AssemblyTuple(UniquelyIdentifiable):
         # Remove duplicates
         self.assemblies: Tuple[Assembly, ...] = tuple(set(assemblies))
 
-    # TODO: __add__ should be a private method, because an external user should better use __or__ method
-    def __add__(self, other: AssemblyTuple) -> AssemblyTuple:
-        """
-        In the context of AssemblyTuples, + creates a new AssemblyTuple containing the members
-        of both parts.
-
-        :param other: Other AssemblyTuple we add
-        :returns: Union AssemblyTuple
-        """
-        if not isinstance(other, AssemblyTuple):
-            raise TypeError("Assemblies can be concatenated only to assemblies")
-
-        return AssemblyTuple(*(self.assemblies + other.assemblies))
-
     # TODO: document the logic that this function performs
+    # Response
     @record_method(lambda self, area, **_: Bindable.bound_value('recording', *self), execute_anyway=True)
     @ImplicitResolution(brain=lambda self, area, **_: Bindable.bound_value('brain', *self))
     def merge(self, area: Area, *, brain: Brain = None):
         """
-        can be used by user with >> or directly by:
+        Creates strong bi-directional links between assemblies via an intermediate assembly located at area
+
+        Can be used by user with >> or directly by:
         (ass1 | ass2).merge( ... ) or AssemblyTuple(list of assemblies).merge( ... )
         """
         if not isinstance(area, Area):
             raise ValueError("Project target must be an Area in the brain")
 
-        # TODO: type hint of `Assembly` is redundant
-        # TODO2: `intersection` is not a static method of `set` so it should only be used on an object (it works here,  but it is structurally incorrect)
-        merged_assembly: Assembly = Assembly(self.assemblies, area,
-                                             initial_recipes=set.intersection(*[x.appears_in for x in self]))
+        # TODO2: `intersection` is not a static method of `set` so it should only be used on an object (it works here, but it is structurally incorrect)
+        # Response: This is valid syntax, it is equivalent to self[0].appears_in.intersection(*[x.appears_in for x in self[1:])
+        #           only shorter and much more readable
+        merged_assembly = Assembly(self.assemblies, area,
+                                   initial_recipes=set.intersection(*[x.appears_in for x in self]))
         if brain is not None:
             brain.winners[area] = list()
             all_parents = list(chain(*(assembly.parents for assembly in self)))
@@ -94,42 +94,42 @@ class AssemblyTuple(UniquelyIdentifiable):
                 subconnectome[assembly.area].add(area)
                 subconnectome[area].add(assembly.area)
 
-            # TODO: magic numbers. move 20 to constant variable with indicative name
-            brain.next_round(subconnectome=subconnectome, replace=True, iterations=brain.repeat * 20)
+            brain.next_round(subconnectome=subconnectome, replace=True, iterations=brain.repeat * MERGE_REPEAT)
 
         merged_assembly.bind_like(*self)
         return merged_assembly
 
     # TODO: the lambda is (almost) duplicated in both decorator parameters. Exctract to function with indicative name, and reuse it
+    # Response: The main logic of this lambda is extracted in Bindable.bound_value, all that is left is adjustment of
+    #           parameters, which is exactly what the lambda is for.
     # TODO2: document the logic that this function performs
+    # Response: What does this mean?
     # TODO3: `assembly.associate(other)` should have same function as `other.associate(assembly)` and `(assembly|other).associate()`
+    # Response: Actually, this is not the intention. This performs association on the bipartite graph induced.
     @record_method(lambda self, other, **_: Bindable.bound_value('recording', *self, *other), execute_anyway=False)
     @ImplicitResolution(brain=lambda self, other, **_: Bindable.bound_value('brain', *self, *other))
-    def associate(self, other: AssemblyTuple, *, brain: Brain):
+    def associate(self, other: AssemblySet, *, brain: Brain):
         """
-        as of now has no syntactic sugar, so use by:
-        (ass1 | ass2).associate(another AssemblyTuple).
-        """
-        # TODO: extract single area check and get logic to `_get_single_area` function
-        areas = set(map(lambda ass: ass.area, self + other))
-        if len(areas) > 1:
-            raise ValueError("All assemblies must reside in the same area")
+        Associates (causes overlap of representative_neurons to increase) assemblies in self with assemblies in other,
+        can be thought of as performing associations on all edges in the bipartite graph induced by self <-> other
 
-        area = areas.pop()
+        As of now has no syntactic sugar, so use by:
+        (... Left Side Assemblies ...).associate(... Right Side Assemblies ...)
+        """
+        if (area := common_value(*(assembly.area for assembly in (self | other)))) is None:
+            raise ValueError("All assemblies must be in the same area for association")
 
         brain.winners[area] = list()
         pairs: Iterable[Tuple[Assembly, Assembly]] = product(self, other)
         # TODO: convert to all options (not only x from `self` and y from `other`)
+        # Response: No, this is the design
         for x, y in pairs:
             activate(x.parents + y.parents, brain=brain)
 
-            # TODO: no need to convert to list. can use set syntactic sugar: `parent_areas = {ass.area for ass in (x.parents + y.parents)}`
-            parent_areas = list(set(map(lambda ass: ass.area, x.parents + y.parents)))
-            # TODO: what is the purpose of `{**.....}` in the next line? can it be replaced with regular dict comprehension?
-            subconnectome = {**{parent_area: [area] for parent_area in parent_areas}}
-            # TODO: magic numbers
+            parent_areas = {ass.area for ass in (x.parents + y.parents)}
+            subconnectome = {parent_area: [area] for parent_area in parent_areas}
             # We compensate with more rounds, in order to avoid natural mixing (by removing self edge area: [area])
-            brain.next_round(subconnectome=subconnectome, replace=True, iterations=brain.repeat * 20)
+            brain.next_round(subconnectome=subconnectome, replace=True, iterations=brain.repeat * ASSOCIATE_REPEAT)
 
     def __rshift__(self, target_area: Area):
         """
@@ -186,13 +186,14 @@ class Assembly(UniquelyIdentifiable):
             recipe.append(self)
 
     # TODO: it seems that the Type is unbound here (should it be the type of Assembly._default_sampler?)
+    # Response: ???
     @property
     def sampler(self) -> Type[AssemblySampler]:
         # property decorator means we can access this as assembly.sampler
         return self._sampler or Assembly._default_sampler
 
     @staticmethod
-    def set_default_sampler(sampler):
+    def set_default_sampler(sampler: Type[AssemblySampler]):
         """
         :param sampler: New default assembly sampler
         """
@@ -223,14 +224,13 @@ class Assembly(UniquelyIdentifiable):
         if not isinstance(area, Area):
             raise TypeError("Projection target must be an Area in the Brain")
 
-        # TODO: type hint of Assembly is redundant
-        projected_assembly: Assembly = Assembly([self], area, initial_recipes=self.appears_in)
+        projected_assembly = Assembly([self], area, initial_recipes=self.appears_in)
 
         if brain is not None:
             activate([self], brain=brain)
             brain.winners[area] = list()
-            # TODO: multiplier for iterations is missing
-            brain.next_round(subconnectome={self.area: [area], area: [area]}, replace=True, iterations=brain.repeat)
+            brain.next_round(subconnectome={self.area: [area], area: [area]}, replace=True,
+                             iterations=brain.repeat * PROJECT_REPEAT)
 
         projected_assembly.bind_like(self)
         return projected_assembly
@@ -263,14 +263,16 @@ class Assembly(UniquelyIdentifiable):
 
         # To improve convergence rate we decided to first project (and stabilize assembly)
         # and only then begin doing a reciprocal project
-        projected_assembly: Assembly = self.project(area, brain=brain)
+        projected_assembly = self.project(area, brain=brain)
         if brain is not None:
             activate(self.parents, brain=brain)
-            # TODO: separate to two lines
-            subconnectome = {**{(parent.area if isinstance(parent, Assembly) else parent):
-                                [self.area] for parent in self.parents}, self.area: [area], area: [self.area]}
-            # TODO: magic numbers
-            brain.next_round(subconnectome=subconnectome, replace=True, iterations=brain.repeat * 20)
+
+            subconnectome = {
+                **{(parent.area if isinstance(parent, Assembly) else parent): [self.area] for parent in self.parents},
+                self.area: [area], area: [self.area]
+            }
+            brain.next_round(subconnectome=subconnectome, replace=True,
+                             iterations=brain.repeat * RECIPROCAL_PROJECT_REPEAT)
 
         projected_assembly.bind_like(self)
         return projected_assembly
