@@ -41,7 +41,7 @@ class Connectome(ABCConnectome):
 
     @property
     def plasticity(self) -> bool:
-        return self._disabled
+        return not self._disabled
 
     @plasticity.setter
     def plasticity(self, mode: bool):
