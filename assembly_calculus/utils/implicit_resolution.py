@@ -5,6 +5,7 @@ from typing import Tuple, Optional, Callable
 from .argument_manipulation import signature
 
 
+# TODO: this is unusual behavior, should be better documented, preferably with usage examples
 class ImplicitResolution:
     """
     Implicit argument resolution decorator.

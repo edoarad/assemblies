@@ -29,6 +29,7 @@ def fire_many(brain: Brain, projectables: Iterable[Projectable], area: Area):
     fire_layered_areas(brain, layers)
 
 
+# TODO: make private function
 def construct_firing_order(projectables: Iterable[Projectable], area: Area) -> List[Dict[Projectable, List[Area]]]:
     """
     Construct the "firing hierarchy", by going up the "parenthood" tree
@@ -55,6 +56,7 @@ def construct_firing_order(projectables: Iterable[Projectable], area: Area) -> L
     return layers
 
 
+# TODO: make private function
 def fire_layered_areas(brain: Brain, firing_order: List[Dict[Projectable, List[Area]]]):
     """
     Fire layers of projectables one by one

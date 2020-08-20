@@ -1,6 +1,7 @@
 from functools import wraps
 
 
+# TODO: use this or delete
 class FunctionTuple:
     """
     This class allows to compute multiple functions on the same input

@@ -14,6 +14,7 @@ class NoInitMeta(type):
         return obj
 
 
+# TODO: make sure the other teams use this version
 class UniquelyIdentifiable(RememberInitName, metaclass=NoInitMeta):
     """
     This class represents objects that are uniquely identifiable, objects that should be identified by instance

@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 class BrainRecipe:
     # TODO: Union[BrainPart, Assembly] is used many times. Maybe use a parent class instead that both will inherit?
     def __init__(self, *parts: Union[BrainPart, Assembly]):
+        # TODO: document!
         self.areas: Set[Area] = set()
         self.area_assembly_mapping: Dict[Area, Set[Assembly]] = {}
         self.stimuli: Set[Stimulus] = set()
