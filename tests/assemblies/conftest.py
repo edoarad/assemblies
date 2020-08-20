@@ -1,6 +1,8 @@
 from assembly_calculus import BrainRecipe, Area, Stimulus, Assembly
 from pytest import fixture
 
+# TODO: extract common magic numbers to constant
+
 
 @fixture
 def stim_a():

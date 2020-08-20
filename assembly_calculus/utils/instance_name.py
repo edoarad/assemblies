@@ -1,6 +1,9 @@
 from traceback import walk_stack
 from functools import cached_property
 
+# TODO: add documentation to the classes in this file
+# TODO2: document that this behaviour is only appropriate for use in interpreter
+
 
 class RememberInitStack:
     def __init__(self):

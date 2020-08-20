@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 
 
 # TODO: change random sampling to performance sampling
+# TODO2: sampling should take multiplicity into account
 def activate(projectables: Iterable[Projectable], *, brain: Brain):
     """to prevent code duplication, this function does the common thing
     of taking a list of assemblies and creating a dictionary from area to neurons (of the
@@ -27,6 +28,7 @@ def activate(projectables: Iterable[Projectable], *, brain: Brain):
     from .assembly import Assembly
     assemblies = tuple(projectable for projectable in projectables if isinstance(projectable, Assembly))
 
+    # TODO: List[float] or List[int]?
     # create a mapping from the areas to the neurons we want to fire
     area_neuron_mapping: Dict[Area, List[float]] = {ass.area: [] for ass in assemblies}
 

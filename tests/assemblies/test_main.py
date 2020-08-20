@@ -8,6 +8,11 @@ from utils import protecc_ram
 CERTAINTY_REPEAT = 25
 
 
+# TODO: make the use of `protecc_ram` optional or configurable (for example using an environment variable)
+# TODO2: extract common magic numbers to constant
+# TODO3: add more asserts to each test case
+# TODO4: remove code duplication inside tests. reuse code using methods. test code should be treated as regular code :)
+
 def test_projection(recipe, assembly_a, assembly_b, area_c):
     protecc_ram(0.75)
 
