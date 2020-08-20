@@ -25,7 +25,7 @@ class BrainTestUtils(object):
 		stimuli = [Stimulus(stimulus_size) for _ in range(number_of_stimuli)]
 		output_area = []
 		if add_output_area:
-			output_area.append(OutputArea(area_size, beta))
+			output_area.append(OutputArea(beta=beta))
 		self._recipe = BrainRecipe(*areas, *stimuli, *output_area)
 		self.brain = bake(self._recipe, p, Connectome, 0, 1)
 		return self.brain
