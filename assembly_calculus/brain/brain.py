@@ -171,7 +171,7 @@ class Brain(UniquelyIdentifiable):
 # TODO 5: should this be a method of `BrainRecipe`?
 # Response: To API Team, you can change this if you want
 def bake(recipe: BrainRecipe, p: float, connectome_cls: Type[ABCConnectome],
-         train_repeat: int = 10, effective_repeat: int = 3):
+         train_repeat: int = 10, effective_repeat: int = 3) -> Brain:
     """Bakes a brain from a recipe, adds all relevant brain parts and performs the initialization sequence"""
     brain = Brain(connectome_cls(p), recipe=recipe, repeat=train_repeat)
     recipe.initialize_brain(brain)

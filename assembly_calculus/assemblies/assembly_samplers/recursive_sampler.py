@@ -1,7 +1,8 @@
 from __future__ import annotations
 from ..assembly_sampler import AssemblySampler
 from ...utils.brain_utils import fire_many
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterable
+
 if TYPE_CHECKING:
     from ..assembly import Assembly
     from ...brain import Brain
@@ -18,7 +19,7 @@ class RecursiveSampler(AssemblySampler):
     """
 
     @staticmethod
-    def sample_neurons(assembly: Assembly, preserve_brain: bool = False, *, brain: Brain):
+    def sample_neurons(assembly: Assembly, preserve_brain: bool = False, *, brain: Brain) -> Iterable[int]:
         """
         Read the winners from given assembly in given brain recursively using fire_many
         and return the result.

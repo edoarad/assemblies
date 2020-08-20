@@ -61,11 +61,9 @@ class AssemblySet(UniquelyIdentifiable):
         # Remove duplicates
         self.assemblies: Tuple[Assembly, ...] = tuple(set(assemblies))
 
-    # TODO: document the logic that this function performs
-    # Response
     @record_method(lambda self, area, **_: Bindable.bound_value('recording', *self), execute_anyway=True)
     @ImplicitResolution(brain=lambda self, area, **_: Bindable.bound_value('brain', *self))
-    def merge(self, area: Area, *, brain: Brain = None):
+    def merge(self, area: Area, *, brain: Brain = None) -> Assembly:
         """
         Creates strong bi-directional links between assemblies via an intermediate assembly located at area
 
@@ -131,7 +129,7 @@ class AssemblySet(UniquelyIdentifiable):
             # We compensate with more rounds, in order to avoid natural mixing (by removing self edge area: [area])
             brain.next_round(subconnectome=subconnectome, replace=True, iterations=brain.repeat * ASSOCIATE_REPEAT)
 
-    def __rshift__(self, target_area: Area):
+    def __rshift__(self, target_area: Area) -> Assembly:
         """
         In the context of assemblies, >> symbolizes merge.
         Example: (within a brain context) (a1 | a2 | a3)>>area
@@ -200,7 +198,7 @@ class Assembly(UniquelyIdentifiable):
         Assembly._default_sampler = sampler
 
     @bindable_brain.method
-    def sample_neurons(self, preserve_brain=False, *, brain: Brain) -> Set[int, ...]:
+    def sample_neurons(self, preserve_brain=False, *, brain: Brain) -> Set[int]:
         """
         :param preserve_brain: Boolean flag determining whether or not to have side effects on the brain
         :param brain: Brain from which to sample assembly
@@ -209,7 +207,7 @@ class Assembly(UniquelyIdentifiable):
         return set(self.sampler.sample_neurons(self, preserve_brain=preserve_brain, brain=brain))
 
     @bindable_brain.property
-    def representative_neurons(self, *, brain: Brain) -> Set[int, ...]:
+    def representative_neurons(self, *, brain: Brain) -> Set[int]:
         return self.sample_neurons(preserve_brain=True, brain=brain)
 
     @record_method(execute_anyway=True)
@@ -235,7 +233,7 @@ class Assembly(UniquelyIdentifiable):
         projected_assembly.bind_like(self)
         return projected_assembly
 
-    def __rshift__(self, target: Area):
+    def __rshift__(self, target: Area) -> Assembly:
         """
         In the context of assemblies, >> represents project.
         Example: assembly >> Area

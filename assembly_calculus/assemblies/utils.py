@@ -5,7 +5,7 @@ This helps assembly.py be less bloated
 
 from __future__ import annotations
 from random import sample
-from typing import List, TYPE_CHECKING, Dict, Union, Iterable
+from typing import List, TYPE_CHECKING, Dict, Union, Iterable, Optional
 from ..brain import Area
 
 if TYPE_CHECKING:
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from .assembly import Assembly, AssemblySet, Projectable
 
 
-def common_value(*values):
+def common_value(*values) -> Optional:
     values = set(values)
     return values.pop() if len(values) == 1 else None
 
@@ -45,7 +45,7 @@ def activate(projectables: Iterable[Projectable], *, brain: Brain):
         brain.winners[source] = sample(area_neuron_mapping[source], k=source.k)  # choose randomly out of winners
 
 
-def union(obj1: Union[Assembly, AssemblySet], obj2: Union[Assembly, AssemblySet]):
+def union(obj1: Union[Assembly, AssemblySet], obj2: Union[Assembly, AssemblySet]) -> AssemblySet:
     """
     this method is set as __or__ of both assembly classes and returns an
     AssemblyTuple object which holds their union.

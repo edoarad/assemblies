@@ -1,6 +1,6 @@
 from functools import wraps
 from types import MappingProxyType
-from typing import Optional, Any, Tuple, Dict, Set
+from typing import Optional, Any, Tuple, Dict, Set, Mapping
 from inspect import Parameter
 
 from .argument_manipulation import signature
@@ -28,7 +28,8 @@ class Bindable:
         self.params: Tuple[str, ...] = params
 
     @staticmethod
-    def bound_value(param_name: str, *instances, graceful_none: bool = True, graceful_discrepancy: bool = False):
+    def bound_value(param_name: str, *instances, graceful_none: bool = True, graceful_discrepancy: bool = False)\
+            -> Optional:
         """
         Attempts finding a common bound value in all instances of some parameter
         :param param_name: Parameter to attempt finding bound values for
@@ -139,7 +140,7 @@ class Bindable:
                     self._bound_params.pop(name)
 
         @property
-        def bound_params(_self):
+        def bound_params(_self) -> Mapping[str, Any]:
             return MappingProxyType(getattr(_self, '_bound_params', {}))
 
         bind.__doc__ = bind.__doc__.format(params)
