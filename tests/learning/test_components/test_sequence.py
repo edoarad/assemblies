@@ -2,6 +2,7 @@ from unittest import TestCase
 
 from parameterized import parameterized
 
+from assembly_calculus import Stimulus
 from assembly_calculus.learning.components.errors import SequenceRunNotInitializedOrInMidRun, \
 	IllegalOutputAreasException, NoPathException
 from assembly_calculus.learning.components.input import InputStimuli
@@ -24,45 +25,29 @@ class TestLearningSequence(TestCase):
 		stimulus_a, stimulus_b = self.brain.connectome.stimuli[:2]
 		input_stimuli = InputStimuli(self.brain, 100, area_a, area_b, verbose=False)
 		sequence = LearningSequence(self.brain, input_stimuli)
-		sequence.add_iteration(input_bits=[0, 1], subconnectome={})
+		sequence.add_iteration(input_bits=[0, 1])
 		sequence.add_iteration(subconnectome={stimulus_a: [area_a], stimulus_b: [area_b]})
 		sequence.add_iteration(subconnectome={area_a: [area_c], area_b: [area_c]})
-		sequence.add_iteration(areas_to_areas={area_c: [self.utils.output_area]})
+		sequence.add_iteration(subconnectome={area_c: [self.utils.output_area]})
 
 		expected_iterations = [
 			{
-				'stim_to_area':
-					{
-						input_stimuli[0][0]: ['A'],
-						input_stimuli[1][0]: ['B']
-					},
-				'area_to_area': {}
+				input_stimuli[0][0]: [area_a],
+				input_stimuli[1][0]: [area_b],
 			},
 
 			{
-				'stim_to_area':
-					{
-						'A': ['A'],
-						'B': ['B']
-					},
-				'area_to_area': {}
+				stimulus_a: [area_a],
+				stimulus_b: [area_b],
 			},
 
 			{
-				'stim_to_area': {},
-				'area_to_area':
-					{
-						'A': ['C'],
-						'B': ['C']
-					}
+				area_a: [area_c],
+				area_b: [area_c],
 			},
 
 			{
-				'stim_to_area': {},
-				'area_to_area':
-					{
-						'C': ['output'],
-					}
+				area_c: [self.utils.output_area],
 			},
 		]
 		expected_iterations = expected_iterations * number_of_cycles
@@ -73,118 +58,77 @@ class TestLearningSequence(TestCase):
 			self.assertEqual(expected_iterations[idx], iteration.format(input_stimuli, 0))
 
 	def test_sequence_multiple_consecutive_runs_per_iteration(self):
-		input_stimuli = InputStimuli(self.brain, 100, 'A', 'B', verbose=False)
+		area_a, area_b, area_c = self.brain.connectome.areas[:3]
+		stimulus_a, stimulus_b = self.brain.connectome.stimuli[:2]
+		input_stimuli = InputStimuli(self.brain, 100, area_a, area_b, verbose=False)
 		sequence = LearningSequence(self.brain, input_stimuli)
 		sequence.add_iteration(input_bits=[0, 1], consecutive_runs=2)
-		sequence.add_iteration(stimuli_to_areas={'A': ['A'], 'B': ['B']}, consecutive_runs=2)
-		sequence.add_iteration(areas_to_areas={'A': ['C'], 'B': ['C']}, consecutive_runs=3)
-		sequence.add_iteration(areas_to_areas={'C': ['output']}, consecutive_runs=1)
+		sequence.add_iteration(subconnectome={stimulus_a: [area_a], stimulus_b: [area_b]}, consecutive_runs=2)
+		sequence.add_iteration(subconnectome={area_a: [area_c], area_b: [area_c]}, consecutive_runs=3)
+		sequence.add_iteration(subconnectome={area_c: [self.utils.output_area]}, consecutive_runs=1)
 
 		expected_iterations = [
 			{
-				'stim_to_area':
-					{
-						input_stimuli[0][0]: ['A'],
-						input_stimuli[1][0]: ['B']
-					},
-				'area_to_area': {}
+				input_stimuli[0][0]: [area_a],
+				input_stimuli[1][0]: [area_b],
 			},
 			{
-				'stim_to_area':
-					{
-						input_stimuli[0][0]: ['A'],
-						input_stimuli[1][0]: ['B']
-					},
-				'area_to_area': {}
+				input_stimuli[0][0]: [area_a],
+				input_stimuli[1][0]: [area_b],
 			},
 
 			{
-				'stim_to_area':
-					{
-						'A': ['A'],
-						'B': ['B']
-					},
-				'area_to_area': {}
+				stimulus_a: [area_a],
+				stimulus_b: [area_b],
 			},
 			{
-				'stim_to_area':
-					{
-						'A': ['A'],
-						'B': ['B']
-					},
-				'area_to_area': {}
+				stimulus_a: [area_a],
+				stimulus_b: [area_b],
 			},
 
 			{
-				'stim_to_area': {},
-				'area_to_area':
-					{
-						'A': ['C'],
-						'B': ['C']
-					}
+				area_a: [area_c],
+				area_b: [area_c],
 			},
 			{
-				'stim_to_area': {},
-				'area_to_area':
-					{
-						'A': ['C'],
-						'B': ['C']
-					}
+				area_a: [area_c],
+				area_b: [area_c],
 			},
 			{
-				'stim_to_area': {},
-				'area_to_area':
-					{
-						'A': ['C'],
-						'B': ['C']
-					}
+				area_a: [area_c],
+				area_b: [area_c],
 			},
 
 			{
-				'stim_to_area': {},
-				'area_to_area':
-					{
-						'C': ['output'],
-					}
+				area_c: [self.utils.output_area],
 			},
 		]
-
 		sequence.initialize_run(number_of_cycles=1)
 		for idx, iteration in enumerate(sequence):
 			self.assertEqual(expected_iterations[idx], iteration.format(input_stimuli, 0))
 
 	def test_sequence_with_only_stimuli(self):
-		input_stimuli = InputStimuli(self.brain, 100, 'A', 'B', verbose=False)
+		area_a, area_b, area_c = self.brain.connectome.areas[:3]
+		stimulus_a, stimulus_b = self.brain.connectome.stimuli[:2]
+		input_stimuli = InputStimuli(self.brain, 100, area_a, area_b, verbose=False)
 		sequence = LearningSequence(self.brain, input_stimuli)
-		sequence.add_iteration(stimuli_to_areas={'A': ['A'], 'B': ['B']})
-		sequence.add_iteration(areas_to_areas={'A': ['C'], 'B': ['C']})
-		sequence.add_iteration(areas_to_areas={'C': ['output']})
+		sequence.add_iteration(subconnectome={stimulus_a: [area_a], stimulus_b: [area_b]})
+		sequence.add_iteration(subconnectome={area_a: [area_c], area_b: [area_c]})
+		sequence.add_iteration(subconnectome={area_c: [self.utils.output_area]})
 
 		expected_iterations = [
 			{
-				'stim_to_area':
-					{
-						'A': ['A'],
-						'B': ['B']
-					},
-				'area_to_area': {}
+				stimulus_a: [area_a],
+				stimulus_b: [area_b],
 			},
 
 			{
-				'stim_to_area': {},
-				'area_to_area':
-					{
-						'A': ['C'],
-						'B': ['C']
-					}
+				area_a: [area_c],
+				area_b: [area_c],
 			},
 
 			{
-				'stim_to_area': {},
-				'area_to_area':
-					{
-						'C': ['output'],
-					}
+				area_c: [self.utils.output_area],
 			},
 		]
 
@@ -193,76 +137,26 @@ class TestLearningSequence(TestCase):
 			self.assertEqual(expected_iterations[idx], iteration.format(input_stimuli, 0))
 
 	def test_sequence_with_only_input_bits(self):
-		input_stimuli = InputStimuli(self.brain, 100, 'A', 'B', verbose=False)
+		area_a, area_b, area_c = self.brain.connectome.areas[:3]
+		input_stimuli = InputStimuli(self.brain, 100, area_a, area_b, verbose=False)
 		sequence = LearningSequence(self.brain, input_stimuli)
 		sequence.add_iteration(input_bits=[0, 1])
-		sequence.add_iteration(areas_to_areas={'A': ['C'], 'B': ['C']})
-		sequence.add_iteration(areas_to_areas={'C': ['output']})
+		sequence.add_iteration(subconnectome={area_a: [area_c], area_b: [area_c]})
+		sequence.add_iteration(subconnectome={area_c: [self.utils.output_area]})
 
 		expected_iterations = [
 			{
-				'stim_to_area':
-					{
-						input_stimuli[0][0]: ['A'],
-						input_stimuli[1][0]: ['B']
-					},
-				'area_to_area': {}
+				input_stimuli[0][0]: [area_a],
+				input_stimuli[1][0]: [area_b],
 			},
 
 			{
-				'stim_to_area': {},
-				'area_to_area':
-					{
-						'A': ['C'],
-						'B': ['C']
-					}
+				area_a: [area_c],
+				area_b: [area_c],
 			},
 
 			{
-				'stim_to_area': {},
-				'area_to_area':
-					{
-						'C': ['output'],
-					}
-			},
-		]
-
-		sequence.initialize_run(number_of_cycles=1)
-		for idx, iteration in enumerate(sequence):
-			self.assertEqual(expected_iterations[idx], iteration.format(input_stimuli, 0))
-
-	def test_sequence_with_only_input_bits(self):
-		input_stimuli = InputStimuli(self.brain, 100, 'A', 'B', verbose=False)
-		sequence = LearningSequence(self.brain, input_stimuli)
-		sequence.add_iteration(input_bits=[0, 1])
-		sequence.add_iteration(areas_to_areas={'A': ['C'], 'B': ['C']})
-		sequence.add_iteration(areas_to_areas={'C': ['output']})
-
-		expected_iterations = [
-			{
-				'stim_to_area':
-					{
-						input_stimuli[0][0]: ['A'],
-						input_stimuli[1][0]: ['B']
-					},
-				'area_to_area': {}
-			},
-
-			{
-				'stim_to_area': {},
-				'area_to_area':
-					{
-						'A': ['C'],
-						'B': ['C']
-					}
-			},
-
-			{
-				'stim_to_area': {},
-				'area_to_area':
-					{
-						'C': ['output'],
-					}
+				area_c: [self.utils.output_area],
 			},
 		]
 
@@ -271,127 +165,94 @@ class TestLearningSequence(TestCase):
 			self.assertEqual(expected_iterations[idx], iteration.format(input_stimuli, 0))
 
 	def test_sequence_with_input_bits_and_stimuli_combines_the_dicts(self):
-		input_stimuli = InputStimuli(self.brain, 100, 'A', 'B', verbose=False, override={0: ('A', 'C')})
+		area_a, area_b, area_c = self.brain.connectome.areas[:3]
+		stimulus_a, stimulus_b, stimulus_c = self.brain.connectome.stimuli[:3]
+		input_stimuli = InputStimuli(self.brain, 100, area_a, area_b, verbose=False,
+		                             override={0: (stimulus_a, stimulus_c)})
 		sequence = LearningSequence(self.brain, input_stimuli)
-		sequence.add_iteration(input_bits=[0, 1], stimuli_to_areas={'A': ['B'], 'B': ['C']})
-		sequence.add_iteration(areas_to_areas={'A': ['C'], 'B': ['C']})
-		sequence.add_iteration(areas_to_areas={'C': ['output']})
+		sequence.add_iteration(input_bits=[0, 1], subconnectome={stimulus_a: [area_b], stimulus_b: [area_c]})
+		sequence.add_iteration(subconnectome={area_a: [area_c], area_b: [area_c]})
+		sequence.add_iteration(subconnectome={area_c: [self.utils.output_area]})
 
 		expected_iterations_00 = [
 			{
-				'stim_to_area':
-					{
-						'A': ['A', 'B'],
-						input_stimuli[1][0]: ['B'],
-						'B': ['C']
-					},
-				'area_to_area': {}
+				stimulus_a: [area_a, area_b],
+				input_stimuli[1][0]: [area_b],
+				stimulus_b: [area_c]
+
 			},
 
 			{
-				'stim_to_area': {},
-				'area_to_area':
-					{
-						'A': ['C'],
-						'B': ['C']
-					}
+
+				area_a: [area_c],
+				area_b: [area_c]
+
 			},
 
 			{
-				'stim_to_area': {},
-				'area_to_area':
-					{
-						'C': ['output'],
-					}
+				area_c: [self.utils.output_area],
 			},
 		]
 
 		expected_iterations_01 = [
 			{
-				'stim_to_area':
-					{
-						'A': ['A', 'B'],
-						input_stimuli[1][1]: ['B'],
-						'B': ['C']
-					},
-				'area_to_area': {}
+				stimulus_a: [area_a, area_b],
+				input_stimuli[1][1]: [area_b],
+				stimulus_b: [area_c]
+
 			},
 
 			{
-				'stim_to_area': {},
-				'area_to_area':
-					{
-						'A': ['C'],
-						'B': ['C']
-					}
+				area_a: [area_c],
+				area_b: [area_c]
+
 			},
 
 			{
-				'stim_to_area': {},
-				'area_to_area':
-					{
-						'C': ['output'],
-					}
+				area_c: [self.utils.output_area],
+
 			},
 		]
 
 		expected_iterations_10 = [
 			{
-				'stim_to_area':
-					{
-						'C': ['A'],
-						input_stimuli[1][0]: ['B'],
-						'A': ['B'],
-						'B': ['C'],
-					},
-				'area_to_area': {}
+				stimulus_c: [area_a],
+				input_stimuli[1][0]: [area_b],
+				stimulus_a: [area_b],
+				stimulus_b: [area_c],
+
 			},
 
 			{
-				'stim_to_area': {},
-				'area_to_area':
-					{
-						'A': ['C'],
-						'B': ['C']
-					}
+				area_a: [area_c],
+				area_b: [area_c]
+
 			},
 
 			{
-				'stim_to_area': {},
-				'area_to_area':
-					{
-						'C': ['output'],
-					}
+				area_c: [self.utils.output_area],
+
 			},
 		]
 
 		expected_iterations_11 = [
 			{
-				'stim_to_area':
-					{
-						'C': ['A'],
-						input_stimuli[1][1]: ['B'],
-						'A': ['B'],
-						'B': ['C'],
-					},
-				'area_to_area': {}
+				stimulus_c: [area_a],
+				input_stimuli[1][1]: [area_b],
+				stimulus_a: [area_b],
+				stimulus_b: [area_c],
+
 			},
 
 			{
-				'stim_to_area': {},
-				'area_to_area':
-					{
-						'A': ['C'],
-						'B': ['C']
-					}
+				area_a: [area_c],
+				area_b: [area_c]
+
 			},
 
 			{
-				'stim_to_area': {},
-				'area_to_area':
-					{
-						'C': ['output'],
-					}
+				area_c: [self.utils.output_area],
+
 			},
 		]
 
@@ -412,39 +273,45 @@ class TestLearningSequence(TestCase):
 			self.assertDictEqual(expected_iterations_11[idx], iteration.format(input_stimuli, 3))
 
 	def test_sequence_has_no_output_area(self):
-		input_stimuli = InputStimuli(self.brain, 100, 'A', 'B', verbose=False)
+		area_a, area_b, area_c = self.brain.connectome.areas[:3]
+
+		input_stimuli = InputStimuli(self.brain, 100, area_a, area_b, verbose=False)
 		sequence = LearningSequence(self.brain, input_stimuli)
 		sequence.add_iteration(input_bits=[0, 1])
-		sequence.add_iteration(areas_to_areas={'A': ['C'], 'B': ['C']})
+		sequence.add_iteration(subconnectome={area_a: [area_c], area_b: [area_c]})
 
 		self.assertRaises(IllegalOutputAreasException, sequence.initialize_run, 1)
 
 	def test_sequence_stimulus_has_no_path_to_output(self):
-		input_stimuli = InputStimuli(self.brain, 100, 'A', 'B', verbose=False)
+		area_a, area_b, area_c = self.brain.connectome.areas[:3]
+		stimulus_a, stimulus_b = self.brain.connectome.stimuli[:2]
+		input_stimuli = InputStimuli(self.brain, 100, area_a, area_b, verbose=False)
 		sequence = LearningSequence(self.brain, input_stimuli)
 		# Input bit 0 has no path to the output area
-		sequence.add_iteration(stimuli_to_areas={'A': ['A'], 'B': ['B']})
-		sequence.add_iteration(areas_to_areas={'B': ['C']})
-		sequence.add_iteration(areas_to_areas={'C': ['output']})
+		sequence.add_iteration(subconnectome={stimulus_a: [area_a], stimulus_b: [area_b]})
+		sequence.add_iteration(subconnectome={area_b: [area_c]})
+		sequence.add_iteration(subconnectome={area_c: [self.utils.output_area]})
 
 		self.assertRaises(NoPathException, sequence.initialize_run, 1)
 
 	def test_sequence_input_bit_has_no_path_to_output(self):
-		input_stimuli = InputStimuli(self.brain, 100, 'A', 'B', verbose=False)
+		area_a, area_b, area_c = self.brain.connectome.areas[:3]
+		input_stimuli = InputStimuli(self.brain, 100, area_a, area_b, verbose=False)
 		sequence = LearningSequence(self.brain, input_stimuli)
 		# Input bit 0 has no path to the output area
 		sequence.add_iteration(input_bits=[0, 1])
-		sequence.add_iteration(areas_to_areas={'B': ['C']})
-		sequence.add_iteration(areas_to_areas={'C': ['output']})
+		sequence.add_iteration(subconnectome={area_b: [area_c]})
+		sequence.add_iteration(subconnectome={area_c: [self.utils.output_area]})
 
 		self.assertRaises(NoPathException, sequence.initialize_run, 1)
 
 	def test_sequence_not_initialized(self):
-		input_stimuli = InputStimuli(self.brain, 100, 'A', 'B', verbose=False)
+		area_a, area_b, area_c = self.brain.connectome.areas[:3]
+		input_stimuli = InputStimuli(self.brain, 100, area_a, area_b, verbose=False)
 		sequence = LearningSequence(self.brain, input_stimuli)
 		sequence.add_iteration(input_bits=[0, 1])
-		sequence.add_iteration(areas_to_areas={'A': ['C'], 'B': ['C']})
-		sequence.add_iteration(areas_to_areas={'C': ['output']})
+		sequence.add_iteration(subconnectome={area_a: [area_c], area_b: [area_c]})
+		sequence.add_iteration(subconnectome={area_c: [self.utils.output_area]})
 
 		# Iterating without initializing raises an error
 		with self.assertRaises(SequenceRunNotInitializedOrInMidRun):

@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional, Callable, Union, Set
+from typing import List, Dict, Optional, Set
 
 from assembly_calculus import Stimulus
 from assembly_calculus.brain import Area, Brain, BrainPart, OutputArea
@@ -186,7 +186,7 @@ class LearningSequence:
 		return {input_bit: self._input_stimuli[input_bit].target_areas
 		        for input_bit in input_bits}
 
-	def add_iteration(self, subconnectome: Dict[BrainPart, Set[BrainPart]] = None,
+	def add_iteration(self, subconnectome: Dict[BrainPart, Set[BrainPart]] = {},
 	                  input_bits: List[int] = None,
 	                  consecutive_runs: int = 1) -> None:
 		"""
