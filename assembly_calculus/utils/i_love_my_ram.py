@@ -1,3 +1,6 @@
+from sys import stderr
+
+
 def get_free_memory() -> int:
     """Return amount of free memory, kilobytes"""
     with open('/proc/meminfo', 'r') as mem:
@@ -16,5 +19,5 @@ def protecc_ram(pctg: float = 0.5):
         soft, hard = resource.getrlimit(resource.RLIMIT_AS)
         resource.setrlimit(resource.RLIMIT_AS, (int(get_free_memory() * 1024 * pctg), hard))
     except:  # noqa
-        print("Warning: no ram protection (possibly running are on windows?)")
+        print("Warning: no ram protection (possibly running are on windows?)", file=stderr)
         pass

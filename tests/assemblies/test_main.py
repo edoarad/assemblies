@@ -2,8 +2,7 @@ import gc
 from os import environ
 
 from assembly_calculus import Connectome, bake
-from assembly_calculus.utils import overlap
-from utils import protecc_ram
+from assembly_calculus.utils import overlap, protecc_ram
 
 
 CERTAINTY_REPEAT = 25

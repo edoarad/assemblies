@@ -6,8 +6,7 @@ import uuid
 from pathlib import Path
 
 from assembly_calculus import Area, Stimulus, BrainRecipe, bake, Connectome, Assembly
-
-from utils import Logger, protecc_ram
+from assembly_calculus.utils import protecc_ram, Logger
 
 import matplotlib.pyplot as plt
 
