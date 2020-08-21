@@ -4,16 +4,16 @@ from collections import defaultdict
 from itertools import product, chain
 from typing import Iterable, Union, Tuple, TYPE_CHECKING, Set, Type
 
-from .assembly_sampler import AssemblySampler
-from .assembly_samplers.recursive_sampler import RecursiveSampler
-from ..utils import ImplicitResolution, Bindable, UniquelyIdentifiable, set_hash, attach_recording, record_method, \
+from assembly_calculus.assemblies.assembly_sampler import AssemblySampler
+from assembly_calculus.assemblies.assembly_samplers.recursive_sampler import RecursiveSampler
+from assembly_calculus.utils import ImplicitResolution, Bindable, UniquelyIdentifiable, set_hash, attach_recording, record_method, \
     bindable_brain
-from ..brain import Stimulus, Area
-from .utils import union, activate, common_value
+from assembly_calculus.brain import Stimulus, Area
+from assembly_calculus.assemblies.utils import union, activate, common_value
 
 if TYPE_CHECKING:
-    from ..brain import Brain
-    from ..brain import BrainRecipe
+    from assembly_calculus.brain import Brain
+    from assembly_calculus.brain import BrainRecipe
 
 # TODO: think about more elegant solutions than Union
 # Response: Union is a standard typing practice

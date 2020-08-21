@@ -6,11 +6,11 @@ This helps assembly.py be less bloated
 from __future__ import annotations
 from random import sample
 from typing import List, TYPE_CHECKING, Dict, Union, Iterable
-from ..brain import Area
+from assembly_calculus.brain import Area
 
 if TYPE_CHECKING:
-    from ..brain import Brain
-    from .assembly import Assembly, AssemblySet, Projectable
+    from assembly_calculus.brain import Brain
+    from assembly_calculus.assemblies.assembly import Assembly, AssemblySet, Projectable
 
 
 def common_value(*values):

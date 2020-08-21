@@ -1,6 +1,6 @@
 from typing import Union, List, Dict, Tuple
 
-from ...brain import Brain, Stimulus, Area
+from assembly_calculus import Brain, Stimulus, Area
 from assembly_calculus.learning.components.errors import MissingArea, MissingStimulus, \
 	MaxAttemptsToGenerateStimuliReached
 

@@ -1,7 +1,7 @@
 from sys import stderr
 
 
-def get_free_memory() -> int:
+def _get_free_memory() -> int:
     """Return amount of free memory, kilobytes"""
     with open('/proc/meminfo', 'r') as mem:
         free_memory = 0

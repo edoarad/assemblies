@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Dict, Any
 from weakref import ref
 
-from .instance_name import RememberInitName
+from assembly_calculus.utils.instance_name import RememberInitName
 
 
 class NoInitMeta(type):
@@ -16,12 +16,18 @@ class NoInitMeta(type):
 
         return obj
 
-
-# TODO: make sure the other teams use this version
+# TODO: this class is used in many places, but `uid` is given only in Assembly.
+# TODO: what is the purpose of usage in the other places?
+# Response: UniquelyIdentifiable implements hash as id, and allows comparison.
+# This is the default implementation but it is better to be explicit
+# TODO 2: document the intended use or give a good use example
 class UniquelyIdentifiable(RememberInitName, metaclass=NoInitMeta):
     """
     This class represents objects that are uniquely identifiable, objects that should be identified by instance
     and not by their properties.
+    Which actually means - id(UniquelyIdentifiable(uid=1) == id(UniquelyIdentifiable(uid=1))
+    It can give objects with the same uid (the argument for constructor) the same id.
+    Note: the uid would probably be different from the real id.
     """
     custom_uids: Dict[Any, 'ref[UniquelyIdentifiable]'] = {}
 

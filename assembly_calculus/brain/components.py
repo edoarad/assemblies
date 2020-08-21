@@ -1,11 +1,11 @@
 from __future__ import annotations
 from typing import Optional, Union, TYPE_CHECKING, Dict, Set
 
-from ..utils import UniquelyIdentifiable, bindable_brain, overlap
+from assembly_calculus.utils import UniquelyIdentifiable, bindable_brain, overlap
 
 if TYPE_CHECKING:
-	from .brain import Brain
-	from ..assemblies.assembly import Assembly
+	from assembly_calculus.brain import Brain
+	from assembly_calculus.assemblies.assembly import Assembly
 
 
 @bindable_brain.cls
