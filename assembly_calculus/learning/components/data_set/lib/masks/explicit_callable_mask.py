@@ -1,8 +1,8 @@
 from inspect import signature
 from typing import Callable
 
-from learning.components.data_set.errors import InvalidFunctionError, MaskValueError
-from learning.components.data_set.mask import Mask
+from assembly_calculus.learning.components.data_set.errors import InvalidFunctionError, MaskValueError
+from assembly_calculus.learning.components.data_set.mask import Mask
 
 
 class ExplicitCallableMask(Mask):
