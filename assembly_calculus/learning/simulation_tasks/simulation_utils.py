@@ -171,7 +171,7 @@ class LayeredSimulationUtils(SimulationUtils):
                 brain.add_area(area)
                 areas_count += 1
 
-        brain.add_output_area(self._output)
+        brain.add_area(self._output)
         return brain
 
     def create_input_stimuli(self, brain: Brain, k: int) -> InputStimuli:
@@ -182,26 +182,26 @@ class LayeredSimulationUtils(SimulationUtils):
 
         # The first input bit fires to the first area, the second fires to the second area, etc
         input_bits = list(range(self.input_size))
-        sequence.add_iteration(input_bits=input_bits, areas_to_areas={})
+        sequence.add_iteration(input_bits=input_bits, subconnectome={})
 
         area_layers = self._split_to_area_layers(brain)
 
         # Every first-layer area (i.e. all areas connected directly to stimuli) fires at itself
         areas_to_areas = {area: [area] for area in area_layers[0]}
-        sequence.add_iteration(input_bits=input_bits, areas_to_areas=areas_to_areas, consecutive_runs=2)
+        sequence.add_iteration(input_bits=input_bits, subconnectome=areas_to_areas, consecutive_runs=2)
 
         for layer in range(self.brain_layers - 1):
             # Every 2 'consecutive' areas fire at an area of the next layer
             areas_to_areas = {area: [area_layers[layer + 1][idx // 2]] for idx, area in enumerate(area_layers[layer])}
-            sequence.add_iteration(areas_to_areas=areas_to_areas)
+            sequence.add_iteration(subconnectome=areas_to_areas)
 
             # In addition to the previous iteration, every area of the next layer fires at itself
-            areas_to_areas = dict(areas_to_areas, **{area: [area] for area in area_layers[layer + 1]})
-            sequence.add_iteration(areas_to_areas=areas_to_areas, consecutive_runs=2)
+            areas_to_areas.update({area: [area] for area in area_layers[layer + 1]})
+            sequence.add_iteration(subconnectome=areas_to_areas, consecutive_runs=2)
 
         # The last later fires at the output
         areas_to_areas = {area: [self._output] for area in area_layers[-1]}
-        sequence.add_iteration(areas_to_areas=areas_to_areas)
+        sequence.add_iteration(subconnectome=areas_to_areas)
 
         return sequence
 
