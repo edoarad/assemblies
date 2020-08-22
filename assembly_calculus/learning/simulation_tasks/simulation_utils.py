@@ -2,14 +2,17 @@ from abc import abstractmethod
 from math import log, ceil
 from typing import Union, List, Callable
 
-from ...brain import Brain
+from assembly_calculus.brain.brain import Brain
+from assembly_calculus.brain.connectome.connectome import Connectome
+from assembly_calculus.brain.components import Area, OutputArea
+
 from assembly_calculus.learning.components.data_set.constructors import create_training_set_from_list, \
     create_explicit_mask_from_list, create_data_set_from_list
 from assembly_calculus.learning.components.data_set.data_set import DataSet
 from assembly_calculus.learning.components.input import InputStimuli
 from assembly_calculus.learning.components.sequence import LearningSequence
 from assembly_calculus.learning.simulation_tasks.strategy import Strategy
-from non_lazy_brain import NonLazyBrain
+#from non_lazy_brain import NonLazyBrain
 
 
 class SimulationUtilsFactory:
@@ -33,7 +36,7 @@ class SimulationUtils:
         self.input_size = input_size
 
     @abstractmethod
-    def create_brain(self, n: int, k: int, p: float, beta: float) -> NonLazyBrain:
+    def create_brain(self, n: int, k: int, p: float, beta: float) -> Brain:
         """
         Creating a non-lazy brain with areas and stimuli according to the input size and the strategy
         """
@@ -105,16 +108,25 @@ class SimpleSimulationUtils(SimulationUtils):
                         Output
     """
 
-    def create_brain(self, n: int, k: int, p: float, beta: float) -> NonLazyBrain:
-        brain = NonLazyBrain(p)
 
-        brain.add_area('A', n, k, beta)
-        brain.add_output_area('Output')
+    # NOTE-
+    # this assumes that the function create_brain is called exactly once,
+    # before anything else.
+    def create_brain(self, n: int, k: int, p: float, beta: float) -> Brain:
+        A = Area(n, k, beta)
+        Output = OutputArea(n, beta)
+
+        self._A = A
+        self._Output = Output
+
+        brain = Brain(Connectome(p))
+        brain.add_area(A)
+        brain.add_area(Output)
 
         return brain
 
     def create_input_stimuli(self, brain: Brain, k: int) -> InputStimuli:
-        return InputStimuli(brain, k, *tuple(['A'] * self.input_size), verbose=False)
+        return InputStimuli(brain, k, *tuple([self._A] * self.input_size), verbose=False)
 
     def create_sequence(self, brain: Brain, input_stimuli: InputStimuli) -> LearningSequence:
         sequence = LearningSequence(brain, input_stimuli)
@@ -123,9 +135,9 @@ class SimpleSimulationUtils(SimulationUtils):
         input_bits = list(range(self.input_size))
         sequence.add_iteration(input_bits=input_bits)
 
-        sequence.add_iteration(input_bits=input_bits, areas_to_areas={'A': ['A']}, consecutive_runs=2)
+        sequence.add_iteration(input_bits=input_bits, areas_to_areas={self._A: [self._A]}, consecutive_runs=2)
 
-        sequence.add_iteration(areas_to_areas={'A': ['Output']})
+        sequence.add_iteration(areas_to_areas={self._A: [self._Output]})
 
         return sequence
 
