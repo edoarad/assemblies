@@ -5,9 +5,9 @@ import time
 import uuid
 from pathlib import Path
 
-from ..brain import Area, Stimulus, BrainRecipe, bake, Connectome
-from ..assemblies import Assembly, fire_many
-from ..utils import Logger, protecc_ram
+from assembly_calculus.brain import Area, Stimulus, BrainRecipe, bake, Connectome
+from assembly_calculus.assemblies import Assembly, fire_many
+from assembly_calculus.utils import Logger, protecc_ram
 
 import matplotlib.pyplot as plt
 

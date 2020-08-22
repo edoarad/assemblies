@@ -2,10 +2,9 @@ from collections import defaultdict
 from copy import deepcopy
 from typing import List, Dict, Tuple, Set
 
-from ....brain import Area, BrainPart
+from assembly_calculus import Area, BrainPart
 
-from ..input import InputStimuli
-from ..errors import InputStimuliMisused
+from assembly_calculus.learning.components.input import InputStimuli
 
 
 class Iteration:
@@ -15,8 +14,8 @@ class Iteration:
 	"""
 
 	def __init__(self, subconnectome: Dict[BrainPart, Set[BrainPart]] = None,
-				 input_bits_to_areas: Dict[int, List[Area]] = None,
-				 consecutive_runs: int = 1):
+	             input_bits_to_areas: Dict[int, List[Area]] = None,
+	             consecutive_runs: int = 1):
 		"""
 		Create a new iteration.
 		:param subconnectome: a mapping between a stimulus/area and the areas/output areas it fires to.
@@ -51,9 +50,6 @@ class Iteration:
 
 		input_value = self._to_bits(input_value, len(input_stimuli))
 		for bit_index, areas in self.input_bits_to_areas.items():
-			if sorted(input_stimuli[bit_index].target_areas) != sorted(areas):
-				raise InputStimuliMisused(bit_index, input_stimuli[bit_index].target_areas, areas)
-
 			stimulus = input_stimuli[bit_index][input_value[bit_index]]
 			project_parameters[stimulus] = self._union(project_parameters[stimulus], areas)
 

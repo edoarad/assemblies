@@ -1,21 +1,23 @@
 from __future__ import annotations
 # Allows forward declarations and such :)
+from collections import defaultdict
+from itertools import product, chain
+from typing import Iterable, Union, Tuple, TYPE_CHECKING, Set, Type
 
-from typing import Iterable, Union, Tuple, TYPE_CHECKING, Set, Optional, Dict
-from itertools import product
+from assembly_calculus.assemblies.assembly_sampler import AssemblySampler
+from assembly_calculus.assemblies.assembly_samplers.recursive_sampler import RecursiveSampler
+from assembly_calculus.utils import ImplicitResolution, Bindable, UniquelyIdentifiable, set_hash, attach_recording, record_method, \
+    bindable_brain
+from assembly_calculus.brain import Stimulus, Area
+from assembly_calculus.assemblies.utils import union, activate, common_value
 
-from .reader import Reader
-from .assembly_readers.read_recursive import ReadRecursive
-from ..utils import Recordable, ImplicitResolution, Bindable, UniquelyIdentifiable
-from ..brain import Stimulus, Area
+if TYPE_CHECKING:
+    from assembly_calculus.brain import Brain
+    from assembly_calculus.brain import BrainRecipe
 
-if TYPE_CHECKING:  # TODO: this is not needed. It's better to always import them.
-    # Response: Sadly we need to do it to avoid cyclic imports,
-    #           So I use TYPE_CHECKING for typing only imports
-    from ..brain import Brain
-    from ..brain import BrainRecipe
-
-
+# TODO: think about more elegant solutions than Union
+# Response: Union is a standard typing practice
+#           It fits the use-case, as we are building upon existing infrastructure
 """
 Standard python 3.8 typing
 Projectable is an umbrella type for regular assemblies 
@@ -24,57 +26,115 @@ and top level assemblies with no parents (i.e stimuli)
 Projectable = Union['Assembly', Stimulus]
 
 
-@Recordable(('merge', True), '_associate',
-            resolution=ImplicitResolution(
-                lambda instance, name: Bindable.implicitly_resolve_many(instance.assemblies, name, False), 'recording'))
-class AssemblyTuple(object):
+"""
+Magic constants
+"""
+PROJECT_REPEAT = 1
+MERGE_REPEAT = 20
+RECIPROCAL_PROJECT_REPEAT = MERGE_REPEAT
+ASSOCIATE_REPEAT = 20
+
+
+class AssemblySet(UniquelyIdentifiable):
     """
     Assembly tuple is used as an intermediate structure to support syntax such as
-    group merge ( a1 + a2 + .. + a_n >> area) and other group operations.
+    assemblies merge (a1 | a2 | .. | a_n) >> area and other assemblies operations.
     """
+
+    def __new__(cls, *assemblies):
+        # We now allow AssemblyTuples to be unique by the hash of the tuple of the
+        # sorted hashes of their content assemblies
+        return UniquelyIdentifiable.__new__(cls, uid=set_hash(assemblies))
 
     def __init__(self, *assemblies: Assembly):
         """
-        :param assemblies: the set of assemblies in the tuple
+        :param assemblies: The set of assemblies in the tuple
         """
-
-        # asserting tuple not empty, and that all object are projectable.
+        # Asserting tuple not empty, and that all object are projectable.
         if len(assemblies) == 0:
             raise IndexError("Assembly tuple is empty")
+
         if not all([isinstance(x, Assembly) or isinstance(x, Stimulus) for x in assemblies]):
             raise TypeError("Tried to initialize Assembly tuple with invalid object")
 
-        self.assemblies: Tuple[Assembly, ...] = assemblies
+        UniquelyIdentifiable.__init__(self)
+        # Remove duplicates
+        self.assemblies: Tuple[Assembly, ...] = tuple(set(assemblies))
 
-    # TODO: This is confusing, because I expect Assembly + Assembly = Assembly.
-    #       There are other solutions. Even just AssemblyTuple(ass1, ass2) >> area is
-    #       better, but I'm sure you can do better than that.
-    def __add__(self, other: AssemblyTuple) -> AssemblyTuple:
-        """
-        In the context of AssemblyTuples, + creates a new AssemblyTuple containing the members
-        of both parts.
-
-        :param other: the other AssemblyTuple we add
-        :returns: the new AssemblyTuple
-        """
-
-        if not isinstance(other, AssemblyTuple):
-            raise TypeError("Assemblies can be concatenated only to assemblies")
-        return AssemblyTuple(*(self.assemblies + other.assemblies))
-
+    # TODO: document the logic that this function performs
+    # Response
+    @record_method(lambda self, area, **_: Bindable.bound_value('recording', *self), execute_anyway=True)
+    @ImplicitResolution(brain=lambda self, area, **_: Bindable.bound_value('brain', *self))
     def merge(self, area: Area, *, brain: Brain = None):
-        brain = brain or Bindable[Assembly].implicitly_resolve_many(self.assemblies, 'brain', False)[1]
-        return Assembly._merge(self.assemblies, area, brain=brain)
+        """
+        Creates strong bi-directional links between assemblies via an intermediate assembly located at area
 
-    def associate(self, other: AssemblyTuple, *, brain: Brain = None):
-        brain = brain or Bindable[Assembly].implicitly_resolve_many(self.assemblies + other.assemblies,
-                                                                    'brain', False)[1]
-        return Assembly._associate(self.assemblies, other.assemblies, brain=brain)
+        Can be used by user with >> or directly by:
+        (ass1 | ass2).merge( ... ) or AssemblyTuple(list of assemblies).merge( ... )
+        """
+        if not isinstance(area, Area):
+            raise ValueError("Project target must be an Area in the brain")
+
+        # TODO2: `intersection` is not a static method of `set` so it should only be used on an object (it works here, but it is structurally incorrect)
+        # Response: This is valid syntax, it is equivalent to self[0].appears_in.intersection(*[x.appears_in for x in self[1:])
+        #           only shorter and much more readable
+        merged_assembly = Assembly(self.assemblies, area,
+                                   initial_recipes=set.intersection(*[x.appears_in for x in self]))
+        if brain is not None:
+            brain.winners[area] = list()
+            all_parents = list(chain(*(assembly.parents for assembly in self)))
+            activate(all_parents, brain=brain)
+
+            subconnectome = defaultdict(lambda: set())
+            for assembly in self:
+                for parent in assembly.parents:
+                    parent_area = parent if isinstance(parent, Stimulus) else parent.area
+                    subconnectome[parent_area].add(assembly.area)
+
+                subconnectome[assembly.area].add(area)
+                subconnectome[area].add(assembly.area)
+
+            brain.next_round(subconnectome=subconnectome, replace=True, iterations=brain.repeat * MERGE_REPEAT)
+
+        merged_assembly.bind_like(*self)
+        return merged_assembly
+
+    # TODO: the lambda is (almost) duplicated in both decorator parameters. Exctract to function with indicative name, and reuse it
+    # Response: The main logic of this lambda is extracted in Bindable.bound_value, all that is left is adjustment of
+    #           parameters, which is exactly what the lambda is for.
+    # TODO2: document the logic that this function performs
+    # Response: What does this mean?
+    # TODO3: `assembly.associate(other)` should have same function as `other.associate(assembly)` and `(assembly|other).associate()`
+    # Response: Actually, this is not the intention. This performs association on the bipartite graph induced.
+    @record_method(lambda self, other, **_: Bindable.bound_value('recording', *self, *other), execute_anyway=False)
+    @ImplicitResolution(brain=lambda self, other, **_: Bindable.bound_value('brain', *self, *other))
+    def associate(self, other: AssemblySet, *, brain: Brain):
+        """
+        Associates (causes overlap of representative_neurons to increase) assemblies in self with assemblies in other,
+        can be thought of as performing associations on all edges in the bipartite graph induced by self <-> other
+
+        As of now has no syntactic sugar, so use by:
+        (... Left Side Assemblies ...).associate(... Right Side Assemblies ...)
+        """
+        if (area := common_value(*(assembly.area for assembly in (self | other)))) is None:
+            raise ValueError("All assemblies must be in the same area for association")
+
+        brain.winners[area] = list()
+        pairs: Iterable[Tuple[Assembly, Assembly]] = product(self, other)
+        # TODO: convert to all options (not only x from `self` and y from `other`)
+        # Response: No, this is the design
+        for x, y in pairs:
+            activate(x.parents + y.parents, brain=brain)
+
+            parent_areas = {ass.area for ass in (x.parents + y.parents)}
+            subconnectome = {parent_area: [area] for parent_area in parent_areas}
+            # We compensate with more rounds, in order to avoid natural mixing (by removing self edge area: [area])
+            brain.next_round(subconnectome=subconnectome, replace=True, iterations=brain.repeat * ASSOCIATE_REPEAT)
 
     def __rshift__(self, target_area: Area):
         """
         In the context of assemblies, >> symbolizes merge.
-        Example: (within a brain context) (a1+a2+a3)>>area
+        Example: (within a brain context) (a1 | a2 | a3)>>area
 
         :param target_area: the area we merge into
         :return: the new merged assembly
@@ -86,215 +146,137 @@ class AssemblyTuple(object):
     def __iter__(self):
         return iter(self.assemblies)
 
+    __or__ = union  # we now support the | operator for both Assembly and AssemblyTuple objects.
 
-# TODO: Better documentation for user-functions, add example usages w\ and w\o bindable
-@Recordable(('project', True), ('reciprocal_project', True))
-@Bindable('brain')
-class Assembly(UniquelyIdentifiable, AssemblyTuple):
-    # TODO: It makes no logical sense for Assembly to inherit AssemblyTuple.
-    # TODO: instead, they can inherit from a mutual `AssemblyOperator` class that defines the operators they both support
-    # An assembly is in particular a tuple of assemblies of length 1, they share many logical operations.
-    # They share many properties, and in particular a singular assembly supports more operations.
+
+@attach_recording
+@bindable_brain.cls
+class Assembly(UniquelyIdentifiable):
     """
     A representation of an assembly of neurons that can be binded to a specific brain
     in which it appears. An assembly is defined primarily by its parents - the assemblies
     and/or stimuli that were fired to create it.
     This class implements basic operations on assemblies (project, reciprocal_project,
-    merge and associate) by using a reader object, which interacts with the brain directly.
+    merge and associate) by using a AssemblySampler object, which interacts with the brain directly.
     """
-    _default_reader: Reader = ReadRecursive
-
-    @staticmethod
-    def assembly_hash(area, parents):
-        return hash((area, *sorted(parents, key=hash)))
+    _default_sampler: Type[AssemblySampler] = RecursiveSampler
 
     def __new__(cls, parents: Iterable[Projectable], area: Area, initial_recipes: Iterable[BrainRecipe] = None,
-                reader: str = 'default'):
-        return UniquelyIdentifiable.__new__(cls, uid=Assembly.assembly_hash(area, parents))
+                sampler: AssemblySampler = None):
+        return UniquelyIdentifiable.__new__(cls, uid=hash((area, set_hash(parents))))
 
     def __init__(self, parents: Iterable[Projectable], area: Area,
-                 initial_recipes: Iterable[BrainRecipe] = None, reader: Reader = None):
+                 initial_recipes: Iterable[BrainRecipe] = None, sampler: Type[AssemblySampler] = None):
         """
         :param parents: the Assemblies and/or Stimuli that were used to create the assembly
         :param area: an Area where the Assembly "lives"
         :param initial_recipes: an iterable containing every BrainRecipe in which the assembly appears
-        :param reader: name of a read driver pulled from assembly_readers. defaults to 'default'
+        :param sampler: a subclass of AssemblySampler that can sample what neurons should be fired in the next project
+                        operation (which are the assemblies' representative neurons, used to perform read operations)
         """
-
         # We hash an assembly using its parents (sorted by id) and area
         # this way equivalent assemblies have the same id.
         UniquelyIdentifiable.__init__(self)
-        AssemblyTuple.__init__(self, self)
 
         self.parents: Tuple[Projectable, ...] = tuple(parents)
         self.area: Area = area
-        self._reader = reader
+        self._sampler = sampler
         self.appears_in: Set[BrainRecipe] = set(initial_recipes or [])
         for recipe in self.appears_in:
             recipe.append(self)
 
+    # TODO: it seems that the Type is unbound here (should it be the type of Assembly._default_sampler?)
+    # Response: ???
     @property
-    def reader(self) -> Reader:
-        return self._reader or Assembly._default_reader
+    def sampler(self) -> Type[AssemblySampler]:
+        # property decorator means we can access this as assembly.sampler
+        return self._sampler or Assembly._default_sampler
 
     @staticmethod
-    def set_default_reader(reader):
-        Assembly._default_reader = reader
-
-    def representative_neuron(self, preserve_brain=False, *, brain: Brain) -> Set[int, ...]:
-        # TODO: Change name of Reader to Identifier???
-        return set(self.reader.read(self, preserve_brain=preserve_brain, brain=brain))
-
-    @staticmethod
-    def read(area: Area, *, brain: Brain):
-        # TODO: Decouple read into different modules
-        assemblies: Set[Assembly] = brain.recipe.area_assembly_mapping[area]
-        overlap: Dict[Assembly, float] = {}
-        for assembly in assemblies:
-            # TODO: extract calculation to function with indicative name
-            overlap[assembly] = len(
-                set(brain.winners[area]) & set(assembly.representative_neuron(preserve_brain=True, brain=brain))) / area.k
-        return max(overlap.keys(), key=lambda x: overlap[x])  # TODO: return None below some threshold
-
-    # TODO: Remove this (And in reader class)
-    def trigger_reader_update_hook(self, *, brain: Brain):
+    def set_default_sampler(sampler: Type[AssemblySampler]):
         """
-        some read_drivers may want to be notified on certain changes
-        we support this by calling this private function in key places (like project)
-        which then triggers the hook in the reader (if it implements it)
-        :param brain:
-        :return:
+        :param sampler: New default assembly sampler
         """
-        self.reader.update_hook(self, brain=brain)
+        Assembly._default_sampler = sampler
 
+    @bindable_brain.method
+    def sample_neurons(self, preserve_brain=False, *, brain: Brain) -> Set[int, ...]:
+        """
+        :param preserve_brain: Boolean flag determining whether or not to have side effects on the brain
+        :param brain: Brain from which to sample assembly
+        :return: The set of neurons representing the assembly (at the current point of time)
+        """
+        return set(self.sampler.sample_neurons(self, preserve_brain=preserve_brain, brain=brain))
+
+    @bindable_brain.property
+    def representative_neurons(self, *, brain: Brain) -> Set[int, ...]:
+        return self.sample_neurons(preserve_brain=True, brain=brain)
+
+    @record_method(execute_anyway=True)
+    @bindable_brain.method
     def project(self, area: Area, *, brain: Brain = None) -> Assembly:
         """
         Projects an assembly into an area.
-
-        :param brain: the brain in which the projection happens
+        :param brain: Should be supplied automatically by context (with brain / with recipe)
         :param area: the area in which the new assembly is going to be created
         :returns: resulting projected assembly
         """
-        if not isinstance(area, Area) and area in brain.recipe.areas:
+        if not isinstance(area, Area):
             raise TypeError("Projection target must be an Area in the Brain")
 
-        projected_assembly: Assembly = Assembly([self], area, initial_recipes=self.appears_in)
-        if brain is not None:
-            Assembly._activate_assemblies([self], brain=brain)
-            # TODO: Is this OK? (To Edo)
-            brain.winners[area] = list()
-            brain.next_round({self.area: [area], area: [area]}, replace=True, iterations=brain.repeat)
-            projected_assembly.trigger_reader_update_hook(brain=brain)
+        projected_assembly = Assembly([self], area, initial_recipes=self.appears_in)
 
-        # TODO: calling `bind_like` manually is error-prone because someone can forget it. can you make a decorator or a more automated way to do it?
-        # Response: This is the standard path defined in the Bindable API,
-        #           And "automation" will be quite weird, anyway this is used only a couple of times, and only in internal API
+        if brain is not None:
+            activate([self], brain=brain)
+            brain.winners[area] = list()
+            brain.next_round(subconnectome={self.area: [area], area: [area]}, replace=True,
+                             iterations=brain.repeat * PROJECT_REPEAT)
+
         projected_assembly.bind_like(self)
         return projected_assembly
-
-    @staticmethod
-    def _activate_assemblies(assemblies, *, brain: Brain):
-        """to prevent code duplication, this function does the common thing
-        of taking a list of assemblies and creating a dictionary from area to neurons (of the
-        assemblies) to set as winners"""
-        # create a mapping from the areas to the neurons we want to fire
-        area_neuron_mapping = {ass.area: [] for ass in assemblies}
-        for ass in assemblies:
-            area_neuron_mapping[ass.area] = list(ass.representative_neuron(brain=brain))
-
-        # update winners for relevant areas in the connectome
-        for source in area_neuron_mapping.keys():
-            brain.winners[source] = area_neuron_mapping[source]
 
     def __rshift__(self, target: Area):
         """
         In the context of assemblies, >> represents project.
-        Example: a >> A (a is an assembly, A is an area)
-
+        Example: assembly >> Area
         :param target: the area into which we project
         :returns: the new assembly that was created
         """
-        if not isinstance(target, Area):
-            raise TypeError("Assembly must be projected onto an area")
         return self.project(target)
 
+    @record_method(execute_anyway=False)
+    @bindable_brain.method
     def reciprocal_project(self, area: Area, *, brain: Brain = None) -> Assembly:
         """
         Reciprocally projects an assembly into an area,
         creating a projected assembly with strong bi-directional links to the current one.
-
-        :param brain: the brain in which the projection occurs
+        example usage:
+        b = a.reciprocal_project(someArea)
+        (now b.area = someArea, and b and a are strongly linked)
         :param area: the area into which we project
+        :param brain: Should be supplied automatically by context (with brain / with recipe)
         :returns: Resulting projected assembly
         """
-        projected_assembly: Assembly = self.project(area, brain=brain)
-        projected_assembly.project(self.area, brain=brain)
-        self.trigger_reader_update_hook(brain=brain)
-
-        return projected_assembly
-
-    @staticmethod
-    def _merge(assemblies: Tuple[Assembly, ...], area: Area, *, brain: Brain = None):
-        """
-        Creates a new assembly with all input assemblies as parents.
-        Practically creates a new assembly with one-directional links from parents
-        ONLY CALL AS: Assembly.merge(...), as the function is invariant under input order.
-
-        :param brain: the brain in which the merge occurs
-        :param assemblies: the parents of the new merged assembly
-        :param area: the area into which we merge
-        :returns: resulting merged assembly
-        """
         # Response: Added area checks
-        if not isinstance(area, Area) and area in brain.recipe.areas:
+        if not isinstance(area, Area):
             raise TypeError("Project target must be an Area in the brain")
 
-        merged_assembly: Assembly = Assembly(assemblies, area,
-                                             initial_recipes=set.intersection(*[x.appears_in for x in assemblies]))
-        # TODO: this is actually a way to check if we're in "binded" or "non binded" state.
-        # TODO: can you think of a nicer way to do that?
-        # TODO: otherwise it seems like a big block of code inside the function that sometimes happens and sometimes not. it is error-prone
-        # Response: This does not serve as a check to see if we are bound or not,
-        #           this serves as a way to perform syntactic assemblies operations in order to define new assemblies
-        #           without performing the operations themselves.
-        #           This is simply to support the recipe ecosystem.
-        #
-        #           In my opinion, this class should be designed as if binding does not exist, and binding is
-        #           purely a syntactic sugar that makes the usage easier
+        # To improve convergence rate we decided to first project (and stabilize assembly)
+        # and only then begin doing a reciprocal project
+        projected_assembly = self.project(area, brain=brain)
         if brain is not None:
-            Assembly._activate_assemblies(assemblies, brain=brain)
+            activate(self.parents, brain=brain)
 
-            # TODO: Is this OK? (To Edo)
-            brain.winners[area] = list()
-            brain.next_round(subconnectome={**{ass.area: [area] for ass in assemblies}, area: [area]}, replace=True,
-                             iterations=brain.repeat)
+            subconnectome = {
+                **{(parent.area if isinstance(parent, Assembly) else parent): [self.area] for parent in self.parents},
+                self.area: [area], area: [self.area]
+            }
+            brain.next_round(subconnectome=subconnectome, replace=True,
+                             iterations=brain.repeat * RECIPROCAL_PROJECT_REPEAT)
 
-            merged_assembly.trigger_reader_update_hook(brain=brain)
-        merged_assembly.bind_like(*assemblies)
-        return merged_assembly
+        projected_assembly.bind_like(self)
+        return projected_assembly
 
-    @staticmethod
-    def _associate(a: Tuple[Assembly, ...], b: Tuple[Assembly, ...], *, brain: Brain = None) -> None:
-        # TODO: it's not the right logic
-        """
-        Associates two lists of assemblies, by strengthening each bond in the
-        corresponding bipartite graph.
-        for simple binary operation use Assembly.associate([a],[b]).
-        for each x in A, y in B, associate (x,y).
-        A1 z-z B1
-        A2 -X- B2
-        A3 z-z B3
-
-        :param a: first list
-        :param b: second list
-        """
-        pairs = product(a, b)
-        for x, y in pairs:
-            x.project(y.area, brain=brain)
-            y.project(x.area, brain=brain)
-
-    # TODO: lt and gt logic can be implemented using a common method
-    # Response: True, but I think it is a tad more readable this way
     def __lt__(self, other: Assembly):
         """
         Checks that other is a child assembly of self.
@@ -308,3 +290,10 @@ class Assembly(UniquelyIdentifiable, AssemblyTuple):
         :param other: the assembly we compare against
         """
         return isinstance(other, Assembly) and self in other.parents
+
+    def __repr__(self):
+        return f"Assembly(parents=[%s], area=%s, sampler=%s)" %\
+               (", ".join(parent.instance_name for parent in self.parents), self.area.instance_name,
+                self.sampler.__name__)
+
+    __or__ = union

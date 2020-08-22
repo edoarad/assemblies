@@ -4,7 +4,7 @@ from __future__ import annotations  # import annotations from later version of p
 from abc import ABCMeta, abstractmethod
 from typing import Dict, List, Tuple, Optional, TypeVar, Mapping, Generic, Callable, Any
 
-from ..components import BrainPart, Area, Stimulus, Connection  # imports shouldn't depend on dir
+from assembly_calculus.brain import BrainPart, Area, Stimulus, Connection  # imports shouldn't depend on dir
                                                                 # structure. find an alternative
 
 
@@ -18,6 +18,8 @@ class MappingProxy(Generic[K_co, V_contra]):
         self._setter = setter
 
     def __getitem__(self, key: K_co):
+        # TODO: why is copy required for get method?
+        # Response: To prevent users from working with internal mutable objects (lists, sets, ...)
         return self._getter(key).copy()
 
     def __setitem__(self, key: K_co, value: V_contra):

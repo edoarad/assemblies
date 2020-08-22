@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from networkx import DiGraph, has_path, draw, draw_networkx_edge_labels, get_node_attributes, get_edge_attributes
 
-from ..errors import NoPathException, IllegalOutputAreasException
+from assembly_calculus.learning.components.errors import NoPathException, IllegalOutputAreasException
 
 
 class ConnectionsGraph(DiGraph):
