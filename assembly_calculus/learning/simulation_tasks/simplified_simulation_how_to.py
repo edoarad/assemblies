@@ -1,9 +1,11 @@
+from assembly_calculus.brain.brain import Brain
+from assembly_calculus.brain.connectome.connectome import Connectome
+from assembly_calculus.brain.components import Area, OutputArea, Stimulus
 from assembly_calculus.learning.components.data_set.constructors import create_training_set_from_list, \
     create_test_set_from_list
 from assembly_calculus.learning.components.input import InputStimuli
 from assembly_calculus.learning.components.model import LearningModel
 from assembly_calculus.learning.components.sequence import LearningSequence
-from non_lazy_brain import NonLazyBrain
 
 
 def my_example_simulation():
@@ -31,41 +33,47 @@ def my_example_simulation():
      5. Area C -> Output
     """
     # Define our args:
-    n = 10000
+    n = 1000
     k = 100
     p = 0.01
     beta = 0.05
     noise_p = 0.001
+    A = Area(n, k, beta)
+    B = Area(n, k, beta)
+    C = Area(n, k, beta)
+    Output = OutputArea(beta)
     output_values = [0, 1, 0, 1]  # defines the binary function we wish to learn
 
     # Create the brain
-    brain = NonLazyBrain(p)
-    for area_name in ('A', 'B', 'C'):
-        brain.add_area(area_name, 10000, k, beta)
+    brain = Brain(Connectome(p))
+    stimuli = Stimulus(n, beta)
+    brain.add_stimulus(stimuli)
+    for area in (A, B, C):
+        brain.add_area(area)
 
-    brain.add_output_area('Output')
+    brain.add_area(Output)
 
     # Define the mapping between bits of the input, and the brain's stimuli
     # so that the model will later know how to translate the input into
     # active stimuli (inactive stimuli don't fire even they are defined in
     # the sequence, they are filtered out using this mapping).
     # (This mapping is also known as InputStimuli)
-    input_stimuli = InputStimuli(brain, k, 'A', 'B')
+    input_stimuli = InputStimuli(brain, k, A, B)
 
     # Create the sequence of projections to be used in the model
     sequence = LearningSequence(brain, input_stimuli)
     sequence.add_iteration(input_bits=[0, 1])
 
     sequence.add_iteration(input_bits=[0, 1],
-                           areas_to_areas={'A': ['A'], 'B': ['B']},
+                           subconnectome={A: {A}, B: {B}},
                            consecutive_runs=2)
 
-    sequence.add_iteration(areas_to_areas={'A': ['C'], 'B': ['C']})
+    sequence.add_iteration(subconnectome={A: {C}, B: {C}})
 
-    sequence.add_iteration(areas_to_areas={'A': ['C'], 'B': ['C'], 'C': ['C']},
+    sequence.add_iteration(subconnectome={A: {C}, B: {C}, C: {C}},
                            consecutive_runs=2)
 
-    sequence.add_iteration(areas_to_areas={'C': ['Output']})
+    sequence.add_iteration(subconnectome={C: {Output}})
     sequence.display_connections_graph()
 
     # Create the data sets:

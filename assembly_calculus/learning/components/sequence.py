@@ -121,7 +121,8 @@ class LearningSequence:
 		"""
 		Give each part a serial number for the graph
 		"""
-		if not isinstance(part, BrainPart):
+		#if not isinstance(part, BrainPart):
+		if type(part) in BrainPart.__args__:
 			return part
 
 		if part in self._serials:
@@ -165,12 +166,14 @@ class LearningSequence:
 		"""
 
 		for source, target_areas in mapping.items():
-			if isinstance(source, BrainPart):
+			#if isinstance(source, BrainPart):
+			if type(source) in BrainPart.__args__:
 				self._verify_brain_part(source)
 			source_node = f'{NODE_TYPE[type(source)]}-{self._serialize_part(source)}'
 
 			for target_area in target_areas:
-				if isinstance(target_area, BrainPart):
+				#if isinstance(target_area, BrainPart):
+				if type(target_area) in BrainPart.__args__:
 					self._verify_brain_part(target_area)
 				area_node = f'{NODE_TYPE[type(target_area)]}-{self._serialize_part(target_area)}'
 
