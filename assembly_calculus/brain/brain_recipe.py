@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import List, Union, TYPE_CHECKING, Dict, Optional, Set
 
-from assembly_calculus import Area, Stimulus, BrainPart
+from assembly_calculus.brain.components import Area, Stimulus, BrainPart
 from assembly_calculus.utils import Recording
 
 # TODO: (To API Team), if you don't like the name, please change it

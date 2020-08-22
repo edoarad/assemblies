@@ -34,7 +34,7 @@ class InputTests(TestCase):
         s2 = Stimulus(self.n, self.beta)
         self.brain.add_stimulus(s2)
 
-        self.brain.add_area(OutputArea(self.n, self.beta))
+        self.brain.add_area(OutputArea(self.beta))
 
     def test_input_stimuli_generates_list_of_input_bit_stimuli_objects_from_single_areas(self):
         input_stimuli = InputStimuli(self.brain, self.k, A, B, C)
