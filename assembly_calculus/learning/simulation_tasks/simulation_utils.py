@@ -12,7 +12,7 @@ from assembly_calculus.learning.components.data_set.data_set import DataSet
 from assembly_calculus.learning.components.input import InputStimuli
 from assembly_calculus.learning.components.sequence import LearningSequence
 from assembly_calculus.learning.simulation_tasks.strategy import Strategy
-#from non_lazy_brain import NonLazyBrain
+
 
 
 class SimulationUtilsFactory:
@@ -88,14 +88,6 @@ class SimulationUtils:
             outputs_list = [output_values_or_function(i) for i in range(2 ** self.input_size)]
         return outputs_list
 
-    @staticmethod
-    def _name(i: int) -> str:
-        """
-        :param i: the index of the object
-        :return: the object's name
-        """
-        return chr(ord('A') + i)
-
 
 class SimpleSimulationUtils(SimulationUtils):
     """
@@ -114,14 +106,14 @@ class SimpleSimulationUtils(SimulationUtils):
     # before anything else.
     def create_brain(self, n: int, k: int, p: float, beta: float) -> Brain:
         A = Area(n, k, beta)
-        Output = OutputArea(n, beta)
+        output = OutputArea(n, beta)
 
         self._A = A
-        self._Output = Output
+        self._output = output
 
         brain = Brain(Connectome(p))
         brain.add_area(A)
-        brain.add_area(Output)
+        brain.add_area(output)
 
         return brain
 
@@ -137,7 +129,7 @@ class SimpleSimulationUtils(SimulationUtils):
 
         sequence.add_iteration(input_bits=input_bits, areas_to_areas={self._A: [self._A]}, consecutive_runs=2)
 
-        sequence.add_iteration(areas_to_areas={self._A: [self._Output]})
+        sequence.add_iteration(areas_to_areas={self._A: [self._output]})
 
         return sequence
 
@@ -160,8 +152,13 @@ class LayeredSimulationUtils(SimulationUtils):
     def brain_layers(self):
         return ceil(log(self.input_size, 2)) + 1
 
-    def create_brain(self, n: int, k: int, p: float, beta: float) -> NonLazyBrain:
-        brain = NonLazyBrain(p)
+    # NOTE-
+    # this assumes that the function create_brain is called exactly once,
+    # before anything else.
+    def create_brain(self, n: int, k: int, p: float, beta: float) -> Brain:
+        brain = Brain(Connectome(p))
+        self._areas = []
+        self._output = OutputArea(n, beta)
 
         areas_count = 0
         for layer_index, area_layer in enumerate(range(self.brain_layers)):
@@ -169,15 +166,16 @@ class LayeredSimulationUtils(SimulationUtils):
             areas_in_layer = ceil((2 ** (-layer_index)) * self.input_size)
 
             for i in range(areas_in_layer):
-                area_name = self._name(areas_count)
-                brain.add_area(area_name, n, k, beta)
+                area = Area(n, k, beta)
+                self._areas.append(area)
+                brain.add_area(area)
                 areas_count += 1
 
-        brain.add_output_area('Output')
+        brain.add_output_area(self._output)
         return brain
 
     def create_input_stimuli(self, brain: Brain, k: int) -> InputStimuli:
-        return InputStimuli(brain, k, *tuple(self._name(i) for i in range(self.input_size)), verbose=False)
+        return InputStimuli(brain, k, *tuple(self._areas), verbose=False)
 
     def create_sequence(self, brain: Brain, input_stimuli: InputStimuli) -> LearningSequence:
         sequence = LearningSequence(brain, input_stimuli)
@@ -202,12 +200,12 @@ class LayeredSimulationUtils(SimulationUtils):
             sequence.add_iteration(areas_to_areas=areas_to_areas, consecutive_runs=2)
 
         # The last later fires at the output
-        areas_to_areas = {area: ['Output'] for area in area_layers[-1]}
+        areas_to_areas = {area: [self._output] for area in area_layers[-1]}
         sequence.add_iteration(areas_to_areas=areas_to_areas)
 
         return sequence
 
-    def _split_to_area_layers(self, brain: Brain) -> List[List[str]]:
+    def _split_to_area_layers(self, brain: Brain) -> List[List[Area]]:
         """
         Splitting the given brain's area into different layers.
         For example, a brain of 3 layers would be split into:
@@ -215,7 +213,7 @@ class LayeredSimulationUtils(SimulationUtils):
                 ['E', 'F']
                    ['G']
         """
-        areas = sorted(list(brain.areas.keys()))
+        areas = self._areas
 
         layers = []
         for layer_index in range(self.brain_layers):
