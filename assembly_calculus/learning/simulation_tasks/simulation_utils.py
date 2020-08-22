@@ -106,7 +106,7 @@ class SimpleSimulationUtils(SimulationUtils):
     # before anything else.
     def create_brain(self, n: int, k: int, p: float, beta: float) -> Brain:
         A = Area(n, k, beta)
-        output = OutputArea(n, beta)
+        output = OutputArea(beta)
 
         self._A = A
         self._output = output
@@ -158,7 +158,7 @@ class LayeredSimulationUtils(SimulationUtils):
     def create_brain(self, n: int, k: int, p: float, beta: float) -> Brain:
         brain = Brain(Connectome(p))
         self._areas = []
-        self._output = OutputArea(n, beta)
+        self._output = OutputArea(beta)
 
         areas_count = 0
         for layer_index, area_layer in enumerate(range(self.brain_layers)):
