@@ -30,4 +30,4 @@ class RecursiveSampler(AssemblySampler):
         """
         with brain.freeze(freeze=preserve_brain):
             fire_many(brain, assembly.parents, assembly.area)
-            return brain.winners[assembly.area]
+            return list(brain.winners[assembly.area])
