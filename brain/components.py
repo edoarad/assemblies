@@ -2,13 +2,15 @@ from __future__ import annotations
 import math
 from typing import Optional, Union, TYPE_CHECKING
 import uuid
+import numpy as np
 from uuid import UUID
 
-# TODO: remove type checking everywhere
+
+from utils.bindable import Bindable, bindable_property
+
 if TYPE_CHECKING:
     from .brain import Brain
 
-from utils.bindable import Bindable, bindable_property
 
 # TODO: document me pleaaase
 # TODO 2: explain why this is needed (rather than, for example, implementing `__eq__` for Assembly)
@@ -42,8 +44,6 @@ class Area(UniquelyIdentifiable):
         if k == 0:
             self.k = math.sqrt(n)
 
-    # TODO: return as a set?
-    # TODONT: Will break existing code, is not a set for performance reasons.
     @bindable_property
     def winners(self, *, brain: Brain):
         return brain.winners[self]
@@ -87,20 +87,20 @@ BrainPart = Union[Area, Stimulus, OutputArea]
 
 
 class Connection:
-    # TODO: type hinting to synapses
     # TODO 2: why is this class needed? is it well-defined? do the type hints represent what really happens in its usage?
     def __init__(self, source: BrainPart, dest: BrainPart, synapses=None):
         self.source: BrainPart = source
         self.dest: BrainPart = dest
-        self.synapses = synapses if synapses is not None else {}
+        self.synapses: np.ndarray = synapses if synapses is not None else np.zeros((source.n, dest.n))
 
     @property
     def beta(self):
         # TODO: always define by dest
-        # TODONT: this is not how beta is defined
+        # TODO NT: this is not how beta is defined
+        # TODO (PERF): it is clearer this way, what's the reason to define it otherwise?
         if isinstance(self.source, Stimulus):
             return self.dest.beta
         return self.source.beta
 
     def __repr__(self):
-        return f"Connection(synapses={self.synapses!r})"
+        return f'Connection(synapses={self.synapses!r})'

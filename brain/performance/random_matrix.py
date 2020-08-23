@@ -21,8 +21,8 @@ class RandomMatrix:
         self._random_generators = [rng]
 
         self.multi_generate = multithreaded(self._multi_generate, threads=threads)
-        self.multi_generate.after(self._multi_generate_after)
-        self.multi_generate.params(self._multi_params)
+        self.multi_generate.set_after(self._multi_generate_after)
+        self.multi_generate.set_params(self._multi_params)
 
         for _ in range(len(self.multi_generate) - 1):
             # Each prng will be used by a different thread, so we need to have different prngs.
@@ -60,10 +60,3 @@ class RandomMatrix:
     @staticmethod
     def _multi_generate_after(outs):
         return outs[0] if outs else np.empty((0, 0), dtype='float64')
-
-
-# TODO: this looks like a nice base to extract as a test! :)
-if __name__ == '__main__':
-    n = 10000
-    a = RandomMatrix().multi_generate(n, n, 0.1)
-    print(np.sum(a) / n ** 2)

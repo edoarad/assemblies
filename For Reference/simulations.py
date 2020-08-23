@@ -39,13 +39,13 @@ def check_hypotheses():
     print('Checking a single area recurrent projection.\nRunning 100 iterations. ')
     b.add_area("A", n, k, beta)
     for _ in range(10):
-        b.project({}, {"A": ["A"]})
+        b.fire({}, {"A": ["A"]})
     print('Completed 10/100')
     for _ in range(40):
-        b.project({}, {"A": ["A"]})
+        b.fire({}, {"A": ["A"]})
     print('Completed 50/100')
     for _ in range(50):
-        b.project({}, {"A": ["A"]})
+        b.fire({}, {"A": ["A"]})
     A = b.areas["A"]
     print(f'Expect the support to be huge. Got {A.support_size}, which is {A.support_size/k}% of k*100')
     print(f'Expect number of new winners to be about k*(A.support_size/n)={k*(A.support_size/n)}. '
@@ -64,14 +64,14 @@ def check_hypotheses():
     b.add_area("B", n, k, beta)
     B = b.areas["B"]
     for i in range(iters - 5):
-        b.project({"stimB": ["B"]}, {"B": ["B"]})
+        b.fire({"stimB": ["B"]}, {"B": ["B"]})
         if i % 5 == 4:
             print(f'After {i} iterations, support size is {B.support_size}')
     winner_list = [set(B.winners)]
 
     print(f'In iterations {iters-5},...,{iters} the assembly has converged.')
     for _ in range(5):
-        b.project({"stimB": ["B"]}, {"B": ["B"]})
+        b.fire({"stimB": ["B"]}, {"B": ["B"]})
         winner_list += [set(B.winners)]
     diff_arr = [[len(wi - wj) for wj in winner_list] for wi in winner_list]
 
@@ -86,13 +86,13 @@ def check_hypotheses():
     print('\nTesting independence of new assembly on the previous')
     b.add_stimulus('stimB2', k)
     winners_stimB = set(B.winners)
-    b.project({'stimB2': ['B']}, {}) # Now B's winners are random
+    b.fire({'stimB2': ['B']}, {}) # Now B's winners are random
     winners_stimB2 = set(B.winners)
     print(f'After a single project from a new stimulus we should have completely random set of winners.')
     print(f'Indeed, the new set of winners intersects the old in only '
           f'{len(winners_stimB.intersection(winners_stimB2))} neurons.')
     for _ in range(iters):
-        b.project({'stimB2': ['B']}, {'B': ['B']})
+        b.fire({'stimB2': ['B']}, {'B': ['B']})
     print(f'After {iters} iterations of projection from new stimulus including recurrent connections.')
     intersection_size = len(set(B.winners).intersection(winners_stimB))
     print(f'The size of the intersection between the new assembly and the previous is {intersection_size}.')
@@ -110,10 +110,10 @@ def project_sim(n=1000000, k=1000, p=0.01, beta=0.05, t=50, lazy=True):
     b.add_stimulus("stim", k)
     b.add_area("A", n, k, beta)
     area_a: brain.Area = b.areas["A"]
-    b.project({"stim": ["A"]}, {})
+    b.fire({"stim": ["A"]}, {})
     support_size_list = [area_a.support_size]
     for i in range(t - 1):
-        b.project({"stim": ["A"]}, {"A": ["A"]})
+        b.fire({"stim": ["A"]}, {"A": ["A"]})
         support_size_list.append(area_a.support_size)
     return support_size_list
 

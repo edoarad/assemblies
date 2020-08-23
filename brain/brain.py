@@ -7,7 +7,6 @@ from typing import Dict, Set, TYPE_CHECKING, List, Optional, Union
 from .components import BrainPart, Stimulus
 from brain.connectome.abstract_connectome import AbstractConnectome
 from brain.components import Area, UniquelyIdentifiable
-# TODO: imports should happen in any case
 if TYPE_CHECKING:
 	from .brain_recipe import BrainRecipe
 	from assemblies import Assembly
@@ -62,9 +61,9 @@ class Brain(UniquelyIdentifiable):
 					_active_connectome[source].add(dest)
 
 		for _ in range(iterations - 1):
-			self.connectome.project(_active_connectome)
+			self.connectome.fire(_active_connectome)
 		# TODO 5: `project` in `Connectome` class has no `return` - what is expected to be returned here?
-		return self.connectome.project(_active_connectome)
+		return self.connectome.fire(_active_connectome)
 
 	def add_area(self, area: Area):
 		self.recipe.append(area)

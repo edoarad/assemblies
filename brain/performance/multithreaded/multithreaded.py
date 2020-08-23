@@ -15,9 +15,13 @@ class Multithreaded:
     Additional per-thread parameter pre-processing (via calling .params) can be added to an instance as well
     An on-finish hook can be added for post-processing of the thread data (via calling .after)
 
-    For a usage example see multithreaded
+    For a usage example see the readme.
     """
-    def __init__(self, func, threads):
+    def __init__(self, func, threads=None):
+        """
+        :param func: The function to be wrapped.
+        :param threads: Number of threads. None defaults to the number of processor cores.
+        """
         self._function = func
         self._params: Callable[[int, ...], Any] = lambda _, *args, **kwargs: (args, kwargs)
         self._after = __identity__
@@ -31,10 +35,10 @@ class Multithreaded:
         self._threads = threads or multiprocessing.cpu_count()
         self._executor = concurrent.futures.ThreadPoolExecutor(self._threads)
 
-    def params(self, params):
+    def set_params(self, params):
         self._params = params
 
-    def after(self, func):
+    def set_after(self, func):
         self._after = func
 
     def __call__(self, *args, **kwargs):
@@ -54,11 +58,15 @@ class Multithreaded:
     def __get__(self, instance, owner):
         if instance:
             mt = Multithreaded(self._function.__get__(instance, owner), self._threads)
-            mt.after(self._after.__get__(instance, owner))
-            if hasattr(self._params, "__get__"):
-                mt.params(getattr(self._params, '__get__')(instance, owner))
+            mt.set_after(self._after.__get__(instance, owner))
+            # TODO: document usage of __get__ in params
+            # TODO 2: "__get__" to const
+            # TODO NT: __get__ is a standard method name in python, this is like putting "__main__" in a const,
+            # TODO NT: or explaining why you call __main__.py __main__.py
+            if hasattr(self._params, '__get__'):
+                mt.set_params(getattr(self._params, '__get__')(instance, owner))
             else:
-                mt.params(self._params)
+                mt.set_params(self._params)
 
             return mt
 
@@ -69,17 +77,12 @@ class Multithreaded:
         self._executor.shutdown(False)
 
 
-# TODO: this should be a static method instead `Multithreaded` class - it is only related to that class
-# TODONT: What? I _*can*_ not understand what does it mean
-# TODO 2: why is the * parameter necessary
-# TODONT 2: It enforces for the notations @multithreaded(threads=1) def blah(): ... and @multithreaded def blah(): ...
-# and disallows @multithreaded(5) def blah(): -> which will throw an error in this way.
 def multithreaded(func=None, *, threads=None):
     """
     :param func: The function to run in a multithreaded fashion
     :param threads: the number of threads to use, defaults to cpu
 
-    Usage example over in example.py
+    Usage example over in the readme.
 
     """
     return Multithreaded(func, threads) if func else (lambda f: Multithreaded(f, threads))

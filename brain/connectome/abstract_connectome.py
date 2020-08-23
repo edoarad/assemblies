@@ -1,6 +1,7 @@
 from __future__ import annotations  # import annotations from later version of python.
 # We need it here to annadiane that connectome has a method which returns itself
 
+from collections import defaultdict
 from abc import ABCMeta, abstractmethod
 from typing import Dict, List, Tuple, Optional, TypeVar, Mapping, Generic, Callable, Any
 
@@ -16,23 +17,6 @@ from ..components import BrainPart, Area, Stimulus, Connection  # imports should
 # https://wrapt.readthedocs.io/en/latest/wrappers.html
 
 
-K_co = TypeVar('K_co', covariant=True)
-V_contra = TypeVar('V_contra', contravariant=True)
-
-
-class MappingProxy(Generic[K_co, V_contra]):
-    def __init__(self, getter: Callable[[K_co], V_contra], setter: Callable[[K_co, V_contra], Any]):
-        self._getter = getter
-        self._setter = setter
-
-    def __getitem__(self, key: K_co):
-        return self._getter(key)
-
-    def __setitem__(self, key: K_co, value: V_contra):
-        self._setter(key, value)
-
-
-# TODO 2: A method named `project` is used but it's not defined in this ABC
 class AbstractConnectome(metaclass=ABCMeta):
     """
     Represent the graph of connections between areas and stimuli of the brain.
@@ -53,6 +37,7 @@ class AbstractConnectome(metaclass=ABCMeta):
     def __init__(self, p, areas=None, stimuli=None):
         self.areas: List[Area] = []
         self.stimuli: List[Stimulus] = []
+        self.winners: Dict[Area, List[int]] = defaultdict(lambda: [])
         self.connections: Dict[Tuple[BrainPart, Area], Connection] = {}
         self.p = p
         self._plasticity_disabled = False
@@ -68,6 +53,7 @@ class AbstractConnectome(metaclass=ABCMeta):
     def add_stimulus(self, stimulus: Stimulus):
         self.stimuli.append(stimulus)
 
+    # TODO: if not in use, delete
     @property
     def plasticity_disabled(self):
         return self._plasticity_disabled
@@ -75,23 +61,6 @@ class AbstractConnectome(metaclass=ABCMeta):
     @plasticity_disabled.setter
     def plasticity_disabled(self, value):
         self._plasticity_disabled = value
-
-    @property
-    def winners(self) -> MappingProxy[Area, List[int]]:
-        # TODO: document the use of MappingProxy - why is it needed here?
-        # TODO 2: can winners be defined as a simple property? (that is, in `__init__` function)
-        # TODONT: Originally this code supported a lazy approach as well, which really didn't have a way of keeping
-        # winners in a normal way. The code is implemented in this way to allow future implementations to be written
-        # lazily
-        return MappingProxy(self._get_winners, self._set_winners)
-
-    @abstractmethod
-    def _get_winners(self, area: Area) -> List[int]:
-        pass
-
-    @abstractmethod
-    def _set_winners(self, area: Area, winners: List[int]):
-        pass
 
     @abstractmethod
     def subconnectome(self, connections: Dict[BrainPart, Area]) -> AbstractConnectome:
@@ -103,6 +72,9 @@ class AbstractConnectome(metaclass=ABCMeta):
         """
         pass
 
+    # TODO: function name should reflect the direction - for example `get_parts_connected_to_area`
+    # TODONT: this is a bad coding convention, method name should not be over informative, I've never seen a five
+    # TODONT: words python method name, and for a good reason
     @abstractmethod
     def get_connected_parts(self, area: Area) -> List[BrainPart]:
         """
@@ -115,5 +87,10 @@ class AbstractConnectome(metaclass=ABCMeta):
     def __repr__(self):
         return f'{self.__class__.__name__} with {len(self.areas)} areas, and {len(self.stimuli)} stimuli'
 
-    def project(self, connections: Dict[BrainPart, List[Area]]):
+    def fire(self, connections: Dict[BrainPart, List[Area]]):
+        """
+
+        :param connections: The connections on which you want to perform the project
+        :return:
+        """
         pass
