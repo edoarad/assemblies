@@ -87,7 +87,7 @@ class LearningModel:
         self._validate_input_number(input_number)
 
         self._run_sequence(input_number, brain_mode=BrainLearningMode.PLASTICITY_OFF)
-        return self.output_area.winners[0]
+        return self._brain.winners[self.output_area]
 
     def _run_sequence(self, input_number: int, brain_mode: BrainLearningMode, desired_output=None,
                       number_of_sequence_cycles=1) -> None:
@@ -106,11 +106,8 @@ class LearningModel:
         if desired_output is not None:
             self.output_area.desired_output = [desired_output]
 
-        with self._set_brain_mode(brain_mode=brain_mode):
-            for iteration in self._sequence:
-                # Getting the projection parameters, after formatting the input stimuli if any are in the iteration
-                projection_parameters = iteration.format(self._input_stimuli, input_number)
-                self._brain.next_round(**projection_parameters)
+        for iteration in self._sequence:
+            self._brain.next_round(iteration.subconnectome)
 
     def _validate_input_number(self, input_number: int) -> None:
         """
@@ -120,12 +117,3 @@ class LearningModel:
         input_domain = math.ceil(math.log(input_number + 1, 2))
         if input_domain > self._input_size:
             raise InputSizeMismatch('Learning model InputStimuli', input_number, self._input_size, input_domain)
-
-    @contextmanager
-    def _set_brain_mode(self, brain_mode: BrainLearningMode) -> None:
-        """
-        Setting the brain to be of the given mode, and later returns its original mode
-        """
-        original_mode, self._brain.learning_mode = self._brain.learning_mode, brain_mode
-        yield
-        self._brain.learning_mode = original_mode

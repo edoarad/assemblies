@@ -62,18 +62,18 @@ class ConnectionsGraph(DiGraph):
                         raise NoPathException(input_node[len(input_type) + 1:],
                                               area[len('output') + 1:])
 
-    def verify_single_output_area(self) -> str:
+    def verify_single_output_area(self) -> int:
         """
         Checking that there is a single output area in the sequence.
         In any other case (none or multiple output areas), this function raises
          an exception.
 
-        :return: The name of the output area in the connections graph.
+        :return: The index of the output area in the connections graph.
         """
         output_areas = [node[7:] for node in self.nodes if node.startswith('output')]
         if len(output_areas) != 1:
             raise IllegalOutputAreasException(output_areas)
-        return output_areas[0]
+        return int(output_areas[0])
 
     def display(self):
         """

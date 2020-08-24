@@ -121,9 +121,6 @@ class LearningSequence:
 		"""
 		Give each part a serial number for the graph
 		"""
-		#if not isinstance(part, BrainPart):
-		if type(part) in BrainPart.__args__:
-			return part
 
 		if part in self._serials:
 			return self._serials[part]
@@ -131,7 +128,7 @@ class LearningSequence:
 		self._serials[part] = self._seq
 		self._seq += 1
 
-		return self._seq
+		return self._seq - 1
 
 	def _verify_stimulus(self, stimulus: Stimulus) -> None:
 		"""
