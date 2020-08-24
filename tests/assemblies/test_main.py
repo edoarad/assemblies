@@ -89,3 +89,4 @@ def test_merge(recipe, assembly_a, assembly_b, area_b, area_c):
                 "Assemblies haven't formed bi-directional links"
 
         gc.collect()
+
