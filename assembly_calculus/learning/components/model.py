@@ -1,5 +1,4 @@
 import math
-from contextlib import contextmanager
 
 from assembly_calculus.brain import Brain
 from assembly_calculus.brain.components import OutputArea
@@ -50,7 +49,9 @@ class LearningModel:
             If not given, the default value is taken from learningConfigurations
         """
         if training_set.input_size != self._input_size:
-            raise InputSizeMismatch('Learning model InputStimuli', 'Training set', self._input_size, training_set.input_size)
+            raise InputSizeMismatch(
+                'Learning model InputStimuli', 'Training set', self._input_size, training_set.input_size
+            )
 
         number_of_sequence_cycles = number_of_sequence_cycles or LearningConfigurations.NUMBER_OF_TRAINING_CYCLES
 
@@ -107,7 +108,9 @@ class LearningModel:
             self.output_area.desired_output = [desired_output]
 
         for iteration in self._sequence:
-            self._brain.next_round(iteration.subconnectome)
+            # Getting the subconnectome, after formatting the input stimuli if any are in the iteration
+            subconnectome = iteration.format(self._input_stimuli, input_number)
+            self._brain.next_round(subconnectome)
 
     def _validate_input_number(self, input_number: int) -> None:
         """

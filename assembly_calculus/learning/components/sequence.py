@@ -150,10 +150,10 @@ class LearningSequence:
 	def _verify_brain_part(self, part: BrainPart) -> None:
 		if isinstance(part, Stimulus):
 			self._verify_stimulus(part)
-		self._verify_area(part)
+		else:
+			self._verify_area(part)
 
-	def _validate_and_add_connections(self, mapping: Dict,
-	                                  consecutive_runs: int):
+	def _validate_and_add_connections(self, mapping: Dict, consecutive_runs: int):
 		"""
 		Validate a source-to-targets mapping for the iteration's projections and add the relevant
 		connections to the connections graph.
@@ -163,19 +163,24 @@ class LearningSequence:
 		"""
 
 		for source, target_areas in mapping.items():
-			#if isinstance(source, BrainPart):
-			if type(source) in BrainPart.__args__:
+			if type(source) == Area or type(source) == Stimulus:
 				self._verify_brain_part(source)
-			source_node = f'{NODE_TYPE[type(source)]}-{self._serialize_part(source)}'
+			if type(source) == Area:
+				source_node = f'{source}-{self._serialize_part(source)}'
+			else:
+				source_node = f'{NODE_TYPE[type(source)]}-{self._serialize_part(source)}'
 
 			for target_area in target_areas:
-				#if isinstance(target_area, BrainPart):
-				if type(target_area) in BrainPart.__args__:
+				if type(source) == Area or type(source) == Stimulus:
 					self._verify_brain_part(target_area)
-				area_node = f'{NODE_TYPE[type(target_area)]}-{self._serialize_part(target_area)}'
+				if type(target_area) == Area:
+					area_node = f'{target_area}-{self._serialize_part(target_area)}'
+				else:
+					area_node = f'{NODE_TYPE[type(target_area)]}-{self._serialize_part(target_area)}'
 
-				self._connections_graph.add_connection(source_node, area_node, consecutive_runs,
-				                                       self.number_of_iterations)
+				self._connections_graph.add_connection(
+					source_node, area_node, consecutive_runs, self.number_of_iterations
+				)
 
 	def _process_input_bits(self, input_bits: List[int]) -> Dict[int, List[Area]]:
 		"""
@@ -183,12 +188,12 @@ class LearningSequence:
 		:param input_bits: a list of bits in the input that should fire to their defined areas
 		:return: a mapping between input bit and it's areas as defined in the input stimuli mapping.
 		"""
-		return {input_bit: self._input_stimuli[input_bit].target_areas
-		        for input_bit in input_bits}
+		return {input_bit: self._input_stimuli[input_bit].target_areas for input_bit in input_bits}
 
-	def add_iteration(self, subconnectome: Dict[BrainPart, Set[BrainPart]] = {},
-	                  input_bits: List[int] = None,
-	                  consecutive_runs: int = 1) -> None:
+	def add_iteration(
+			self, subconnectome: Dict[BrainPart, Set[BrainPart]] = {},
+			input_bits: List[int] = None,
+			consecutive_runs: int = 1) -> None:
 		"""
 		Adding an iteration to the learning sequence, consisting of firing stimuli/areas and fired-at areas/output areas
 		:param subconnectome: a mapping between a stimulus/area and the areas/output areas it fires to
@@ -208,9 +213,9 @@ class LearningSequence:
 		else:
 			input_bits_to_areas = None
 
-		new_iteration = Iteration(subconnectome=subconnectome,
-		                          input_bits_to_areas=input_bits_to_areas,
-		                          consecutive_runs=consecutive_runs)
+		new_iteration = Iteration(
+			subconnectome=subconnectome, input_bits_to_areas=input_bits_to_areas, consecutive_runs=consecutive_runs
+		)
 		self._iterations.append(new_iteration)
 
 	def display_connections_graph(self):
