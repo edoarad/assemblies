@@ -18,8 +18,8 @@ class BrainTestUtils(object):
 		self._recipe: BrainRecipe = None
 		self.output_area: OutputArea = None
 
-	def create_brain(self, number_of_areas, p=None, area_size=None, winners_size=None, beta=None,
-	                 add_output_area=False, number_of_stimuli=0, stimulus_size=None) -> Brain:
+	def create_brain(self, number_of_areas, p=0.1, area_size=100, winners_size=10, beta=0.05,
+	                 add_output_area=False, number_of_stimuli=0, stimulus_size=100) -> Brain:
 		self._init_data()
 		areas = [Area(area_size, winners_size, beta) for _ in range(number_of_areas)]
 		stimuli = [Stimulus(stimulus_size) for _ in range(number_of_stimuli)]

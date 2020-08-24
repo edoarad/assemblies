@@ -22,7 +22,5 @@ class TestLearningModel(LearningComponentTestBase):
 
         result_00_2 = model.run_model(0)
         result_11_2 = model.run_model(3)
-
         self.assertEqual(result_11, result_11_2)
         self.assertEqual(result_00, result_00_2)
-

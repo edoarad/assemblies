@@ -1,18 +1,24 @@
 from unittest import TestCase
 
-from assembly_calculus.learning.components.errors import MissingArea, MissingStimulus, MaxAttemptsToGenerateStimuliReached
+from assembly_calculus.brain import BrainPart
+from assembly_calculus.learning.components.errors import MissingArea, MissingStimulus, \
+    MaxAttemptsToGenerateStimuliReached
 from assembly_calculus.learning.components.input import InputStimuli, InputBitStimuli, MAX_ATTEMPTS
-#from non_lazy_brain import NonLazyBrain 
 from assembly_calculus.brain import Brain
 from assembly_calculus.brain.connectome import Connectome
 from assembly_calculus.brain.components import Area, Stimulus, OutputArea
 
-A,B,C = None, None, None  # brain areas
-s0, s1, s2 = None, None, None  # brain stimuli
+A: BrainPart
+B: BrainPart
+C: BrainPart
+s0: Stimulus
+s1: Stimulus
+s2: Stimulus
+
 
 class InputTests(TestCase):
     def setUp(self) -> None:
-        global A,B,C
+        global A, B, C
         global s0, s1, s2
 
         self.n = 100
@@ -112,13 +118,10 @@ class InputTests(TestCase):
 
     def test_input_stimuli_with_the_same_area_twice_doesnt_the_use_same_stimuli(self):
         input_stimuli = InputStimuli(self.brain, self.k, A, A)
-        print(input_stimuli)
 
         # input_stimuli[0] is an input bit stimuli, which is of the form: InputBitStimuli(0 = stim0, 1 = stim1)
         # So we want to assure the two input bit stimuli are compiled of different stimuli:
         self.assertNotEqual(input_stimuli[0][0], input_stimuli[1][0])
-        print(input_stimuli[0])
-        print(input_stimuli[1])
         self.assertNotEqual(input_stimuli[0][1], input_stimuli[1][1])
 
     def test_input_stimuli_with_property_and_get_item_returns_the_same(self):
@@ -135,6 +138,3 @@ class InputTests(TestCase):
         self.assertIsInstance(InputStimuli(self.brain, self.k, *tuple([A] * MAX_ATTEMPTS)), InputStimuli)
         self.assertRaises(MaxAttemptsToGenerateStimuliReached,
                           InputStimuli, self.brain, self.k, *tuple([A] * (MAX_ATTEMPTS + 1)))
-
-
-
