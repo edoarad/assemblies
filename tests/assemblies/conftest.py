@@ -39,9 +39,13 @@ def assembly_a(stim_a, area_a):
 def assembly_b(stim_b, area_b):
     return Assembly([stim_b], area_b)
 
+@fixture
+def assembly_c(assembly_a, assembly_b, area_c):
+    return Assembly([assembly_a, assembly_b], area_c)
 
 @fixture
 def recipe(stim_a, stim_b, area_a, area_b, area_c, assembly_a, assembly_b):
     return BrainRecipe(
         stim_a, stim_b, area_a, area_b, area_c, assembly_a, assembly_b
     )
+
