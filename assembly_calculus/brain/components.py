@@ -38,8 +38,6 @@ class Area(UniquelyIdentifiable):
         maximal_assembly = max(overlaps.keys(), key=lambda x: overlaps[x])
         return maximal_assembly if overlaps[maximal_assembly] > Area.THRESHOLD else None
 
-    # TODO: use `read` terminology
-    # Response: Supports both
     @bindable_brain.property
     def active_assembly(self, *, brain: Brain) -> Optional[Assembly]:
         return self.read(preserve_brain=True, brain=brain)

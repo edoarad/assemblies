@@ -1,8 +1,6 @@
 from traceback import walk_stack
 from functools import cached_property
 
-# TODO2: document that this behaviour is only appropriate for use in interpreter
-# Response: This can be used in regular executions as well for debugging
 from types import FrameType
 from typing import Tuple
 

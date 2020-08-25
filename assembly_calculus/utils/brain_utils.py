@@ -67,8 +67,6 @@ def _fire_layered_areas(brain: Brain, firing_order: List[Dict[Projectable, List[
                                                         for stim, areas in
                                                         layer.items() if isinstance(stim, Stimulus)}
         assembly_mapping: Dict[Area, List[Area]] = {}
-        # TODO: why such complex logic instead of using `layer.keys()` instead of `layer.items()`?
-        # Response: To get the value as well in the iterator itself
         for ass, areas in filter(lambda t: (lambda assembly, _: isinstance(assembly, Assembly))(*t), layer.items()):
             # map area to all areas into which this area needs to be fired
             assembly_mapping[ass.area] = assembly_mapping.get(ass.area, []) + areas

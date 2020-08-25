@@ -12,8 +12,6 @@ if environ.get('PROTECC_MY_RAM', True):
     protecc_ram(0.75)
 
 
-# TODO2: extract common magic numbers to constant
-# Response: train_repeat is handcrafted per test, depends on how much stabilization is required
 # TODO3: add more asserts to each test case
 # Response: ???
 # TODO4: remove code duplication inside tests. reuse code using methods. test code should be treated as regular code :)
