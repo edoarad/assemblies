@@ -12,16 +12,16 @@ if TYPE_CHECKING:
 # of this class structure in general.
 class RecursiveSampler(AssemblySampler):
     """
-    A class representing a reader that obtains information about an assembly using the 'read' method.
+    A class representing a sampler that obtains information about an assembly using the 'sample_neurons' method.
     The method works by recursively firing areas from the top of the parent tree of the assembly,
     and examining which neurons were fired.
-    Note: This is the default read driver.
+    Note: This is the default assembly sampler.
     """
 
     @staticmethod
     def sample_neurons(assembly: Assembly, preserve_brain: bool = False, *, brain: Brain) -> Iterable[int]:
         """
-        Read the winners from given assembly in given brain recursively using fire_many
+        Sample the winners from given assembly in given brain recursively using fire_many
         and return the result.
         :param assembly: the assembly object
         :param preserve_brain: a boolean representing whether we want to change the brain state or not
