@@ -3,7 +3,7 @@ from os import environ
 
 from assembly_calculus import Connectome, bake
 from assembly_calculus.utils import overlap, protecc_ram
-
+from assembly_calculus.utils.brain_utils import _construct_firing_order
 
 CERTAINTY_REPEAT = 25
 EFFECTIVE_REPEAT = 3
@@ -88,3 +88,17 @@ def test_merge(recipe, assembly_a, assembly_b, area_b, area_c):
 
         gc.collect()
 
+
+def test_construct_firing_order():
+    from assembly_calculus import Area, Stimulus, Assembly
+    area_a = Area(1000)
+    area_b = Area(1000)
+    area_c = Area(1000)
+    stim_a = Stimulus(31)
+    stim_b = Stimulus(31)
+    ass_a = Assembly([stim_a], area_a)
+    ass_b = Assembly([stim_b], area_b)
+    correct_firing_order = [{stim_a: [area_a], stim_b: [area_b]}, {ass_a: [area_c], ass_b: [area_c]}]
+    assert _construct_firing_order([ass_a, ass_b], area_c) == correct_firing_order
+    ass_c = Assembly([ass_a, ass_b], area_c)
+    assert _construct_firing_order([ass_c], area_a) == correct_firing_order + [{ass_c: [area_a]}]
