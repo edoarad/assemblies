@@ -61,6 +61,12 @@ The `Brain` packages provides the following classes:
     >>> recipe = BrainRecipe(stim, area, assembly)
     ```
     
+    Representing multiple assemblies and operating on them can be achieved using `|` in the following manner:
+    
+    ```pycon
+    >>> tuple1 = (ass1 | ass2 | ass3)    # this represents the tuple of these 'ass1', 'ass2', 'ass3'
+    >>> tuple2 = (ass| ...)              # this represents the singleton containing 'ass'
+    ```
     The assembly class provides methods for manipulating assemblies within the brain.
     
     - `project`
@@ -72,7 +78,7 @@ The `Brain` packages provides the following classes:
                 assembly_ac = assembly_a >> area_c  # assuming assembly_a is in area_a, this creates a copy in area_c
                 assembly_bc = assembly_b >> area_c
         ```
-    
+       
     - `merge`
         Method which takes two assemblies from two areas and creates an assembly in a third area
         that fires together with both of them. Can be called using `|` and `>>` in the following manner:
