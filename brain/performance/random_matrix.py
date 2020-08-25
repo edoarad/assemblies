@@ -1,6 +1,8 @@
+from typing import Iterable, Tuple, Dict
+
 from numpy.random import Generator, PCG64
 import numpy as np
-from brain.performance.multithreaded import multithreaded
+from brain.performance.multithreaded import multithreaded, ThreadNum
 
 
 class RandomMatrix:
@@ -44,14 +46,14 @@ class RandomMatrix:
         out[first:last] = rng.binomial(1, prob, out[first:last].shape)
         return out
 
-    def _multi_params(self, threads: int, height: int, width: int, prob: float):
+    def _multi_params(self, threads: ThreadNum, height: int, width: int, prob: float):
         """
         Handling the parameters to multi_generate.
         :param threads: number of threads
         :param height: height of matrix
         :param width: width of matrix
         :param prob: Bernoulli parameter.
-        :return:
+        :return: The iterable of parameters to the threads.
         """
         step = np.ceil(height / threads).astype(np.int_)
         out = np.empty((height, width))

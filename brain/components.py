@@ -87,7 +87,6 @@ BrainPart = Union[Area, Stimulus, OutputArea]
 
 
 class Connection:
-    # TODO 2: why is this class needed? is it well-defined? do the type hints represent what really happens in its usage?
     def __init__(self, source: BrainPart, dest: BrainPart, synapses=None):
         self.source: BrainPart = source
         self.dest: BrainPart = dest
@@ -95,12 +94,7 @@ class Connection:
 
     @property
     def beta(self):
-        # TODO: always define by dest
-        # TODO NT: this is not how beta is defined
-        # TODO (PERF): it is clearer this way, what's the reason to define it otherwise?
-        if isinstance(self.source, Stimulus):
-            return self.dest.beta
-        return self.source.beta
+        return self.dest.beta
 
     def __repr__(self):
         return f'Connection(synapses={self.synapses!r})'

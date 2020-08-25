@@ -1,14 +1,17 @@
 import multiprocessing
 import concurrent.futures
 
-from typing import Callable, Any
+from typing import Callable, Any, Iterable, Tuple, Dict, Collection, List
 
 
 def __identity__(x):
     return x
 
 
-class Multithreaded:
+ThreadNum = int
+
+
+class _Multithreaded:
     """
     This class is used as a wrapper result for the multithreaded decorator method.
     It takes a function to wrap, and the numbers of threads (defaults to the number of processor cores).
@@ -22,11 +25,26 @@ class Multithreaded:
         :param func: The function to be wrapped.
         :param threads: Number of threads. None defaults to the number of processor cores.
         """
+        """
+        _function is the function each thread will execute.
+        """
         self._function = func
-        self._params: Callable[[int, ...], Any] = lambda _, *args, **kwargs: (args, kwargs)
-        self._after = __identity__
-        self.__name__ = func.__name__
 
+        """
+        _params is a function which receives the thread number and parameters to the wrapped function.
+        It should returns an iterable [(args_i, kwargs_i) for i in thread_num] where args_i, kwargs_i are the parameters
+        given to the i'th thread.
+        """
+        self._params: Callable[[ThreadNum, ...], Iterable[Tuple[Collection, Dict]]] = \
+            lambda n, *args, **kwargs: [(args, kwargs) for _ in range(n)]
+
+        """
+        _after is a function which recieves the list of outputs of each thread and combines them to get the final 
+        return value.
+        """
+        self._after: Callable[[List], Any] = __identity__
+
+        self.__name__ = func.__name__
         if hasattr(func, '__docs__'):
             self.__docs__ = func.__docs__
         if hasattr(func, '__signature__'):
@@ -42,6 +60,9 @@ class Multithreaded:
         self._after = func
 
     def __call__(self, *args, **kwargs):
+        """
+        Calling the wrapped function.
+        """
         futures = {}
         params = self._params(self._threads, *args, **kwargs)
         outs = [None] * self._threads
@@ -54,21 +75,6 @@ class Multithreaded:
             futures[self._executor.submit(do_thread, i, t_args, t_kwargs)] = i
         concurrent.futures.wait(futures)
         return self._after(outs)
-
-    def __get__(self, instance, owner):
-        if instance:
-            mt = Multithreaded(self._function.__get__(instance, owner), self._threads)
-            mt.set_after(self._after.__get__(instance, owner))
-            # TODO: document usage of __get__ in params
-            # TODO 2: "__get__" to const
-            # TODO NT: __get__ is a standard method name in python, this is like putting "__main__" in a const,
-            # TODO NT: or explaining why you call __main__.py __main__.py
-            if hasattr(self._params, '__get__'):
-                mt.set_params(getattr(self._params, '__get__')(instance, owner))
-            else:
-                mt.set_params(self._params)
-
-            return mt
 
     def __len__(self):
         return self._threads
@@ -85,4 +91,4 @@ def multithreaded(func=None, *, threads=None):
     Usage example over in the readme.
 
     """
-    return Multithreaded(func, threads) if func else (lambda f: Multithreaded(f, threads))
+    return _Multithreaded(func, threads) if func else (lambda f: _Multithreaded(f, threads))

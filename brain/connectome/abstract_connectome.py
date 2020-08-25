@@ -7,8 +7,7 @@ from typing import Dict, List, Tuple, Optional, TypeVar, Mapping, Generic, Calla
 
 from wrapt import ObjectProxy  # Needed to pip install
 
-from ..components import BrainPart, Area, Stimulus, Connection  # imports shouldn't depend on dir
-                                                                # structure. find an alternative
+from brain.components import BrainPart, Area, Stimulus, Connection
 
 
 # The wrapt library implements easy to use wrapper objects, which delegates everything to the object you are
@@ -53,7 +52,6 @@ class AbstractConnectome(metaclass=ABCMeta):
     def add_stimulus(self, stimulus: Stimulus):
         self.stimuli.append(stimulus)
 
-    # TODO: if not in use, delete
     @property
     def plasticity_disabled(self):
         return self._plasticity_disabled
@@ -62,19 +60,6 @@ class AbstractConnectome(metaclass=ABCMeta):
     def plasticity_disabled(self, value):
         self._plasticity_disabled = value
 
-    @abstractmethod
-    def subconnectome(self, connections: Dict[BrainPart, Area]) -> AbstractConnectome:
-        """
-        Retrieve restriction of the connectome to specific subconnectome.
-        Note that changes to the returned subconnectome should reflect in the original one. (By reference)
-        :param connections: directed connections needed in the subconnectome
-        :return: A connectome which is a subgraph of the self connectome, according to the mapping in connections
-        """
-        pass
-
-    # TODO: function name should reflect the direction - for example `get_parts_connected_to_area`
-    # TODONT: this is a bad coding convention, method name should not be over informative, I've never seen a five
-    # TODONT: words python method name, and for a good reason
     @abstractmethod
     def get_connected_parts(self, area: Area) -> List[BrainPart]:
         """

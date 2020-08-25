@@ -4,11 +4,11 @@ from typing import Dict, List, Iterable
 import numpy as np
 from collections import defaultdict
 
-# TODO: please use absolute and not relative imports. they will be clearer and easier to maintain
-from ..performance import RandomMatrix
 
-from ..components import Area, BrainPart, Stimulus, Connection
-from .abstract_connectome import AbstractConnectome
+from brain.performance import RandomMatrix
+
+from brain.components import Area, BrainPart, Stimulus, Connection
+from brain.connectome.abstract_connectome import AbstractConnectome
 
 
 class Connectome(AbstractConnectome):
@@ -62,23 +62,20 @@ class Connectome(AbstractConnectome):
 
         self.connections[part, area] = Connection(part, area, synapses)
 
-    # @TuringMachine: Look into this
-    # TODO: `Dict[BrainPart, List[Area]]` is a complex type that should be defined by name
-    # TODO 2: document
-    def subconnectome(self, connections: Dict[BrainPart, List[Area]]) -> AbstractConnectome:
-        # TODO: split the following line to two small methods with indicative names
-        # TODO 2: can `areas` and `stimuli` be treated together?
-        areas = set([part for part in connections if isinstance(part, Area)] + list(chain(*connections.values())))
-        stimuli = [part for part in connections if isinstance(part, Stimulus)]
-        edges = [(part, area) for part in connections for area in connections[part]]
-        neural_subnet = [(edge, self.connections[edge]) for edge in edges]
-        nlc = Connectome(self.p, areas=list(areas), stimuli=stimuli, connections=neural_subnet,
-                         initialize=False)
-        return nlc
-        # TODO fix this, this part doesn't work with the new connections implemnentation!
-
     def get_connected_parts(self, area: Area) -> List[BrainPart]:
         return [source for source, dest in self.connections if dest == area]
+
+    def _update_connection(self, source: BrainPart, area: Area, new_winners: Dict[Area, List[int]]) -> None:
+        """
+        Update one connection (based on the plasticity).
+        A helper function for update_connectomes.
+        """
+        connection = self.connections[source, area]
+        beta = connection.beta
+        source_neurons: Iterable[int] = \
+            range(source.n) if isinstance(source, Stimulus) else self.winners[source]
+        # Note that this uses numpy vectorization to multiply a whole matrix by a scalar.
+        connection.synapses[source_neurons, new_winners[area][:, None]] *= (1 + beta)
 
     def update_connectomes(self, new_winners: Dict[Area, List[int]], sources: Dict[Area, List[BrainPart]]) -> None:
         """
@@ -90,23 +87,7 @@ class Connectome(AbstractConnectome):
             return
         for area in new_winners:
             for source in sources[area]:
-                connection = self.connections[source, area]
-                beta = connection.beta
-                source_neurons: Iterable[int] = \
-                    range(source.n) if isinstance(source, Stimulus) else self.winners[source]
-                # TODO: extract to small function, document the use of numpy vectorization to avoid misuse in the future
-                # TODO NT: Extracting this piece of code to a different function would require:
-                # TODO NT: A) A lot of parameters (source, area, source_neurons, new_winners, beta) for a single line function
-                # TODO NT: B) Will most likely cause more misuse, as giving this line a whole function means it can be called
-                # TODO NT:  Without invoking the whole logic
-                # TODO NT reply: you don't have to pass every single variable as a parameter. the function can accept a compound object
-                # TODO NT reply: (even the whole left hand side of the line)
-                # TODO NT reply: the purpose is to give the operation a name. it will help avoid misuse
-                # TODO NT reply reply: It does not address the problems we've presented, you can't really misuse a line
-                # TODO NT reply reply: which is part of a bigger method without actually looking through the source code
-                # TODO NT reply reply: and if you look through the source code, you are probably capable enough to not
-                # TODO NT reply reply: misuse a line which is part of a less than 10-lined method
-                connection.synapses[source_neurons, new_winners[area][:, None]] *= (1 + beta)
+                self._update_connection(source, area, new_winners)
 
     def update_winners(self, new_winners: Dict[Area, List[int]], sources: Dict[Area, List[BrainPart]]) -> None:
         """
@@ -143,7 +124,7 @@ class Connectome(AbstractConnectome):
     def fire(self, connections: Dict[BrainPart, List[Area]]):
         """ Project is the basic operation where some stimuli and some areas are activated,
         with only specified connections between them active.
-        :param connections A dictionary of connections to use in the projection, for example {area1
+        :param connections: A dictionary of connections to use in the projection, for example {area1
         """
 
         sources_mapping: defaultdict[Area, List[BrainPart]] = defaultdict(lambda: [])

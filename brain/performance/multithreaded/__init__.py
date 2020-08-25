@@ -1,1 +1,1 @@
-from .multithreaded import multithreaded
+from .multithreaded import multithreaded, ThreadNum
