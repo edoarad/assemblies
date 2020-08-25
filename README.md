@@ -49,6 +49,13 @@ The `Brain` packages provides the following classes:
     >>> area = Area(beta = 0.1, n = 10 ** 7, k = 10 ** 4)
     ```
 
+    The area class provides methods for handling areas within the brain.
+    - `read`
+        returns the most active assembly in an area. Can be called by an area object in the following manner:
+        ```pycon
+        >>> read_assembly = area.read(preserve_brain=True, brain=brain)
+        ```
+        
 - `Assembly`
     
     This class represents an Assembly in the brain.
@@ -70,7 +77,7 @@ The `Brain` packages provides the following classes:
     The assembly class provides methods for manipulating assemblies within the brain.
     
     - `project`
-        Method which takes an assembly in a certain area and creates a copy of that assembly
+        takes an assembly in a certain area and creates a copy of that assembly
         in another area. Can be called using `>>` in the following manner:
     
         ```pycon
@@ -80,7 +87,7 @@ The `Brain` packages provides the following classes:
         ```
        
     - `merge`
-        Method which takes two assemblies from two areas and creates an assembly in a third area
+        takes two assemblies from two areas and creates an assembly in a third area
         that fires together with both of them. Can be called using `|` and `>>` in the following manner:
         
         ```pycon
@@ -89,7 +96,7 @@ The `Brain` packages provides the following classes:
         ```
         
     - `associate`
-        Method which takes two assemblies in a certain area and associates them such that
+        takes two assemblies in a certain area and associates them such that
         they fire together. Can be called on more than one assembly using `|` in the following manner:
         
         ```pycon
@@ -104,7 +111,7 @@ The `Brain` packages provides the following classes:
     The sub-package defines the following classes:
     
     - `Connectome`
-        Abstract class which defines the API which a general connectome should have.
+        defines the API which a general connectome should have.
         This class should be inhereted and implemented.
         
         ```pycon
