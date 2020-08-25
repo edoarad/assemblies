@@ -61,7 +61,7 @@ class AssemblySet(UniquelyIdentifiable):
         # Remove duplicates
         self.assemblies: Tuple[Assembly, ...] = tuple(set(assemblies))
 
-    def _merge_recording_resolver(self: AssemblySet, area: Area, **_):
+    def _merge_recording_resolver(self: AssemblySet, area: Area, **kwargs):
         return Bindable.bound_value('recording', *self)
 
     @record_method(_merge_recording_resolver, execute_anyway=True)
@@ -97,7 +97,7 @@ class AssemblySet(UniquelyIdentifiable):
         merged_assembly.bind_like(*self)
         return merged_assembly
 
-    def _associate_recording_resolver(self: AssemblySet, other: AssemblySet, **_):
+    def _associate_recording_resolver(self: AssemblySet, other: AssemblySet, **kwargs):
         return Bindable.bound_value('recording', *self, *other)
 
     @record_method(_associate_recording_resolver, execute_anyway=False)
