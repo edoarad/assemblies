@@ -15,9 +15,7 @@ if TYPE_CHECKING:
     from ..brain import Brain
     from ..brain import BrainRecipe
 
-# TODO: think about more elegant solutions than Union
-# Response: Union is a standard typing practice
-#           It fits the use-case, as we are building upon existing infrastructure
+
 """
 Standard python 3.8 typing
 Projectable is an umbrella type for regular assemblies 
