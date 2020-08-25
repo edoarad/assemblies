@@ -23,6 +23,7 @@ def _create_model(strategy: Strategy,
     brain = simulation_utils.create_brain(n=10000, k=100, p=0.01, beta=0.05)
 
     input_stimuli = simulation_utils.create_input_stimuli(brain, k=100)
+
     sequence = simulation_utils.create_sequence(brain, input_stimuli)
     sequence.display_connections_graph()
     training_set = simulation_utils.create_training_set(output_values_or_function, training_set_size_function, noise)
@@ -30,7 +31,7 @@ def _create_model(strategy: Strategy,
     model = LearningModel(brain=brain,
                           sequence=sequence,
                           input_stimuli=input_stimuli)
-
+    
     model.train_model(training_set=training_set, number_of_sequence_cycles=1)
     test_set = simulation_utils.create_test_set(output_values_or_function)
 

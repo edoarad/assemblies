@@ -175,7 +175,7 @@ class LayeredSimulationUtils(SimulationUtils):
         return brain
 
     def create_input_stimuli(self, brain: Brain, k: int) -> InputStimuli:
-        return InputStimuli(brain, k, *tuple(self._areas), verbose=False)
+        return InputStimuli(brain, k, *tuple(self._areas[:self.input_size]), verbose=False)
 
     def create_sequence(self, brain: Brain, input_stimuli: InputStimuli) -> LearningSequence:
         sequence = LearningSequence(brain, input_stimuli)
