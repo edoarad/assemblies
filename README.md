@@ -54,7 +54,7 @@ The `Brain` packages provides the following classes:
     This class represents an Assembly in the brain.
     
     ```pycon
-    >>> from assembly_calculus import Area, Stimulus, Assembly. BrainRecipe
+    >>> from assembly_calculus import Area, Stimulus, Assembly, BrainRecipe
     >>> area = Area(beta = 0.1, n = 10 ** 7, k = 10 ** 4)
     >>> stim = Stimulus(1000 ** 0.5)
     >>> assembly = Assembly([stim], area)
@@ -64,8 +64,8 @@ The `Brain` packages provides the following classes:
     Representing multiple assemblies and operating on them can be achieved using `|` in the following manner:
     
     ```pycon
-    >>> tuple1 = (ass1 | ass2 | ass3)    # this represents the tuple of these 'ass1', 'ass2', 'ass3'
-    >>> tuple2 = (ass| ...)              # this represents the singleton containing 'ass'
+    >>> assembly_set = (ass1 | ass2 | ass3)         # this represents the set of these 'ass1', 'ass2', 'ass3'
+    >>> assembly_singelton = (ass| ...)             # this represents the singleton containing 'ass'
     ```
     The assembly class provides methods for manipulating assemblies within the brain.
     
@@ -75,7 +75,7 @@ The `Brain` packages provides the following classes:
     
         ```pycon
         >>> with recipe:
-                assembly_ac = assembly_a >> area_c  # assuming assembly_a is in area_a, this creates a copy in area_c
+                assembly_ac = assembly_a >> area_c  # assuming assembly_a is in area_a, this creates a projection in area_c
                 assembly_bc = assembly_b >> area_c
         ```
        
