@@ -8,8 +8,6 @@ if TYPE_CHECKING:
     from ...brain import Brain
 
 
-# TODO: update documentation (`read` method, etc). Explain what is the meaning of "read driver" and what is the purpose
-# of this class structure in general.
 class RecursiveSampler(AssemblySampler):
     """
     A class representing a sampler that obtains information about an assembly using the 'sample_neurons' method.
