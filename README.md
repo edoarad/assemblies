@@ -53,6 +53,45 @@ The `Brain` packages provides the following classes:
     
     This class represents an Assembly in the brain.
     
+    ```pycon
+    >>> from assembly_calculus import Area, Stimulus, Assembly. BrainRecipe
+    >>> area = Area(beta = 0.1, n = 10 ** 7, k = 10 ** 4)
+    >>> stim = Stimulus(1000 ** 0.5)
+    >>> assembly = Assembly([stim], area)
+    >>> recipe = BrainRecipe(stim, area, assembly)
+    ```
+    
+    The assembly class provides methods for manipulating assemblies within the brain.
+    
+    - `project`
+        Method which takes an assembly in a certain area and creates a copy of that assembly
+        in another area. Can be called using `>>` in the following manner:
+    
+        ```pycon
+        >>> with recipe:
+                assembly_ac = assembly_a >> area_c  # assuming assembly_a is in area_a, this creates a copy in area_c
+                assembly_bc = assembly_b >> area_c
+        ```
+    
+    - `merge`
+        Method which takes two assemblies from two areas and creates an assembly in a third area
+        that fires together with both of them. Can be called using `|` and `>>` in the following manner:
+        
+        ```pycon
+        >>> with recipe:
+                (assembly_a | assembly_b) >> area_c
+        ```
+        
+    - `associate`
+        Method which takes two assemblies in a certain area and associates them such that
+        they fire together. Can be called on more than one assembly using `|` in the following manner:
+        
+        ```pycon
+        >>> with recipe:
+                (assembly_ac | ...).associate(assembly_bc | ...)
+        ```
+        
+    
 - `Connectome`
     
     Sub-package which holds the structre of the brain.
