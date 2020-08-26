@@ -17,7 +17,7 @@ def protecc_ram(pctg: float = 0.5):
     try:
         import resource
         soft, hard = resource.getrlimit(resource.RLIMIT_AS)
-        resource.setrlimit(resource.RLIMIT_AS, (int(get_free_memory() * 1024 * pctg), hard))
+        resource.setrlimit(resource.RLIMIT_AS, (int(_get_free_memory() * 1024 * pctg), hard))
     except:  # noqa
         print("Warning: no ram protection (possibly running are on windows?)", file=stderr)
         pass
