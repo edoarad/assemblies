@@ -21,6 +21,7 @@ class NoInitMeta(type):
 # TODO: what is the purpose of usage in the other places?
 # Response: UniquelyIdentifiable implements hash as id, and allows comparison.
 # This is the default implementation but it is better to be explicit
+# also supports instance name
 # TODO 2: document the intended use or give a good use example
 class UniquelyIdentifiable(RememberInitName, metaclass=NoInitMeta):
     """
