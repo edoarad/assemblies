@@ -58,7 +58,7 @@ class Stimulus(UniquelyIdentifiable):
 
 class OutputArea(Area):
     def __init__(self, n: int, beta: float):
-        super(OutputArea, self).__init__(n=n, beta=beta)
+        super(OutputArea, self).__init__(n=2, k=1, beta=beta)
 
     def __repr__(self):
         return f"OutputArea(n={self.n}, beta={self.beta})"
@@ -69,6 +69,16 @@ class OutputArea(Area):
 # It seems that there is a logical relation between the classes here, which would be better modeled using a parent class
 # Response: In my opinion, this is a more specific type-hinting, and it describes exactly what is needed,
 #           A parent class is less specific and will create bugs if people attempt to subclass it, no?
+# Response to response: there should not be a problem creating sub-classes. the code using BrainPart should
+# only depend on its public methods and should not assume any internal structure or implementation
+# TM - team: This session of discussion is directed to Lib ext. team, but anyway. We think as well that:
+# 1. The 'Union' doesn't refer to the C-style union, but to the TypeTheory union of literally either type A or type B.
+# 2. Using subclass isn't appropriate here, since the only thing that Stimulus and area has in common, is the fact that
+#    both of them are laying in a brain. They share only the beta attribute , since calling the k from Stimulus and,
+#    the k from Area the same k is misleading.
+# 3. The entire use for BrainPart is for TypeHinting, which really doesn't mean anything in python,
+#    but to increase the code readability, thus simply defining "Area or Stimulus" is perfect (Which is what we want to
+#    hint)
 BrainPart = Union[Area, Stimulus]
 
 
