@@ -1,7 +1,7 @@
 from typing import Hashable, Iterable
 
 
-def set_hash(elements: Iterable[Hashable]):
+def set_hash(elements: Iterable[Hashable]) -> int:
     return hash(tuple(sorted(set(elements), key=hash)))
 
 
