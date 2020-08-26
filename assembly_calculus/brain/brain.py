@@ -4,7 +4,7 @@ from collections import defaultdict
 from typing import Dict, Set, TYPE_CHECKING, List, Optional, Union, Type
 from contextlib import contextmanager
 
-from assembly_calculus.brain_recipe import BrainRecipe
+from assembly_calculus.brain.brain_recipe import BrainRecipe
 from assembly_calculus.brain.components import BrainPart, Stimulus, Area
 from assembly_calculus.brain.connectome.abc_connectome import ABCConnectome
 from assembly_calculus.utils import UniquelyIdentifiable
