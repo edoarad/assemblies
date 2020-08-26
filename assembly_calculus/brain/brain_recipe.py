@@ -1,15 +1,15 @@
 from __future__ import annotations
 from typing import List, Union, TYPE_CHECKING, Dict, Optional, Set
 
-from .components import Area, Stimulus, BrainPart
-from ..utils import Recording
+from assembly_calculus.brain.components import Area, Stimulus, BrainPart
+from assembly_calculus.utils import Recording
 
 # TODO: (To API Team), if you don't like the name, please change it
 BrainObjects = None
 
 if TYPE_CHECKING:
-    from .brain import Brain
-    from ..assemblies import Assembly
+    from assembly_calculus.brain import Brain
+    from assembly_calculus.assemblies import Assembly
     BrainObjects = Union[BrainPart, Assembly]
 
 

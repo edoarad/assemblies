@@ -1,11 +1,11 @@
 from __future__ import annotations
-from ..assembly_sampler import AssemblySampler
-from ...utils.brain_utils import fire_many
+from assembly_calculus.assemblies.assembly_sampler import AssemblySampler
+from assembly_calculus.utils.brain_utils import fire_many
 from typing import TYPE_CHECKING, Iterable
 
 if TYPE_CHECKING:
-    from ..assembly import Assembly
-    from ...brain import Brain
+    from assembly_calculus.assemblies.assembly import Assembly
+    from assembly_calculus.brain import Brain
 
 
 class RecursiveSampler(AssemblySampler):

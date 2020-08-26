@@ -3,10 +3,10 @@ from __future__ import annotations
 from itertools import chain
 from typing import Iterable, Dict, List, TYPE_CHECKING
 
-from ..brain import Brain, Area, Stimulus
+from assembly_calculus.brain import Brain, Area, Stimulus
 
 if TYPE_CHECKING:
-    from ..assemblies import Projectable
+    from assembly_calculus.assemblies import Projectable
 
 
 def fire_many(brain: Brain, projectables: Iterable[Projectable], area: Area):

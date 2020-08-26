@@ -2,7 +2,7 @@ from functools import wraps
 from inspect import Parameter, Signature
 from typing import Tuple, Optional, Callable
 
-from .argument_manipulation import signature
+from assembly_calculus.utils.argument_manipulation import signature
 
 
 class ImplicitResolution:

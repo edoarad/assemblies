@@ -4,16 +4,16 @@ from collections import defaultdict
 from typing import Dict, Set, TYPE_CHECKING, List, Optional, Union, Type
 from contextlib import contextmanager
 
-from .brain_recipe import BrainRecipe
-from .components import BrainPart, Stimulus, Area
-from .connectome.abc_connectome import ABCConnectome
-from ..utils import UniquelyIdentifiable
+from assembly_calculus.brain.brain_recipe import BrainRecipe
+from assembly_calculus.brain.components import BrainPart, Stimulus, Area
+from assembly_calculus.brain.connectome.abc_connectome import ABCConnectome
+from assembly_calculus.utils import UniquelyIdentifiable
 
 # TODO: imports should happen in any case
 # Response: Trying to avoid cyclic imports, if it is important we can figure out the minimal amount of
 #           such imports to avoid a cycle, but it makes it a bit more clear this way in my opinion
 if TYPE_CHECKING:
-    from ..assemblies import Assembly
+    from assembly_calculus.assemblies import Assembly
 
 
 class Brain(UniquelyIdentifiable):
