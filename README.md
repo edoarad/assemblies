@@ -111,7 +111,7 @@ The `Brain` packages provides the following classes:
     The sub-package defines the following classes:
     
     - `Connectome`
-        defines the API which a general connectome should have.
+        Abstract class which defines the API which a general connectome should have.
         This class should be inhereted and implemented.
         
         ```pycon

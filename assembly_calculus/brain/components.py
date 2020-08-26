@@ -57,7 +57,7 @@ class Stimulus(UniquelyIdentifiable):
 
 
 class OutputArea(Area):
-    def __init__(self, n: int, beta: float):
+    def __init__(self, beta: float):
         super(OutputArea, self).__init__(n=2, k=1, beta=beta)
 
     def __repr__(self):
