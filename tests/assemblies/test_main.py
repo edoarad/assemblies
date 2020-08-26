@@ -12,10 +12,9 @@ if environ.get('PROTECC_MY_RAM', True):
     protecc_ram(0.75)
 
 
-# TODO3: add more asserts to each test case
-# Response: ???
 # TODO4: remove code duplication inside tests. reuse code using methods. test code should be treated as regular code :)
-# Response: Two lines code duplication per function is fine... creating a method will be more confusing.
+# Response: Not code duplication in my opinion, this is used in totally different context and 2 lines is fine,
+#           moving to function will be confusing.
 
 def test_projection(recipe, assembly_a, assembly_b, area_c):
     with recipe:
