@@ -16,6 +16,7 @@ class NoInitMeta(type):
 
         return obj
 
+
 # TODO: this class is used in many places, but `uid` is given only in Assembly.
 # TODO: what is the purpose of usage in the other places?
 # Response: UniquelyIdentifiable implements hash as id, and allows comparison.
