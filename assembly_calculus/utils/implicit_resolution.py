@@ -2,11 +2,9 @@ from functools import wraps
 from inspect import Parameter, Signature
 from typing import Tuple, Optional, Callable
 
-from .argument_manipulation import signature
+from assembly_calculus.utils.argument_manipulation import signature
 
 
-# TODO: this is unusual behavior, should be better documented, preferably with usage examples
-# Response: How is this?
 class ImplicitResolution:
     """
     Implicit argument resolution decorator.

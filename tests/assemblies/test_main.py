@@ -3,7 +3,7 @@ from os import environ
 
 from assembly_calculus import Connectome, bake
 from assembly_calculus.utils import overlap, protecc_ram
-
+from assembly_calculus.utils.brain_utils import _construct_firing_order
 
 CERTAINTY_REPEAT = 25
 EFFECTIVE_REPEAT = 3
@@ -12,8 +12,6 @@ if environ.get('PROTECC_MY_RAM', True):
     protecc_ram(0.75)
 
 
-# TODO2: extract common magic numbers to constant
-# Response: train_repeat is handcrafted per test, depends on how much stabilization is required
 # TODO3: add more asserts to each test case
 # Response: ???
 # TODO4: remove code duplication inside tests. reuse code using methods. test code should be treated as regular code :)
@@ -89,3 +87,9 @@ def test_merge(recipe, assembly_a, assembly_b, area_b, area_c):
                 "Assemblies haven't formed bi-directional links"
 
         gc.collect()
+
+
+def test_construct_firing_order(area_a, area_b, area_c, stim_a, stim_b, assembly_a, assembly_b, assembly_c):
+    correct_firing_order = [{stim_a: [area_a], stim_b: [area_b]}, {assembly_a: [area_c], assembly_b: [area_c]}]
+    assert _construct_firing_order([assembly_a, assembly_b], area_c) == correct_firing_order
+    assert _construct_firing_order([assembly_c], area_a) == correct_firing_order + [{assembly_c: [area_a]}]

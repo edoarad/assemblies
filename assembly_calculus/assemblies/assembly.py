@@ -2,7 +2,7 @@ from __future__ import annotations
 # Allows forward declarations and such :)
 from collections import defaultdict
 from itertools import product, chain
-from typing import Iterable, Union, Tuple, TYPE_CHECKING, Set, Type
+from typing import Iterable, Union, Tuple, TYPE_CHECKING, Set, Type, Optional
 
 from assembly_calculus.assemblies.assembly_sampler import AssemblySampler
 from assembly_calculus.assemblies.assembly_samplers.recursive_sampler import RecursiveSampler
@@ -15,9 +15,7 @@ if TYPE_CHECKING:
     from assembly_calculus.brain import Brain
     from assembly_calculus.brain import BrainRecipe
 
-# TODO: think about more elegant solutions than Union
-# Response: Union is a standard typing practice
-#           It fits the use-case, as we are building upon existing infrastructure
+
 """
 Standard python 3.8 typing
 Projectable is an umbrella type for regular assemblies 
@@ -61,11 +59,12 @@ class AssemblySet(UniquelyIdentifiable):
         # Remove duplicates
         self.assemblies: Tuple[Assembly, ...] = tuple(set(assemblies))
 
-    # TODO: document the logic that this function performs
-    # Response
-    @record_method(lambda self, area, **_: Bindable.bound_value('recording', *self), execute_anyway=True)
+    def _merge_recording_resolver(self: AssemblySet, area: Area, **kwargs):
+        return Bindable.bound_value('recording', *self)
+
+    @record_method(_merge_recording_resolver, execute_anyway=True)
     @ImplicitResolution(brain=lambda self, area, **_: Bindable.bound_value('brain', *self))
-    def merge(self, area: Area, *, brain: Brain = None):
+    def merge(self, area: Area, *, brain: Brain = None) -> Assembly:
         """
         Creates strong bi-directional links between assemblies via an intermediate assembly located at area
 
@@ -75,9 +74,6 @@ class AssemblySet(UniquelyIdentifiable):
         if not isinstance(area, Area):
             raise ValueError("Project target must be an Area in the brain")
 
-        # TODO2: `intersection` is not a static method of `set` so it should only be used on an object (it works here, but it is structurally incorrect)
-        # Response: This is valid syntax, it is equivalent to self[0].appears_in.intersection(*[x.appears_in for x in self[1:])
-        #           only shorter and much more readable
         merged_assembly = Assembly(self.assemblies, area,
                                    initial_recipes=set.intersection(*[x.appears_in for x in self]))
         if brain is not None:
@@ -99,19 +95,17 @@ class AssemblySet(UniquelyIdentifiable):
         merged_assembly.bind_like(*self)
         return merged_assembly
 
-    # TODO: the lambda is (almost) duplicated in both decorator parameters. Exctract to function with indicative name, and reuse it
-    # Response: The main logic of this lambda is extracted in Bindable.bound_value, all that is left is adjustment of
-    #           parameters, which is exactly what the lambda is for.
-    # TODO2: document the logic that this function performs
-    # Response: What does this mean?
-    # TODO3: `assembly.associate(other)` should have same function as `other.associate(assembly)` and `(assembly|other).associate()`
-    # Response: Actually, this is not the intention. This performs association on the bipartite graph induced.
-    @record_method(lambda self, other, **_: Bindable.bound_value('recording', *self, *other), execute_anyway=False)
+    def _associate_recording_resolver(self: AssemblySet, other: AssemblySet, **kwargs):
+        return Bindable.bound_value('recording', *self, *other)
+
+    @record_method(_associate_recording_resolver, execute_anyway=False)
     @ImplicitResolution(brain=lambda self, other, **_: Bindable.bound_value('brain', *self, *other))
-    def associate(self, other: AssemblySet, *, brain: Brain):
+    def associate(self, other: Optional[AssemblySet], *, brain: Brain):
         """
         Associates (causes overlap of representative_neurons to increase) assemblies in self with assemblies in other,
-        can be thought of as performing associations on all edges in the bipartite graph induced by self <-> other
+        can be thought of as performing associations (by activating all parents simultaneously)
+         on all edges in the bipartite graph induced by self <-> other one-by-one.
+        If other is None, performs association of self <-> self.
 
         As of now has no syntactic sugar, so use by:
         (... Left Side Assemblies ...).associate(... Right Side Assemblies ...)
@@ -120,10 +114,12 @@ class AssemblySet(UniquelyIdentifiable):
             raise ValueError("All assemblies must be in the same area for association")
 
         brain.winners[area] = list()
-        pairs: Iterable[Tuple[Assembly, Assembly]] = product(self, other)
-        # TODO: convert to all options (not only x from `self` and y from `other`)
-        # Response: No, this is the design
+        pairs: Iterable[Tuple[Assembly, Assembly]] = product(self, other) if other is not None else product(self, self)
         for x, y in pairs:
+            if x == y:
+                # Skip associating assembly with self
+                continue
+
             activate(x.parents + y.parents, brain=brain)
 
             parent_areas = {ass.area for ass in (x.parents + y.parents)}
@@ -131,7 +127,7 @@ class AssemblySet(UniquelyIdentifiable):
             # We compensate with more rounds, in order to avoid natural mixing (by removing self edge area: [area])
             brain.next_round(subconnectome=subconnectome, replace=True, iterations=brain.repeat * ASSOCIATE_REPEAT)
 
-    def __rshift__(self, target_area: Area):
+    def __rshift__(self, target_area: Area) -> Assembly:
         """
         In the context of assemblies, >> symbolizes merge.
         Example: (within a brain context) (a1 | a2 | a3)>>area
@@ -185,8 +181,6 @@ class Assembly(UniquelyIdentifiable):
         for recipe in self.appears_in:
             recipe.append(self)
 
-    # TODO: it seems that the Type is unbound here (should it be the type of Assembly._default_sampler?)
-    # Response: ???
     @property
     def sampler(self) -> Type[AssemblySampler]:
         # property decorator means we can access this as assembly.sampler
@@ -200,7 +194,7 @@ class Assembly(UniquelyIdentifiable):
         Assembly._default_sampler = sampler
 
     @bindable_brain.method
-    def sample_neurons(self, preserve_brain=False, *, brain: Brain) -> Set[int, ...]:
+    def sample_neurons(self, preserve_brain=False, *, brain: Brain) -> Set[int]:
         """
         :param preserve_brain: Boolean flag determining whether or not to have side effects on the brain
         :param brain: Brain from which to sample assembly
@@ -209,7 +203,7 @@ class Assembly(UniquelyIdentifiable):
         return set(self.sampler.sample_neurons(self, preserve_brain=preserve_brain, brain=brain))
 
     @bindable_brain.property
-    def representative_neurons(self, *, brain: Brain) -> Set[int, ...]:
+    def representative_neurons(self, *, brain: Brain) -> Set[int]:
         return self.sample_neurons(preserve_brain=True, brain=brain)
 
     @record_method(execute_anyway=True)
@@ -235,7 +229,7 @@ class Assembly(UniquelyIdentifiable):
         projected_assembly.bind_like(self)
         return projected_assembly
 
-    def __rshift__(self, target: Area):
+    def __rshift__(self, target: Area) -> Assembly:
         """
         In the context of assemblies, >> represents project.
         Example: assembly >> Area
@@ -257,7 +251,6 @@ class Assembly(UniquelyIdentifiable):
         :param brain: Should be supplied automatically by context (with brain / with recipe)
         :returns: Resulting projected assembly
         """
-        # Response: Added area checks
         if not isinstance(area, Area):
             raise TypeError("Project target must be an Area in the brain")
 
