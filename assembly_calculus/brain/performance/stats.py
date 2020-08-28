@@ -1,6 +1,6 @@
 import numpy as np
 
-from .random_matrix import RandomMatrix
+from assembly_calculus.brain.performance.random_matrix import RandomMatrix
 
 # TODO: this file seems unused, remove
 

@@ -1,6 +1,6 @@
 import numpy as np
 
-from .. import multithreaded
+from assembly_calculus.brain.performance import multithreaded
 
 # TODO: this file is not used, remove
 

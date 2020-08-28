@@ -1,6 +1,6 @@
 from numpy.random import Generator, PCG64
 import numpy as np
-from .multithreaded import multithreaded
+from assembly_calculus.brain.performance.multithreaded.multithreaded import multithreaded
 
 
 # TODO: remove unused imports

@@ -7,8 +7,8 @@ import numpy as np
 from collections import defaultdict
 import scipy.sparse as sp
 
-from .abc_connectome import ABCConnectome
-from ..components import Area, BrainPart, Stimulus, Connection
+from assembly_calculus.brain.connectome.abc_connectome import ABCConnectome
+from assembly_calculus.brain.components import Area, BrainPart, Stimulus, Connection
 
 
 class NonLazySparseConnectome(ABCConnectome):

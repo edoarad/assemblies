@@ -4,9 +4,9 @@ from typing import Dict, List, Iterable, NamedTuple, cast, Optional
 import numpy as np
 from collections import defaultdict
 
-from .abc_connectome import ABCConnectome
-from ..performance import multithreaded, MultithreadedRNG
-from ..components import Area, BrainPart, Stimulus, Connection
+from assembly_calculus.brain.connectome.abc_connectome import ABCConnectome
+from assembly_calculus.brain.performance import multithreaded, MultithreadedRNG
+from assembly_calculus.brain.components import Area, BrainPart, Stimulus, Connection
 
 
 class MultithreadedConnectome(ABCConnectome):

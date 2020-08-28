@@ -10,7 +10,7 @@ import scipy.sparse as sp
 from .abc_connectome import ABCConnectome
 from ..performance import MultithreadedRNG
 from ..performance import RandomMatrix
-from ..components import Area, BrainPart, Stimulus, Connection
+from assembly_calculus.brain.components import Area, BrainPart, Stimulus, Connection
 
 
 class NonLazyConnectomeRandomMatrix(ABCConnectome):

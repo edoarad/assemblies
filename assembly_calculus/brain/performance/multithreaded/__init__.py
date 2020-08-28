@@ -1,1 +1,1 @@
-from .multithreaded import multithreaded
+from assembly_calculus.brain.performance.multithreaded import multithreaded

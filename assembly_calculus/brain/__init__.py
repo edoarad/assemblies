@@ -1,5 +1,5 @@
-from .components import Area, BrainPart, Stimulus, OutputArea, Connection
-from .brain import Brain, bake
-from .brain_recipe import BrainRecipe
-from .connectome import ABCConnectome
-from .connectome.connectome import Connectome
+from assembly_calculus.brain.components import Area, BrainPart, Stimulus, OutputArea, Connection
+from assembly_calculus.brain.brain import Brain, bake
+from assembly_calculus.brain.brain_recipe import BrainRecipe
+from assembly_calculus.brain.connectome.connectome import ABCConnectome
+from assembly_calculus.brain.connectome.connectome import Connectome

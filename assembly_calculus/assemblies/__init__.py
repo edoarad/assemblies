@@ -1,2 +1,2 @@
-from .assembly import Assembly, Projectable
+from assembly_calculus.assemblies.assembly import Assembly, Projectable
 
