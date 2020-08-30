@@ -13,5 +13,4 @@ class BrainLearningMode(Enum):
         test the brain's behavior without affecting the weights of the existing connections.
     """
     DEFAULT = auto()
-    FORCE_DESIRED_OUTPUT = auto()
     PLASTICITY_OFF = auto()
