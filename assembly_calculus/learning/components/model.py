@@ -1,10 +1,9 @@
 import math
-from typing import Dict
+from typing import Dict, List
 
 from assembly_calculus.brain import Brain
 from assembly_calculus.brain.components import OutputArea
 
-from assembly_calculus.learning.brain_modes import BrainLearningMode
 from assembly_calculus.learning.components.configurations import LearningConfigurations
 from assembly_calculus.learning.components.data_set.data_set import DataSet
 from assembly_calculus.learning.components.errors import InputSizeMismatch, InputStimuliAndSequenceMismatch
@@ -58,7 +57,7 @@ class LearningModel:
 
 		for data_point in training_set:
 			self._run_sequence(input_number=data_point.input,
-			                   desired_output={self.output_area: data_point.output},
+			                   desired_output={self.output_area: [data_point.output]},
 			                   number_of_sequence_cycles=number_of_sequence_cycles)
 
 	def test_model(self, test_set: DataSet) -> TestResults:
@@ -91,7 +90,7 @@ class LearningModel:
 		return self._brain.winners[self.output_area]
 
 	def _run_sequence(self, input_number: int, number_of_sequence_cycles=1, *, enable_plasticity: bool = True,
-	                  desired_output: Dict[OutputArea, int] = None) -> None:
+	                  desired_output: Dict[OutputArea, List[int]] = None) -> None:
 		"""
 		Running the unsupervised and supervised learning according to the configured sequence, i.e., setting up the
 		connections between the areas of the brain (listed in the sequence), according to the activated stimuli
@@ -107,7 +106,7 @@ class LearningModel:
 		for iteration in self._sequence:
 			# Getting the subconnectome, after formatting the input stimuli if any are in the iteration
 			subconnectome = iteration.format(self._input_stimuli, input_number)
-			self._brain.next_round(subconnectome, desired_output=desired_output, enable_plasticity=True)
+			self._brain.next_round(subconnectome, override_winners=desired_output, enable_plasticity=True)
 
 	def _validate_input_number(self, input_number: int) -> None:
 		"""

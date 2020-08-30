@@ -54,7 +54,7 @@ class Brain(UniquelyIdentifiable):
 	# TODO 6: please make it clearer and simplify the logic
 	# TODO 7: change replace to flag
 	def next_round(self, subconnectome=None, replace=True, iterations=1,
-	               desired_output: Dict[OutputArea, int] = None, enable_plasticity: bool = True):
+	               override_winners: Dict[Area, List[int]] = None, enable_plasticity: bool = True):
 		# TODO 3: make next statement clearer
 		if replace or subconnectome is None:
 			_active_connectome = subconnectome or self.active_connectome
@@ -67,7 +67,7 @@ class Brain(UniquelyIdentifiable):
 
 		result = None
 		for _ in range(iterations):
-			self.connectome.project(_active_connectome, desired_output=desired_output,
+			self.connectome.project(_active_connectome, override_winners=override_winners,
 			                        enable_plasticity=enable_plasticity)
 		# TODO 5: `project` in `Connectome` class has no `return` - what is expected to be returned here?
 		return result

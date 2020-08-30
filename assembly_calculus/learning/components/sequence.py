@@ -1,7 +1,6 @@
 from typing import List, Dict, Optional, Set
 
-from assembly_calculus import Stimulus
-from assembly_calculus.brain import Area, Brain, BrainPart, OutputArea
+from assembly_calculus.brain import Area, Brain, BrainPart, OutputArea, Stimulus
 from assembly_calculus.learning.components.errors import MissingArea, SequenceRunNotInitializedOrInMidRun, \
 	SequenceFinalizationError, \
 	MissingStimulus
