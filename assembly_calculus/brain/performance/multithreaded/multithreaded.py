@@ -25,23 +25,17 @@ class _Multithreaded:
         :param func: The function to be wrapped.
         :param threads: Number of threads. None defaults to the number of processor cores.
         """
-        """
-        _function is the function each thread will execute.
-        """
+        # _function is the function each thread will execute.
         self._function = func
 
-        """
-        _params is a function which receives the thread number and parameters to the wrapped function.
-        It should returns an iterable [(args_i, kwargs_i) for i in thread_num] where args_i, kwargs_i are the parameters
-        given to the i'th thread.
-        """
+        # _params is a function which receives the thread number and parameters to the wrapped function.
+        # It should returns an iterable [(args_i, kwargs_i) for i in thread_num] where args_i, kwargs_i are
+        # the parameters given to the i'th thread.
         self._params: Callable[[ThreadNum, ...], Iterable[Tuple[Collection, Dict]]] = \
             lambda n, *args, **kwargs: [(args, kwargs) for _ in range(n)]
 
-        """
-        _after is a function which recieves the list of outputs of each thread and combines them to get the final 
-        return value.
-        """
+        # _after is a function which receives the list of outputs of each thread and combines them to get the final
+        # return value.
         self._after: Callable[[List], Any] = __identity__
 
         self.__name__ = func.__name__

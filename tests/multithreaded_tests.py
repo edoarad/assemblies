@@ -1,7 +1,7 @@
 import numpy as np
 
-from brain.performance.multithreaded import multithreaded
-from brain.performance.random_matrix import RandomMatrix
+from assembly_calculus.brain.performance.multithreaded import multithreaded
+from assembly_calculus.brain.performance.random_matrix import RandomMatrix
 
 
 """

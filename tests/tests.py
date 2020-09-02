@@ -1,8 +1,8 @@
 
 import pytest
 
-from brain import *
-from brain.connectome import *
+from assembly_calculus.brain import *
+from assembly_calculus.brain.connectome import *
 
 
 EPSILON = 0.001

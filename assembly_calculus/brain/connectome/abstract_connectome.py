@@ -3,11 +3,11 @@ from __future__ import annotations  # import annotations from later version of p
 
 from collections import defaultdict
 from abc import ABCMeta, abstractmethod
-from typing import Dict, List, Tuple, Optional, TypeVar, Mapping, Generic, Callable, Any
+from typing import Dict, List, Tuple, Optional, TypeVar, Mapping, Generic, Callable, Any, Set
 
 from wrapt import ObjectProxy  # Needed to pip install
 
-from brain.components import BrainPart, Area, Stimulus, Connection
+from assembly_calculus.brain.components import BrainPart, Area, Stimulus, Connection
 
 
 # The wrapt library implements easy to use wrapper objects, which delegates everything to the object you are
@@ -37,6 +37,7 @@ class AbstractConnectome(metaclass=ABCMeta):
         self.areas: List[Area] = []
         self.stimuli: List[Stimulus] = []
         self.winners: Dict[Area, List[int]] = defaultdict(lambda: [])
+        self.support: Dict[Area, Set[int]] = defaultdict(lambda: set())
         self.connections: Dict[Tuple[BrainPart, Area], Connection] = {}
         self.p = p
         self._plasticity_disabled = False
@@ -61,7 +62,7 @@ class AbstractConnectome(metaclass=ABCMeta):
         self._plasticity_disabled = value
 
     @abstractmethod
-    def get_connected_parts(self, area: Area) -> List[BrainPart]:
+    def get_sources(self, area: Area) -> List[BrainPart]:
         """
         Retrieve all parts with connection to specific areas, according to the current connectome
         :param area: area which we need the connections to

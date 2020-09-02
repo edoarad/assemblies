@@ -2,7 +2,7 @@ from typing import Iterable, Tuple, Dict
 
 from numpy.random import Generator, PCG64
 import numpy as np
-from brain.performance.multithreaded import multithreaded, ThreadNum
+from assembly_calculus.brain.performance.multithreaded import multithreaded, ThreadNum
 
 
 class RandomMatrix:

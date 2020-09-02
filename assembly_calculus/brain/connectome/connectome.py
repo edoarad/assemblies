@@ -1,14 +1,13 @@
-from itertools import chain
 from numpy.core import ndarray
 from typing import Dict, List, Iterable
 import numpy as np
 from collections import defaultdict
 
 
-from brain.performance import RandomMatrix
+from assembly_calculus.brain.performance import RandomMatrix
 
-from brain.components import Area, BrainPart, Stimulus, Connection
-from brain.connectome.abstract_connectome import AbstractConnectome
+from assembly_calculus.brain.components import Area, BrainPart, Stimulus, Connection
+from assembly_calculus.brain.connectome.abstract_connectome import AbstractConnectome
 
 
 class Connectome(AbstractConnectome):
@@ -16,12 +15,11 @@ class Connectome(AbstractConnectome):
     Implementation of a random based connectome, based on the abstract connectome.
     The object representing the connection in here is ndarray from numpy
     """
-    def __init__(self, p: float, areas=None, stimuli=None, connections=None, initialize=False):
+    def __init__(self, p: float, areas=None, stimuli=None, initialize=False):
         """
         :param p: The attribute p for the probability of an edge to exits
         :param areas: list of areas
         :param stimuli: list of stimuli
-        :param connections: Optional argument which gives active connections to the connectome
         :param initialize: Whether or not to initialize the connectome of the brain.
         """
         super(Connectome, self).__init__(p, areas, stimuli)
@@ -39,11 +37,10 @@ class Connectome(AbstractConnectome):
         super().add_stimulus(stimulus)
         self._initialize_parts([stimulus])
 
-    def _initialize_parts(self, parts: List[BrainPart]):
+    def _initialize_parts(self, parts: List[BrainPart]) -> None:
         """
         Initialize all the connections to and from the given brain parts.
         :param parts: List of stimuli and areas to initialize
-        :return:
         """
         for part in parts:
             for other in self.areas + self.stimuli:
@@ -51,24 +48,26 @@ class Connectome(AbstractConnectome):
                 if isinstance(part, Area) and part != other:
                     self._initialize_connection(other, part)
 
-    def _initialize_connection(self, part: BrainPart, area: Area):
+    def _initialize_connection(self, part: BrainPart, area: Area) -> None:
         """
         Initalize the connection from brain part to an area
         :param part: Stimulus or Area which the connection should come from
         :param area: Area which the connection go to
-        :return:
         """
         synapses = self.rng.multi_generate(area.n, part.n, self.p).reshape((part.n, area.n), order='F')
-
         self.connections[part, area] = Connection(part, area, synapses)
 
-    def get_connected_parts(self, area: Area) -> List[BrainPart]:
+    def get_sources(self, area: Area) -> List[BrainPart]:
+        """ Get sources to area """
         return [source for source, dest in self.connections if dest == area]
 
     def _update_connection(self, source: BrainPart, area: Area, new_winners: Dict[Area, List[int]]) -> None:
         """
         Update one connection (based on the plasticity).
         A helper function for update_connectomes.
+        :param source: the source the area
+        :param area: the area to _update the connection
+        :param new_winners: the new winners per area
         """
         connection = self.connections[source, area]
         beta = connection.beta
@@ -98,9 +97,11 @@ class Connectome(AbstractConnectome):
         to_update = sources.keys()
         for area in to_update:
             self.winners[area] = new_winners[area]
+            self.support[area].update(new_winners[area])
 
-    def _project_into(self, area: Area, sources: List[BrainPart]) -> List[int]:
-        """Project multiple stimuli and area assemblies into area 'area' at the same time.
+    def _fire_into(self, area: Area, sources: List[BrainPart]) -> List[int]:
+        """
+        Fire multiple stimuli and area assemblies into area 'area' at the same time.
         :param area: The area projected into
         :param sources: List of separate brain parts whose assemblies we will projected into this area
         :return: Returns new winners of the area
@@ -122,7 +123,8 @@ class Connectome(AbstractConnectome):
         return np.argpartition(prev_winner_inputs, area.n - area.k)[-area.k:]
 
     def fire(self, connections: Dict[BrainPart, List[Area]]):
-        """ Project is the basic operation where some stimuli and some areas are activated,
+        """
+        Fire is the basic operation where some stimuli and some areas are activated,
         with only specified connections between them active.
         :param connections: A dictionary of connections to use in the projection, for example {area1
         """
@@ -139,7 +141,7 @@ class Connectome(AbstractConnectome):
 
         new_winners: Dict[Area, List[int]] = dict()
         for area in to_update:
-            new_winners[area] = self._project_into(area, sources_mapping[area])
+            new_winners[area] = self._fire_into(area, sources_mapping[area])
 
         self.update_connectomes(new_winners, sources_mapping)
         self.update_winners(new_winners, sources_mapping)
