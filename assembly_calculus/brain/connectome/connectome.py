@@ -174,11 +174,9 @@ class Connectome(ABCConnectome):
 
 		new_winners: Dict[Area, List[int]] = dict()
 		for area in to_update:
+			new_winners[area] = self.project_into(area, sources_mapping[area])
 			if override_winners and area in override_winners:  # In case of enforcing some winners to some area
-				print(override_winners[area])
 				new_winners[area] = override_winners[area]
-			else:
-				new_winners[area] = self.project_into(area, sources_mapping[area])
 
 		if enable_plasticity:
 			self.update_connectomes(new_winners, sources_mapping)

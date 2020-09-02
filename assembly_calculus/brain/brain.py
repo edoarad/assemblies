@@ -59,11 +59,8 @@ class Brain(UniquelyIdentifiable):
 		if replace or subconnectome is None:
 			_active_connectome = subconnectome or self.active_connectome
 		else:
-			# TODO 4: the following rows should use dictionary merge logic
 			_active_connectome = self.active_connectome.copy()
-			for source, destinations in subconnectome.items():
-				for dest in destinations:
-					_active_connectome[source].add(dest)
+			_active_connectome.update(subconnectome)
 
 		result = None
 		for _ in range(iterations):
