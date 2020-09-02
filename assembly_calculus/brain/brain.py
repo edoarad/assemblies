@@ -9,9 +9,7 @@ from assembly_calculus.brain.components import BrainPart, Stimulus, Area
 from assembly_calculus.brain.connectome.abc_connectome import ABCConnectome
 from assembly_calculus.utils import UniquelyIdentifiable
 
-# TODO: imports should happen in any case
-# Response: Trying to avoid cyclic imports, if it is important we can figure out the minimal amount of
-#           such imports to avoid a cycle, but it makes it a bit more clear this way in my opinion
+
 if TYPE_CHECKING:
     from assembly_calculus.assemblies import Assembly
 
@@ -33,7 +31,6 @@ class Brain(UniquelyIdentifiable):
 
     def __init__(self, connectome: ABCConnectome, recipe: BrainRecipe = None, repeat: int = 1):
         # TODO: document __init__ parameters
-        # Response: TM Team
         super(Brain, self).__init__()
         self.repeat = repeat
         self.recipe = recipe or BrainRecipe()
@@ -57,11 +54,8 @@ class Brain(UniquelyIdentifiable):
         if replace or subconnectome is None:
             _active_connectome = subconnectome or self.active_connectome
         else:
-            # TODO 4: the following rows should use dictionary merge logic
             _active_connectome = self.active_connectome.copy()
-            for source, destinations in subconnectome.items():
-                for dest in destinations:
-                    _active_connectome[source].add(dest)
+            _active_connectome.update(subconnectome)
 
         result = None
         for _ in range(iterations):
@@ -164,13 +158,6 @@ class Brain(UniquelyIdentifiable):
                 assembly.bind(brain=current_ctx_stack[assembly])
 
 
-# TODO 3: is it crucial to get `connectome_cls` or can we get a connectome object?
-# Response: This was the previous way to do it, we don't care if this will be changed to a connectome object
-# TODO 4: make names clearer: train_repeat -> recipe_repeat, effective_repeat -> something clearer?
-# Response: This is from the world of machine learning, in my opinion these are meaningful names.
-#           Training is the initialization and effective is the final.
-# TODO 5: should this be a method of `BrainRecipe`?
-# Response: To API Team, you can change this if you want
 def bake(recipe: BrainRecipe, p: float, connectome_cls: Type[ABCConnectome],
          train_repeat: int = 10, effective_repeat: int = 3) -> Brain:
     """Bakes a brain from a recipe, adds all relevant brain parts and performs the initialization sequence"""
