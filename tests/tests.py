@@ -7,7 +7,7 @@ from assembly_calculus.brain.connectome import *
 
 EPSILON = 0.001
 BASIC_BETA = 0.1
-STANDARD_SIZES = [(5000, 71), (10000, 100), (7500, 85), (2500, 50)]
+STANDARD_SIZES = [(5000, 71), (1250, 35), (3750, 61), (2500, 50)]
 SMALL_SIZES = [(4, 2), (9, 3), (16, 4), (25, 5)]
 
 
@@ -176,15 +176,6 @@ def test_bigger_k():
     conn = Connectome(p=1, initialize=True)
 
     a = Area(n=1, k=5, beta=BASIC_BETA)
-    conn.add_area(a)
-    conn.fire({a: [a]})
-
-
-@pytest.mark.xfail()
-def test_k_is_zero():
-    conn = Connectome(p=1, initialize=True)
-
-    a = Area(n=1, k=0, beta=BASIC_BETA)
     conn.add_area(a)
     conn.fire({a: [a]})
 

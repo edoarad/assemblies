@@ -1,61 +1,46 @@
 from __future__ import annotations
-import math
-from typing import Optional, Union, TYPE_CHECKING
-import uuid
-import numpy as np
-from uuid import UUID
+from typing import Optional, Union, TYPE_CHECKING, Dict, Set
 
-
-from utils.bindable import Bindable, bindable_property
+from assembly_calculus.utils import UniquelyIdentifiable, bindable_brain, overlap
 
 if TYPE_CHECKING:
-    from .brain import Brain
+    from assembly_calculus.brain import Brain
+    from assembly_calculus.assemblies.assembly import Assembly
 
 
-# TODO: document me pleaaase
-# TODO 2: explain why this is needed (rather than, for example, implementing `__eq__` for Assembly)
-class UniquelyIdentifiable:
-    hist = {}
-
-    def __init__(self, uid=None):
-        self._uid: UUID = uuid.uuid4()
-        if uid is not None and uid in UniquelyIdentifiable.hist:
-            self._uid = UniquelyIdentifiable.hist[uid]
-        elif uid is not None:
-            UniquelyIdentifiable.hist[uid] = self._uid
-
-    def __hash__(self):
-        return hash(self._uid)
-
-    def __eq__(self, other):
-        # TODO: make more readable
-        # TODO 2: avoid edge case in which _uid and getattr are both None
-        return type(self) == type(other) and self._uid == getattr(other, '_uid', None)
-
-
-@Bindable('brain')
+@bindable_brain.cls
 class Area(UniquelyIdentifiable):
+    THRESHOLD: float = 0.20
+
     def __init__(self, n: int, k: Optional[int] = None, beta: float = 0.01):
         super(Area, self).__init__()
         self.beta: float = beta
         self.n: int = n
-        self.k: int = k if k is not None else int(n ** 0.5)
+        self.k: int = k or int(n ** 0.5)
 
-        if k == 0:
-            self.k = math.sqrt(n)
+    @bindable_brain.property
+    def winners(self, *, brain: Brain) -> Set[int]:
+        return set(brain.winners[self])
 
-    @bindable_property
-    def winners(self, *, brain: Brain):
-        return brain.winners[self]
-
-    @bindable_property
+    @bindable_brain.property
     def support(self, *, brain: Brain):
         return brain.support[self]
 
-    @bindable_property
-    def active_assembly(self, *, brain: Brain):
-        from assemblies.assembly_fun import Assembly
-        return Assembly.read(self, brain=brain)
+    @bindable_brain.method
+    def read(self, *, preserve_brain: bool = True, brain: Brain) -> Optional[Assembly]:
+        """Returns the most activated assembly in the area"""
+        assemblies: Set[Assembly] = brain.recipe.area_assembly_mapping[self]
+        overlaps: Dict[Assembly, float] = {}
+        for assembly in assemblies:
+            overlaps[assembly] = overlap(brain.winners[self],
+                                         assembly.sample_neurons(preserve_brain=preserve_brain, brain=brain))
+
+        maximal_assembly = max(overlaps.keys(), key=lambda x: overlaps[x])
+        return maximal_assembly if overlaps[maximal_assembly] > Area.THRESHOLD else None
+
+    @bindable_brain.property
+    def active_assembly(self, *, brain: Brain) -> Optional[Assembly]:
+        return self.read(preserve_brain=True, brain=brain)
 
     def __repr__(self):
         return f"Area(n={self.n}, k={self.k}, beta={self.beta})"
@@ -72,8 +57,8 @@ class Stimulus(UniquelyIdentifiable):
 
 
 class OutputArea(Area):
-    def __init__(self, n: int, beta: float):
-        super(OutputArea, self).__init__(n=n, beta=beta)
+    def __init__(self, beta: float):
+        super(OutputArea, self).__init__(n=2, k=1, beta=beta)
 
     def __repr__(self):
         return f"OutputArea(n={self.n}, beta={self.beta})"
@@ -82,19 +67,41 @@ class OutputArea(Area):
 # TODO: use a parent class instead of union
 # A union is C-style code (where we would get a pointer to some place)
 # It seems that there is a logical relation between the classes here, which would be better modeled using a parent class
-# TODO 2: OutputArea inherits from Area, no need to specify both
-BrainPart = Union[Area, Stimulus, OutputArea]
+# Response: In my opinion, this is a more specific type-hinting, and it describes exactly what is needed,
+#           A parent class is less specific and will create bugs if people attempt to subclass it, no?
+# Response to response: there should not be a problem creating sub-classes. the code using BrainPart should
+# only depend on its public methods and should not assume any internal structure or implementation
+# TM - team: This session of discussion is directed to Lib ext. team, but anyway. We think as well that:
+# 1. The 'Union' doesn't refer to the C-style union, but to the TypeTheory union of literally either type A or type B.
+# 2. Using subclass isn't appropriate here, since the only thing that Stimulus and area has in common, is the fact that
+#    both of them are laying in a brain. They share only the beta attribute , since calling the k from Stimulus and,
+#    the k from Area the same k is misleading.
+# 3. The entire use for BrainPart is for TypeHinting, which really doesn't mean anything in python,
+#    but to increase the code readability, thus simply defining "Area or Stimulus" is perfect (Which is what we want to
+#    hint)
+BrainPart = Union[Area, Stimulus]
 
 
 class Connection:
+    # TODO: type hinting to synapses
+    # TODO 2: why is this class needed? is it well-defined? do the type hints represent what really happens in its usage?
     def __init__(self, source: BrainPart, dest: BrainPart, synapses=None):
         self.source: BrainPart = source
         self.dest: BrainPart = dest
-        self.synapses: np.ndarray = synapses if synapses is not None else np.zeros((source.n, dest.n))
+        self.synapses = synapses if synapses is not None else {}
 
     @property
     def beta(self):
-        return self.dest.beta
+        # TODO: always define by dest
+        if isinstance(self.source, Stimulus):
+            return self.dest.beta
+        return self.source.beta
+
+    def __getitem__(self, key: int):
+        return self.synapses[key]
+
+    def __setitem__(self, key: int, value: float):
+        self.synapses[key] = value
 
     def __repr__(self):
-        return f'Connection(synapses={self.synapses!r})'
+        return f"Connection(synapses={self.synapses!r})"

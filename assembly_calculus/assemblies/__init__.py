@@ -1,1 +1,2 @@
-from .assembly_fun import Assembly
+from assembly_calculus.assemblies.assembly import Assembly, Projectable
+
