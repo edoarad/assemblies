@@ -30,7 +30,12 @@ class Brain(UniquelyIdentifiable):
     """
 
     def __init__(self, connectome: ABCConnectome, recipe: BrainRecipe = None, repeat: int = 1):
-        # TODO: document __init__ parameters
+        # TODO: complete self.repeat's documentation
+        '''
+        :param connectome: the brain's connectome object, holding the areas, stimuli and the synapse weights.
+        :param recipe: a BrainRecipe object describing a brain to be baked.
+        :param repeat: ????
+        '''
         super(Brain, self).__init__()
         self.repeat = repeat
         self.recipe = recipe or BrainRecipe()
@@ -44,24 +49,19 @@ class Brain(UniquelyIdentifiable):
         for stimulus in self.recipe.stimuli:
             self.add_stimulus(stimulus)
 
-    # TODO: make uniform use of type hints (if exists in some functions, add to all functions)
-    # TODO 2: `subconnectome` is never passed as None, is this option relevant?
+
     # TODO 6: this function is confusing: it depends on `replace` state, behaves differently if `subconnectome` is None or not,
     # TODO 6: performs a merge operation between `active_connectome` and `subconnectome`, and returns an undefined value.
     # TODO 6: please make it clearer and simplify the logic
-    def next_round(self, subconnectome=None, replace=True, iterations=1):
-        # TODO 3: make next statement clearer
-        if replace or subconnectome is None:
-            _active_connectome = subconnectome or self.active_connectome
+    def next_round(self, subconnectome: Dict[BrainPart, Set[BrainPart]] = None, replace: bool = True, iterations: int = 1):
+        if replace:
+            _active_connectome = subconnectome
         else:
             _active_connectome = self.active_connectome.copy()
             _active_connectome.update(subconnectome)
 
-        result = None
         for _ in range(iterations):
             self.connectome.project(_active_connectome)
-        # TODO 5: `project` in `Connectome` class has no `return` - what is expected to be returned here?
-        return result
 
     def add_area(self, area: Area):
         self.recipe.append(area)
