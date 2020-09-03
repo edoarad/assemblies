@@ -72,7 +72,8 @@ def my_example_simulation():
                            consecutive_runs=2)
 
     sequence.add_iteration(subconnectome={C: {Output}})
-    sequence.display_connections_graph()
+    # TODO: decide what to do with the graph
+    # sequence.display_connections_graph()
 
     # Create the data sets:
     # If we want to define which values are used for training, we need to define
