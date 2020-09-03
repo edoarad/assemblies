@@ -1,6 +1,9 @@
-.env/
-.idea/
-.pytest_cache/
+.floo
+.floobits_readme
+.flooignore
+.env
+.pytest_cache
+graphs
 **/__pycache__/
-simulations/artifacts/
-venv/
+__pycache__
+.idea/

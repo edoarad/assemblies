@@ -1,1 +1,1 @@
-from assembly_calculus.brain.performance.multithreaded import multithreaded
+from .multithreaded import multithreaded, ThreadNum

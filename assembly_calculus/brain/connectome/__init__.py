@@ -1,5 +1,2 @@
-from assembly_calculus.brain.connectome.abc_connectome import ABCConnectome
-from assembly_calculus.brain.connectome.connectome import Connectome
-from assembly_calculus.brain.connectome.non_lazy_sparse_connectome import NonLazySparseConnectome
-from assembly_calculus.brain.connectome.non_lazy_connectome_original import NonLazyConnectomeOriginal
-from assembly_calculus.brain.connectome.non_lazy_connectome_random_matrix import NonLazyConnectomeRandomMatrix
+from .abstract_connectome import AbstractConnectome
+from .connectome import Connectome
