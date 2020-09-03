@@ -7,6 +7,7 @@ from assembly_calculus.brain.components import Area, BrainPart, Stimulus, Connec
 from assembly_calculus.brain.connectome.abstract_connectome import AbstractConnectome
 from assembly_calculus.brain.performance import RandomMatrix
 
+# TODO: change new_winners type to ndarray, make winners private
 
 class Connectome(AbstractConnectome):
     """
@@ -27,6 +28,7 @@ class Connectome(AbstractConnectome):
         if initialize:
             self._initialize_parts((areas or []) + (stimuli or []))
     # TODO: check what to do with plasticity
+
     def add_area(self, area: Area):
         super().add_area(area)
         self._initialize_parts([area])
@@ -58,6 +60,7 @@ class Connectome(AbstractConnectome):
     def get_sources(self, area: Area) -> List[BrainPart]:
         """ Get sources to area """
         return [source for source, dest in self.connections if dest == area]
+
 
     def _update_connection(self, source: BrainPart, area: Area, new_winners: Dict[Area, List[int]]) -> None:
         """
@@ -97,7 +100,7 @@ class Connectome(AbstractConnectome):
             self.winners[area] = new_winners[area]
             self.support[area].update(new_winners[area])
 
-    def _fire_into(self, area: Area, sources: List[BrainPart]) -> List[int]:
+    def _fire_into(self, area: Area, sources: List[BrainPart]) -> np.ndarray:
         """
         Fire multiple stimuli and area assemblies into area 'area' at the same time.
         :param area: The area projected into
@@ -138,11 +141,12 @@ class Connectome(AbstractConnectome):
         # to_update is the set of all areas that receive input
         to_update = sources_mapping.keys()
 
-        new_winners: Dict[Area, List[int]] = dict()
+        new_winners: Dict[Area, ndarray] = dict()
         for area in to_update:
-            new_winners[area] = self._fire_into(area, sources_mapping[area])
             if override_winners and area in override_winners:  # In case of enforcing some winners to some area
-                new_winners[area] = override_winners[area]
+                new_winners[area] = np.array(override_winners[area])
+            else:
+                new_winners[area] = self._fire_into(area, sources_mapping[area])
 
         if enable_plasticity:
             self.update_connectomes(new_winners, sources_mapping)
