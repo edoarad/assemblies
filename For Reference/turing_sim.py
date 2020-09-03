@@ -3,11 +3,11 @@ This module contains some simulations made to test the possibility of implementi
 Turing machine using the code of this library. #TODO: Right?
 """
 
-import brain
-import brain_util as bu
+from assembly_calculus.brain import Brain
+#import brain_util as bu
 
 def larger_k(n=10000,k=100,p=0.01,beta=0.05, bigger_factor=10):
-	b = brain.Brain(p, save_winners=True)
+	b = Brain(p, save_winners=True)
 	b.add_stimulus("stim", k)
 	b.add_area("A",n,k,beta)
 	b.add_area("B",n,bigger_factor*k,beta)
@@ -42,7 +42,7 @@ def larger_k(n=10000,k=100,p=0.01,beta=0.05, bigger_factor=10):
 	print("Overlap is " + str(o))
 
 def turing_erase(n=50000,k=100,p=0.01,beta=0.05, r=1.0, bigger_factor=20):
-	b = brain.Brain(p, save_winners=True)
+	b = Brain(p, save_winners=True)
 	# Much smaller stimulus, similar to lower p from stimulus into A
 	smaller_k = int(r*k)
 	b.add_stimulus("stim", smaller_k)

@@ -49,9 +49,61 @@ The `Brain` packages provides the following classes:
     >>> area = Area(beta = 0.1, n = 10 ** 7, k = 10 ** 4)
     ```
 
+    The area class provides methods for handling areas within the brain.
+    - `read`
+        returns the most active assembly in an area. Can be called by an area object in the following manner:
+        ```pycon
+        >>> read_assembly = area.read(preserve_brain=True, brain=brain)
+        ```
+        
 - `Assembly`
     
     This class represents an Assembly in the brain.
+    
+    ```pycon
+    >>> from assembly_calculus import Area, Stimulus, Assembly, BrainRecipe
+    >>> area = Area(beta = 0.1, n = 10 ** 7, k = 10 ** 4)
+    >>> stim = Stimulus(1000 ** 0.5)
+    >>> assembly = Assembly([stim], area)
+    >>> recipe = BrainRecipe(stim, area, assembly)
+    ```
+    
+    Representing multiple assemblies and operating on them can be achieved using `|` in the following manner:
+    
+    ```pycon
+    >>> assembly_set = (ass1 | ass2 | ass3)         # this represents the set of these 'ass1', 'ass2', 'ass3'
+    >>> assembly_singelton = (ass| ...)             # this represents the singleton containing 'ass'
+    ```
+    The assembly class provides methods for manipulating assemblies within the brain.
+    
+    - `project`
+        takes an assembly in a certain area and creates a copy of that assembly
+        in another area. Can be called using `>>` in the following manner:
+    
+        ```pycon
+        >>> with recipe:
+                assembly_ac = assembly_a >> area_c  # assuming assembly_a is in area_a, this creates a projection in area_c
+                assembly_bc = assembly_b >> area_c
+        ```
+       
+    - `merge`
+        takes two assemblies from two areas and creates an assembly in a third area
+        that fires together with both of them. Can be called using `|` and `>>` in the following manner:
+        
+        ```pycon
+        >>> with recipe:
+                (assembly_a | assembly_b) >> area_c
+        ```
+        
+    - `associate`
+        takes two assemblies in a certain area and associates them such that
+        they fire together. Can be called on more than one assembly using `|` in the following manner:
+        
+        ```pycon
+        >>> with recipe:
+                (assembly_ac | ...).associate(assembly_bc | ...)
+        ```
+        
     
 - `Connectome`
     
