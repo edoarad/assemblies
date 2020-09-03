@@ -5,7 +5,7 @@ from typing import Dict, Set, TYPE_CHECKING, List, Optional, Union, Type
 from contextlib import contextmanager
 
 from assembly_calculus.brain.brain_recipe import BrainRecipe
-from assembly_calculus.brain.components import BrainPart, Stimulus, Area
+from assembly_calculus.brain.components import BrainPart, Stimulus, Area, OutputArea
 from assembly_calculus.brain.connectome.abstract_connectome import AbstractConnectome
 from assembly_calculus.utils import UniquelyIdentifiable
 
@@ -30,12 +30,12 @@ class Brain(UniquelyIdentifiable):
     """
 
     def __init__(self, connectome: AbstractConnectome, recipe: BrainRecipe = None, repeat: int = 1):
-        # TODO: complete self.repeat's documentation
         '''
         :param connectome: the brain's connectome object, holding the areas, stimuli and the synapse weights.
         :param recipe: a BrainRecipe object describing a brain to be baked.
         :param repeat: ????
         '''
+        # TODO: complete self.repeat's documentation
         super(Brain, self).__init__()
         self.repeat = repeat
         self.recipe = recipe or BrainRecipe()
@@ -53,7 +53,10 @@ class Brain(UniquelyIdentifiable):
     # TODO 6: this function is confusing: it depends on `replace` state, behaves differently if `subconnectome` is None or not,
     # TODO 6: performs a merge operation between `active_connectome` and `subconnectome`, and returns an undefined value.
     # TODO 6: please make it clearer and simplify the logic
-    def next_round(self, subconnectome: Dict[BrainPart, Set[BrainPart]] = None, replace: bool = True, iterations: int = 1):
+    # TODO: Change the name to fire
+    # TODO: document well
+    def next_round(self, subconnectome: Dict[BrainPart, Set[BrainPart]] = None, replace: bool = True, iterations: int = 1,
+                   override_winners: Dict[Area, List[int]] = None, enable_plasticity: bool = True):
         if replace:
             _active_connectome = subconnectome
         else:
@@ -64,7 +67,8 @@ class Brain(UniquelyIdentifiable):
                     _active_connectome[source].add(dest)
 
         for _ in range(iterations):
-            self.connectome.fire(_active_connectome)
+            self.connectome.fire(_active_connectome, override_winners=override_winners,
+                                 enable_plasticity=enable_plasticity)
 
     def add_area(self, area: Area):
         self.recipe.append(area)

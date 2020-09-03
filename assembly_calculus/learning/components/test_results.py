@@ -106,6 +106,8 @@ class TestResults:
         assert len(self.results) > 0, "Empty test results"
         true_positives = self.count_filtered_results(ResultType.TRUE_POSITIVE)
         predicted_positives = self.count_filtered_results(ResultType.FALSE_POSITIVE, ResultType.TRUE_POSITIVE)
+        if predicted_positives == 0:
+            return 1.0
         return round(true_positives / predicted_positives, 2)
 
     @property
@@ -113,4 +115,6 @@ class TestResults:
         assert len(self.results) > 0, "Empty test results"
         true_positives = self.count_filtered_results(ResultType.TRUE_POSITIVE)
         actual_positives = self.count_filtered_results(ResultType.FALSE_NEGATIVE, ResultType.TRUE_POSITIVE)
+        if actual_positives == 0:
+            return 1.0
         return round(true_positives / actual_positives, 2)

@@ -37,7 +37,7 @@ def my_example_simulation():
     k = 100
     p = 0.01
     beta = 0.05
-    noise_p = 0.001
+    noise_p = 0
     A = Area(n, k, beta)
     B = Area(n, k, beta)
     C = Area(n, k, beta)
@@ -46,8 +46,6 @@ def my_example_simulation():
 
     # Create the brain
     brain = Brain(Connectome(p))
-    stimuli = Stimulus(n, beta)
-    brain.add_stimulus(stimuli)
     for area in (A, B, C):
         brain.add_area(area)
 
@@ -99,7 +97,7 @@ def my_example_simulation():
                           sequence=sequence,
                           input_stimuli=input_stimuli)
 
-    model.train_model(training_set=training_set, number_of_sequence_cycles=1)
+    model.train_model(training_set=training_set, number_of_sequence_cycles=32)
 
     test_results = model.test_model(test_set)
 
@@ -107,7 +105,7 @@ def my_example_simulation():
         f"Finished testing the trained model - results:\n"
         f"Accuracy: {test_results.accuracy}\n"
         f"Precision: {test_results.precision}\n"
-        f"Recall: {test_results.accuracy}\n"
+        f"Recall: {test_results.recall}\n"
     )
 
 
