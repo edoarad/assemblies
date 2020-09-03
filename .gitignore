@@ -5,3 +5,5 @@
 .pytest_cache
 graphs
 **/__pycache__/
+__pycache__
+.idea/

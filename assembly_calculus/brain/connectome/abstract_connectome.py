@@ -57,6 +57,14 @@ class AbstractConnectome(metaclass=ABCMeta):
     def plasticity_disabled(self):
         return self._plasticity_disabled
 
+    @property
+    def plasticity(self) -> bool:
+        return not self._plasticity_disabled
+
+    @plasticity.setter
+    def plasticity(self, mode: bool):
+        self._plasticity_disabled = not mode
+
     @plasticity_disabled.setter
     def plasticity_disabled(self, value):
         self._plasticity_disabled = value

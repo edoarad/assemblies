@@ -29,7 +29,7 @@ class Brain(UniquelyIdentifiable):
 
     """
 
-    def __init__(self, connectome: ABCConnectome, recipe: BrainRecipe = None, repeat: int = 1):
+    def __init__(self, connectome: AbstractConnectome, recipe: BrainRecipe = None, repeat: int = 1):
         # TODO: complete self.repeat's documentation
         '''
         :param connectome: the brain's connectome object, holding the areas, stimuli and the synapse weights.
@@ -39,7 +39,7 @@ class Brain(UniquelyIdentifiable):
         super(Brain, self).__init__()
         self.repeat = repeat
         self.recipe = recipe or BrainRecipe()
-        self.connectome: ABCConnectome = connectome
+        self.connectome: AbstractConnectome = connectome
         self.active_connectome: Dict[BrainPart, Set[BrainPart]] = defaultdict(lambda: set())
         self.ctx_stack: List[Dict[Union[BrainPart, Assembly], Optional[Brain]]] = []
 
@@ -58,10 +58,13 @@ class Brain(UniquelyIdentifiable):
             _active_connectome = subconnectome
         else:
             _active_connectome = self.active_connectome.copy()
-            _active_connectome.update(subconnectome)
+            # it is necessary to merge item-item
+            for source, destinations in subconnectome.items():
+                for dest in destinations:
+                    _active_connectome[source].add(dest)
 
         for _ in range(iterations):
-            self.connectome.project(_active_connectome)
+            self.connectome.fire(_active_connectome)
 
     def add_area(self, area: Area):
         self.recipe.append(area)
@@ -158,7 +161,7 @@ class Brain(UniquelyIdentifiable):
                 assembly.bind(brain=current_ctx_stack[assembly])
 
 
-def bake(recipe: BrainRecipe, p: float, connectome_cls: Type[ABCConnectome],
+def bake(recipe: BrainRecipe, p: float, connectome_cls: Type[AbstractConnectome],
          train_repeat: int = 10, effective_repeat: int = 3) -> Brain:
     """Bakes a brain from a recipe, adds all relevant brain parts and performs the initialization sequence"""
     brain = Brain(connectome_cls(p), recipe=recipe, repeat=train_repeat)
