@@ -58,6 +58,10 @@ class Brain(UniquelyIdentifiable):
             _active_connectome = subconnectome
         else:
             _active_connectome = self.active_connectome.copy()
+            # it is necessary to merge item-item
+            for source, destinations in subconnectome.items():
+                for dest in destinations:
+                    _active_connectome[source].add(dest)
             _active_connectome.update(subconnectome)
 
         for _ in range(iterations):
