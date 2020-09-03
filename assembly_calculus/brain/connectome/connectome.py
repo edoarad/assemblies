@@ -5,6 +5,7 @@ from collections import defaultdict
 
 from assembly_calculus.brain.components import Area, BrainPart, Stimulus, Connection
 from assembly_calculus.brain.connectome.abstract_connectome import AbstractConnectome
+from assembly_calculus.brain.performance import RandomMatrix
 
 
 class Connectome(AbstractConnectome):
