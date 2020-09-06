@@ -14,7 +14,6 @@ from assembly_calculus.learning.sequence import LearningSequence
 from simulations.learning.strategy import Strategy
 
 
-
 class SimulationUtilsFactory:
 
     @staticmethod
@@ -100,7 +99,6 @@ class SimpleSimulationUtils(SimulationUtils):
                         Output
     """
 
-
     # NOTE-
     # this assumes that the function create_brain is called exactly once,
     # before anything else.
@@ -121,18 +119,17 @@ class SimpleSimulationUtils(SimulationUtils):
         return InputStimuli(brain, k, *tuple([self._A] * self.input_size), verbose=False)
 
     def create_sequence(self, brain: Brain, input_stimuli: InputStimuli) -> LearningSequence:
-        sequence = LearningSequence(brain, input_stimuli)
+        sequence: LearningSequence = LearningSequence(brain, input_stimuli)
 
         # All stimuli fire to area 'A'
         input_bits = list(range(self.input_size))
         sequence.add_iteration(input_bits=input_bits)
 
-        sequence.add_iteration(input_bits=input_bits, areas_to_areas={self._A: [self._A]}, consecutive_runs=2)
+        sequence.add_iteration(input_bits=input_bits, subconnectome={self._A: {self._A}}, consecutive_runs=2)
 
-        sequence.add_iteration(areas_to_areas={self._A: [self._output]})
+        sequence.add_iteration(subconnectome={self._A: {self._output}})
 
         return sequence
-
 
 
 class LayeredSimulationUtils(SimulationUtils):
