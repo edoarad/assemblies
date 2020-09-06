@@ -1,7 +1,7 @@
 from typing import List
 
-from assembly_calculus.learning.data_set import MaskIndexError, MaskValueError
-from assembly_calculus.learning.data_set import Mask
+from assembly_calculus.learning.data_set.errors import MaskIndexError, MaskValueError
+from assembly_calculus.learning.data_set.mask import Mask
 
 
 class ExplicitListMask(Mask):

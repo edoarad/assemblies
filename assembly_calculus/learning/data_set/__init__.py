@@ -1,4 +1,9 @@
-from assembly_calculus.learning.data_set.data_set import DataSet
-from assembly_calculus.learning.data_set.constructors import create_training_set_from_list, \
-    create_explicit_mask_from_list, create_data_set_from_list, create_test_set_from_list
 from assembly_calculus.learning.data_set.data_point import DataPoint
+from assembly_calculus.learning.data_set.data_set import DataSet
+
+from assembly_calculus.learning.data_set.constructors import create_training_set_from_list, create_training_set_from_callable, create_training_set_from_dict
+from assembly_calculus.learning.data_set.constructors import create_test_set_from_list, create_test_set_from_callable, create_test_set_from_dict
+from assembly_calculus.learning.data_set.constructors import create_explicit_mask_from_list, create_explicit_mask_from_callable, create_lazy_mask
+from assembly_calculus.learning.data_set.constructors import create_data_set_from_list, create_data_set_from_callable
+from assembly_calculus.learning.data_set.mask import Mask
+from assembly_calculus.learning.data_set.errors import *
