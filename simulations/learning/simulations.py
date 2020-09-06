@@ -2,8 +2,8 @@ from collections import namedtuple
 from typing import List, Callable, Union
 
 from assembly_calculus.learning.components.model import LearningModel
-from assembly_calculus.learning.simulation_tasks.strategy import Strategy
-from assembly_calculus.learning.simulation_tasks.simulation_utils import SimulationUtilsFactory
+from simulations.learning.strategy import Strategy
+from simulations.learning.simulation_utils import SimulationUtilsFactory
 
 
 TrainedModel = namedtuple('Model', ['model', 'test_set'])

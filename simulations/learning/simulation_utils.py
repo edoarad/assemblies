@@ -11,7 +11,7 @@ from assembly_calculus.learning.components.data_set.constructors import create_t
 from assembly_calculus.learning.components.data_set.data_set import DataSet
 from assembly_calculus.learning.components.input import InputStimuli
 from assembly_calculus.learning.components.sequence import LearningSequence
-from assembly_calculus.learning.simulation_tasks.strategy import Strategy
+from simulations.learning.strategy import Strategy
 
 
 
