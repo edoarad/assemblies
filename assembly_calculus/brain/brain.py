@@ -53,7 +53,7 @@ class Brain(UniquelyIdentifiable):
     # TODO 6: this function is confusing: it depends on `replace` state, behaves differently if `subconnectome` is None or not,
     # TODO 6: performs a merge operation between `active_connectome` and `subconnectome`, and returns an undefined value.
     # TODO 6: please make it clearer and simplify the logic
-    # TODO: Change the name to fire
+    # TODO: Change te name to fire
     # TODO: document well
     def next_round(self, subconnectome: Dict[BrainPart, Set[BrainPart]] = None, replace: bool = True, iterations: int = 1,
                    override_winners: Dict[Area, List[int]] = None, enable_plasticity: bool = True):
