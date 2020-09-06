@@ -1,14 +1,14 @@
 from typing import Callable, List, Dict
 
-from assembly_calculus.learning.components.data_set.data_set import DataSet, DataSets
-from assembly_calculus.learning.components.data_set.lib.basic_types.callable_data_set import CallableDataSet as _CallableDataSet
-from assembly_calculus.learning.components.data_set.lib.basic_types.values_list_data_set import ValuesListDataSet as _ValuesListDataSet
-from assembly_calculus.learning.components.data_set.lib.masks.explicit_callable_mask import ExplicitCallableMask as _ExplicitCallableMask
-from assembly_calculus.learning.components.data_set.lib.masks.explicit_list_mask import ExplicitListMask as _ExplicitListMask
-from assembly_calculus.learning.components.data_set.lib.masks.lazy_mask import LazyMask as _LazyMask
-from assembly_calculus.learning.components.data_set.lib.test_set import TestSet as _TestSet
-from assembly_calculus.learning.components.data_set.lib.training_set import TrainingSet as _TrainingSet
-from assembly_calculus.learning.components.data_set.mask import Mask
+from assembly_calculus.learning.data_set import DataSet, DataSets
+from assembly_calculus.learning.data_set import CallableDataSet as _CallableDataSet
+from assembly_calculus.learning.data_set import ValuesListDataSet as _ValuesListDataSet
+from assembly_calculus.learning.data_set import ExplicitCallableMask as _ExplicitCallableMask
+from assembly_calculus.learning.data_set import ExplicitListMask as _ExplicitListMask
+from assembly_calculus.learning.data_set import LazyMask as _LazyMask
+from assembly_calculus.learning.data_set import TestSet as _TestSet
+from assembly_calculus.learning.data_set import TrainingSet as _TrainingSet
+from assembly_calculus.learning.data_set import Mask
 
 DEFAULT_MULTI_FACTOR = 5
 

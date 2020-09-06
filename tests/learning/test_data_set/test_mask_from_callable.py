@@ -1,7 +1,7 @@
 from unittest import TestCase
 
-from assembly_calculus.learning.components.data_set.constructors import create_explicit_mask_from_callable
-from assembly_calculus.learning.components.data_set.errors import InvalidFunctionError, MaskValueError
+from assembly_calculus.learning.data_set import create_explicit_mask_from_callable
+from assembly_calculus.learning.data_set import InvalidFunctionError, MaskValueError
 
 
 class TestMaskFromCallable(TestCase):

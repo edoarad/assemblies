@@ -4,12 +4,12 @@ from typing import Dict, List
 from assembly_calculus.brain import Brain
 from assembly_calculus.brain.components import OutputArea
 
-from assembly_calculus.learning.components.configurations import LearningConfigurations
-from assembly_calculus.learning.components.data_set.data_set import DataSet
-from assembly_calculus.learning.components.errors import InputSizeMismatch, InputStimuliAndSequenceMismatch
-from assembly_calculus.learning.components.input import InputStimuli
-from assembly_calculus.learning.components.sequence import LearningSequence
-from assembly_calculus.learning.components.test_results import TestResults
+from assembly_calculus.learning.configurations import LearningConfigurations
+from assembly_calculus.learning.data_set import DataSet
+from assembly_calculus.learning.errors import InputSizeMismatch, InputStimuliAndSequenceMismatch
+from assembly_calculus.learning.input import InputStimuli
+from assembly_calculus.learning.sequence import LearningSequence
+from assembly_calculus.learning.test_results import TestResults
 
 
 class LearningModel:

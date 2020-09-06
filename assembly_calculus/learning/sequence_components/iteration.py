@@ -1,10 +1,8 @@
-from collections import defaultdict
-from copy import deepcopy
-from typing import List, Dict, Tuple, Set
+from typing import Dict, Tuple, Set
 
 from assembly_calculus import Area, BrainPart
 
-from assembly_calculus.learning.components.input import InputStimuli
+from assembly_calculus.learning.input import InputStimuli
 
 
 class Iteration:

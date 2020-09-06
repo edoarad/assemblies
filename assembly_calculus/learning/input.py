@@ -1,7 +1,7 @@
 from typing import Union, List, Dict, Tuple
 
 from assembly_calculus import Brain, Stimulus, Area
-from assembly_calculus.learning.components.errors import MissingArea, MissingStimulus, \
+from assembly_calculus.learning.errors import MissingArea, MissingStimulus, \
 	MaxAttemptsToGenerateStimuliReached
 
 AUTO_GENERATED_STIMULUS_NAME_FORMAT = "__s_{area_name}_{input_bit_value}{postfix}"

@@ -1,4 +1,4 @@
-from assembly_calculus.learning.components.data_set.data_point import DataPoint
+from assembly_calculus.learning.data_set import DataPoint
 
 
 class DataPointImpl(DataPoint):

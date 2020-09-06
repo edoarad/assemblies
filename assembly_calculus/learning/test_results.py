@@ -1,7 +1,7 @@
 from enum import Enum, auto
 from typing import List
 
-from .data_set.data_point import DataPoint
+from assembly_calculus.learning.data_set import DataPoint
 
 
 INPUT_NOT_BINARY_ERROR = "Data point input must be 0 or 1. " \

@@ -1,8 +1,8 @@
 from unittest import TestCase
 
-from assembly_calculus.learning.components.data_set.constructors import create_explicit_mask_from_list, create_training_set_from_callable, \
+from assembly_calculus.learning.data_set import create_explicit_mask_from_list, create_training_set_from_callable, \
     create_training_set_from_dict
-from assembly_calculus.learning.components.data_set.data_point import DataPoint
+from assembly_calculus.learning.data_set import DataPoint
 
 
 class TestTrainingSet(TestCase):

@@ -1,13 +1,13 @@
 from typing import List, Dict, Optional, Set
 
 from assembly_calculus.brain import Area, Brain, BrainPart, OutputArea, Stimulus
-from assembly_calculus.learning.components.errors import MissingArea, SequenceRunNotInitializedOrInMidRun, \
+from assembly_calculus.learning.errors import MissingArea, SequenceRunNotInitializedOrInMidRun, \
 	SequenceFinalizationError, \
 	MissingStimulus
-from assembly_calculus.learning.components.input import InputStimuli
-from assembly_calculus.learning.components.sequence_components.connections_graph import ConnectionsGraph
-from assembly_calculus.learning.components.sequence_components.iteration import Iteration
-from assembly_calculus.learning.components.sequence_components.iteration_configuration import IterationConfiguration
+from assembly_calculus.learning.input import InputStimuli
+from assembly_calculus.learning.sequence_components import ConnectionsGraph
+from assembly_calculus.learning.sequence_components import Iteration
+from assembly_calculus.learning.sequence_components import IterationConfiguration
 
 NODE_TYPE = {Stimulus: 'stimulus', int: 'input-bit', Area: 'area', OutputArea: 'output'}
 

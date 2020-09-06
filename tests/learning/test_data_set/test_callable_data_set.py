@@ -1,7 +1,7 @@
 from unittest import TestCase
 
-from assembly_calculus.learning.components.data_set.constructors import create_data_set_from_callable
-from assembly_calculus.learning.components.data_set.errors import InvalidFunctionError, DataSetValueError
+from assembly_calculus.learning.data_set import create_data_set_from_callable
+from assembly_calculus.learning.data_set import InvalidFunctionError, DataSetValueError
 
 
 class TestCallableDataSet(TestCase):

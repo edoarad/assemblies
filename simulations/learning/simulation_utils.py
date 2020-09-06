@@ -6,11 +6,11 @@ from assembly_calculus.brain.brain import Brain
 from assembly_calculus.brain.connectome.connectome import Connectome
 from assembly_calculus.brain.components import Area, OutputArea
 
-from assembly_calculus.learning.components.data_set.constructors import create_training_set_from_list, \
+from assembly_calculus.learning.data_set import create_training_set_from_list, \
     create_explicit_mask_from_list, create_data_set_from_list
-from assembly_calculus.learning.components.data_set.data_set import DataSet
-from assembly_calculus.learning.components.input import InputStimuli
-from assembly_calculus.learning.components.sequence import LearningSequence
+from assembly_calculus.learning.data_set import DataSet
+from assembly_calculus.learning.input import InputStimuli
+from assembly_calculus.learning.sequence import LearningSequence
 from simulations.learning.strategy import Strategy
 
 

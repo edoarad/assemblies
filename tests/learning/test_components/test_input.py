@@ -3,7 +3,7 @@ from unittest import TestCase
 from assembly_calculus.brain import BrainPart
 from assembly_calculus.learning.components.errors import MissingArea, MissingStimulus, \
     MaxAttemptsToGenerateStimuliReached
-from assembly_calculus.learning.components.input import InputStimuli, InputBitStimuli, MAX_ATTEMPTS
+from assembly_calculus.learning.input import InputStimuli, InputBitStimuli, MAX_ATTEMPTS
 from assembly_calculus.brain import Brain
 from assembly_calculus.brain.connectome import Connectome
 from assembly_calculus.brain.components import Area, Stimulus, OutputArea

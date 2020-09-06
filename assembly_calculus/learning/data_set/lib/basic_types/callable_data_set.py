@@ -1,9 +1,9 @@
 from inspect import signature
 
-from assembly_calculus.learning.components.data_set.data_point import DataPoint
-from assembly_calculus.learning.components.data_set.errors import InvalidFunctionError
-from assembly_calculus.learning.components.data_set.lib.basic_types.indexed_data_set import IndexedDataSet
-from assembly_calculus.learning.components.data_set.lib.data_point import DataPointImpl
+from assembly_calculus.learning.data_set import DataPoint
+from assembly_calculus.learning.data_set import InvalidFunctionError
+from assembly_calculus.learning.data_set import IndexedDataSet
+from assembly_calculus.learning.data_set import DataPointImpl
 
 
 class CallableDataSet(IndexedDataSet):

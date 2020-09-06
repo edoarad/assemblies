@@ -1,7 +1,7 @@
 from unittest import TestCase
 
-from assembly_calculus.learning.components.data_set.constructors import create_data_set_from_list
-from assembly_calculus.learning.components.data_set.errors import DataSetSizeError, DataSetValueError
+from assembly_calculus.learning.data_set import create_data_set_from_list
+from assembly_calculus.learning.data_set import DataSetSizeError, DataSetValueError
 
 
 class TestListDataSet(TestCase):

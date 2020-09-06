@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
-from assembly_calculus.learning.components.data_set.data_point import DataPoint
-from assembly_calculus.learning.components.data_set.lib.basic_types.data_set_base import DataSetBase
+from assembly_calculus.learning.data_set import DataPoint
+from assembly_calculus.learning.data_set import DataSetBase
 
 
 class IndexedDataSet(DataSetBase, metaclass=ABCMeta):

@@ -2,10 +2,10 @@ from abc import ABCMeta, abstractmethod
 
 import numpy as np
 
-from assembly_calculus.learning.components.data_set.data_point import DataPoint
-from assembly_calculus.learning.components.data_set.data_set import DataSet
-from assembly_calculus.learning.components.data_set.errors import DataSetValueError
-from assembly_calculus.learning.components.data_set.lib.data_point import DataPointImpl
+from assembly_calculus.learning.data_set import DataPoint
+from assembly_calculus.learning.data_set import DataSet
+from assembly_calculus.learning.data_set import DataSetValueError
+from assembly_calculus.learning.data_set import DataPointImpl
 
 
 class DataSetBase(DataSet, metaclass=ABCMeta):

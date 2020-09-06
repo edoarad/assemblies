@@ -1,9 +1,9 @@
 import random
 
-from assembly_calculus.learning.components.data_set.data_point import DataPoint
-from assembly_calculus.learning.components.data_set.lib.basic_types.data_set_base import DataSetBase
-from assembly_calculus.learning.components.data_set.lib.basic_types.partial_data_set import PartialDataSet
-from assembly_calculus.learning.components.data_set.mask import Mask
+from assembly_calculus.learning.data_set import DataPoint
+from assembly_calculus.learning.data_set import DataSetBase
+from assembly_calculus.learning.data_set import PartialDataSet
+from assembly_calculus.learning.data_set import Mask
 
 
 class TrainingSet(PartialDataSet):
