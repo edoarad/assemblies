@@ -9,7 +9,6 @@ from assembly_calculus.brain.components import BrainPart, Stimulus, Area, Output
 from assembly_calculus.brain.connectome.abstract_connectome import AbstractConnectome
 from assembly_calculus.utils import UniquelyIdentifiable
 
-
 if TYPE_CHECKING:
     from assembly_calculus.assemblies import Assembly
 
@@ -49,13 +48,13 @@ class Brain(UniquelyIdentifiable):
         for stimulus in self.recipe.stimuli:
             self.add_stimulus(stimulus)
 
-
     # TODO 6: this function is confusing: it depends on `replace` state, behaves differently if `subconnectome` is None or not,
     # TODO 6: performs a merge operation between `active_connectome` and `subconnectome`, and returns an undefined value.
     # TODO 6: please make it clearer and simplify the logic
     # TODO: Change te name to fire
     # TODO: document well
-    def next_round(self, subconnectome: Dict[BrainPart, Set[BrainPart]] = None, replace: bool = True, iterations: int = 1,
+    def next_round(self, subconnectome: Dict[BrainPart, Set[BrainPart]] = None, replace: bool = True,
+                   iterations: int = 1,
                    override_winners: Dict[Area, List[int]] = None, enable_plasticity: bool = True):
         if replace:
             _active_connectome = subconnectome
@@ -81,8 +80,7 @@ class Brain(UniquelyIdentifiable):
 
     def enable(self, source: BrainPart, dest: BrainPart = None):
         """
-        # TODO: "inhibit" means to disable connections
-        Inhibit connection between two brain parts (i.e. activate it).
+        Enable connection between two brain parts.
         If dest is None then all connections from the source are inhibited.
         :param source: The source brain part of the connection.
         :param dest: The destination brain part of the connection.
@@ -112,9 +110,7 @@ class Brain(UniquelyIdentifiable):
 
     @property
     def support(self):
-        # TODO: Implement
-        # Response: Performance/API
-        return None
+        return self.connectome.support
 
     @contextmanager
     def temporary_plasticity(self, mode: bool):
