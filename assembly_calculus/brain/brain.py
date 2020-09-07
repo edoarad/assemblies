@@ -32,9 +32,8 @@ class Brain(UniquelyIdentifiable):
         '''
         :param connectome: the brain's connectome object, holding the areas, stimuli and the synapse weights.
         :param recipe: a BrainRecipe object describing a brain to be baked.
-        :param repeat: ????
+        :param repeat: number of times to perform fire (only assembly use it)
         '''
-        # TODO: complete self.repeat's documentation
         super(Brain, self).__init__()
         self.repeat = repeat
         self.recipe = recipe or BrainRecipe()
@@ -48,25 +47,19 @@ class Brain(UniquelyIdentifiable):
         for stimulus in self.recipe.stimuli:
             self.add_stimulus(stimulus)
 
-    # TODO 6: this function is confusing: it depends on `replace` state, behaves differently if `subconnectome` is None or not,
-    # TODO 6: performs a merge operation between `active_connectome` and `subconnectome`, and returns an undefined value.
-    # TODO 6: please make it clearer and simplify the logic
     # TODO: Change te name to fire
-    # TODO: document well
-    def next_round(self, subconnectome: Dict[BrainPart, Set[BrainPart]] = None, replace: bool = True,
-                   iterations: int = 1,
-                   override_winners: Dict[Area, List[int]] = None, enable_plasticity: bool = True):
-        if replace:
-            _active_connectome = subconnectome
-        else:
-            _active_connectome = self.active_connectome.copy()
-            # it is necessary to merge item-item
-            for source, destinations in subconnectome.items():
-                for dest in destinations:
-                    _active_connectome[source].add(dest)
-
+    def next_round(self, subconnectome: Dict[BrainPart, Union[List[BrainPart], Set[BrainPart]]],
+                   iterations: int = 1, override_winners: Dict[Area, List[int]] = None,
+                   enable_plasticity: bool = True):
+        '''
+        :param subconnectome: A dictionary of connections to use in the projection
+        :param iterations: number of fire iterations
+        :param override_winners: if passed, will override the winners in the Area with the value
+        :param enable_plasticity: if True, update the connectomes
+        :return:
+        '''
         for _ in range(iterations):
-            self.connectome.fire(_active_connectome, override_winners=override_winners,
+            self.connectome.fire(subconnectome, override_winners=override_winners,
                                  enable_plasticity=enable_plasticity)
 
     def add_area(self, area: Area):
