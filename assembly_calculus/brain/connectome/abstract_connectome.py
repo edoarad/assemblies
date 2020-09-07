@@ -1,6 +1,7 @@
 from __future__ import annotations  # import annotations from later version of python.
 # We need it here to annadiane that connectome has a method which returns itself
 
+import numpy as np
 from collections import defaultdict
 from abc import ABCMeta, abstractmethod
 from typing import Dict, List, Tuple, Optional, TypeVar, Mapping, Generic, Callable, Any, Set
@@ -36,7 +37,7 @@ class AbstractConnectome(metaclass=ABCMeta):
     def __init__(self, p, areas=None, stimuli=None):
         self.areas: List[Area] = []
         self.stimuli: List[Stimulus] = []
-        self.winners: Dict[Area, List[int]] = defaultdict(lambda: [])
+        self.winners: Dict[Area, np.ndarray] = defaultdict(lambda: [])
         self.support: Dict[Area, Set[int]] = defaultdict(lambda: set())
         self.connections: Dict[Tuple[BrainPart, Area], Connection] = {}
         self.p = p
