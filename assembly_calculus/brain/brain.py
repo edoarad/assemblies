@@ -29,11 +29,11 @@ class Brain(UniquelyIdentifiable):
     """
 
     def __init__(self, connectome: AbstractConnectome, recipe: BrainRecipe = None, repeat: int = 1):
-        '''
+        """
         :param connectome: the brain's connectome object, holding the areas, stimuli and the synapse weights.
         :param recipe: a BrainRecipe object describing a brain to be baked.
         :param repeat: number of times to perform fire (only assembly use it)
-        '''
+        """
         super(Brain, self).__init__()
         self.repeat = repeat
         self.recipe = recipe or BrainRecipe()
@@ -50,13 +50,13 @@ class Brain(UniquelyIdentifiable):
     def fire(self, subconnectome: Dict[BrainPart, Union[List[BrainPart], Set[BrainPart]]],
              iterations: int = 1, override_winners: Dict[Area, List[int]] = None,
              enable_plasticity: bool = True):
-        '''
+        """
         :param subconnectome: A dictionary of connections to use in the projection
         :param iterations: number of fire iterations
         :param override_winners: if passed, will override the winners in the Area with the value
         :param enable_plasticity: if True, update the connectomes
         :return:
-        '''
+        """
         for _ in range(iterations):
             self.connectome.fire(subconnectome, override_winners=override_winners,
                                  enable_plasticity=enable_plasticity)
@@ -64,37 +64,10 @@ class Brain(UniquelyIdentifiable):
     def add_area(self, area: Area):
         self.recipe.append(area)
         self.connectome.add_area(area)
-        self.enable(area, area)
 
     def add_stimulus(self, stimulus: Stimulus):
         self.recipe.append(stimulus)
         self.connectome.add_stimulus(stimulus)
-
-    def enable(self, source: BrainPart, dest: BrainPart = None):
-        """
-        Enable connection between two brain parts.
-        If dest is None then all connections from the source are inhibited.
-        :param source: The source brain part of the connection.
-        :param dest: The destination brain part of the connection.
-        """
-        if dest is not None:
-            self.active_connectome[source].add(dest)
-            return
-        for sink in self.connectome.areas + self.connectome.stimuli:
-            self.enable(source, sink)
-
-    def disable(self, source: BrainPart, dest: BrainPart = None):
-        """
-        Disinhibit connection between two brain parts (i.e. deactivate it).
-        If dest is None then all connections from the source are disinhibited.
-        :param source: The source brain part of the connection.
-        :param dest: The destination brain part of the connection.
-        """
-        if dest is not None:
-            self.active_connectome[source].discard(dest)
-            return
-        for sink in self.connectome.areas:
-            self.disable(source, sink)
 
     @property
     def winners(self):
