@@ -43,14 +43,6 @@ class AbstractConnectome(metaclass=ABCMeta):
     def add_stimulus(self, stimulus: Stimulus):
         self.stimuli.append(stimulus)
 
-    @abstractmethod
-    def get_sources(self, area: Area) -> List[BrainPart]:
-        """
-        Retrieve all parts with connection to specific areas, according to the current connectome
-        :param area: area which we need the connections to
-        :return: List of all connections to the area
-        """
-
     def __repr__(self):
         return f'{self.__class__.__name__} with {len(self.areas)} areas, and {len(self.stimuli)} stimuli'
 

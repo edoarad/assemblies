@@ -13,6 +13,7 @@ class Connectome(AbstractConnectome):
     Implementation of a random based connectome, based on the abstract connectome.
     The object representing the connection in here is ndarray from numpy
     """
+
     def __init__(self, p: float, areas=None, stimuli=None, initialize=False):
         """
         :param p: The attribute p for the probability of an edge to exits
@@ -26,6 +27,7 @@ class Connectome(AbstractConnectome):
 
         if initialize:
             self._initialize_parts((areas or []) + (stimuli or []))
+
     # TODO: check what to do with plasticity
 
     def add_area(self, area: Area):
@@ -55,10 +57,6 @@ class Connectome(AbstractConnectome):
         """
         synapses = self.rng.multi_generate(area.n, part.n, self.p).reshape((part.n, area.n), order='F')
         self.connections[part, area] = Connection(part, area, synapses)
-
-    def get_sources(self, area: Area) -> List[BrainPart]:
-        """ Get sources to area """
-        return [source for source, dest in self.connections if dest == area]
 
     def _update_connection(self, source: BrainPart, area: Area, new_winners: Dict[Area, np.ndarray]) -> None:
         """

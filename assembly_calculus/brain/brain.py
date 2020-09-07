@@ -23,22 +23,16 @@ class Brain(UniquelyIdentifiable):
     underlying implementation of the connectome.
 
     Attributes:
-        connectome: The full connectome of the brain, hold all the connections between the brain parts.
-        active_connectome: The current active subconnectome of the brain. Gives a nice way of supporting inhibit, disinhibit.
-
+        connectome: the brain's connectome object, holding the areas, stimuli and the synapse weights.
+        recipe: a BrainRecipe object describing a brain to be baked.
+        repeat: number of times to perform fire (only assembly use it)
     """
 
     def __init__(self, connectome: AbstractConnectome, recipe: BrainRecipe = None, repeat: int = 1):
-        """
-        :param connectome: the brain's connectome object, holding the areas, stimuli and the synapse weights.
-        :param recipe: a BrainRecipe object describing a brain to be baked.
-        :param repeat: number of times to perform fire (only assembly use it)
-        """
         super(Brain, self).__init__()
         self.repeat = repeat
         self.recipe = recipe or BrainRecipe()
         self.connectome: AbstractConnectome = connectome
-        self.active_connectome: Dict[BrainPart, Set[BrainPart]] = defaultdict(lambda: set())
         self.ctx_stack: List[Dict[Union[BrainPart, Assembly], Optional[Brain]]] = []
 
         for area in self.recipe.areas:
