@@ -22,6 +22,7 @@ class AbstractConnectome(metaclass=ABCMeta):
         to be saved by reference. (This makes the get_subconnectome routine much easier to implement)
         winners: The winners of each area in the current state.
         support: The past-winners of each area until now.
+        plasticity: Whether or not the plasticity is enabled (Boolean)
     """
 
     def __init__(self, p, areas=None, stimuli=None):
@@ -31,6 +32,7 @@ class AbstractConnectome(metaclass=ABCMeta):
         self.support: Dict[Area, Set[int]] = defaultdict(lambda: set())
         self.connections: Dict[Tuple[BrainPart, Area], Connection] = {}
         self.p = p
+        self.plasticity = True
 
         if areas:
             self.areas = areas
@@ -46,10 +48,8 @@ class AbstractConnectome(metaclass=ABCMeta):
     def __repr__(self):
         return f'{self.__class__.__name__} with {len(self.areas)} areas, and {len(self.stimuli)} stimuli'
 
-    def fire(self, connections: Dict[BrainPart, List[Area]], *, override_winners: Dict[Area, List[int]] = None,
-             enable_plasticity=True):
+    def fire(self, connections: Dict[BrainPart, List[Area]], *, override_winners: Dict[Area, List[int]] = None):
         """
         :param connections: The connections on which you want to perform the project
         :param override_winners: if passed, will override the winners in the Area with the value
-        :param enable_plasticity: if True, update the connectomes
         """

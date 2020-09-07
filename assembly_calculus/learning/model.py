@@ -106,7 +106,8 @@ class LearningModel:
         for iteration in self._sequence:
             # Getting the subconnectome, after formatting the input stimuli if any are in the iteration
             subconnectome = iteration.format(self._input_stimuli, input_number)
-            self._brain.fire(subconnectome, override_winners=desired_output, enable_plasticity=enable_plasticity)
+            with self._brain.temporary_plasticity(enable_plasticity):
+                self._brain.fire(subconnectome, override_winners=desired_output)
 
     def _validate_input_number(self, input_number: int) -> None:
         """

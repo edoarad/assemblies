@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections import defaultdict
 from typing import Dict, Set, TYPE_CHECKING, List, Optional, Union, Type
 from contextlib import contextmanager
 
@@ -18,14 +17,22 @@ class Brain(UniquelyIdentifiable):
     Represents a simulated brain, with it's connectome which holds the areas, stimuli, and all the synapse weights.
     The brain updates by selecting a subgraph of stimuli and areas, and activating only those connections.
     The brain object works with a general connectome, which export an unified api for how the connections between the
-    parts of the brain should be used. In case of need, one should extend the connectome API as he would like to make
-    the implementation of the brain easier/better. Note that the brain implementation shouldn't depends on the
+    parts of the brain should be used.
+    In case of need, one should extend the connectome API as he would like to make
+    the implementation of the brain easier/better.
+    Note that the brain implementation shouldn't depends on the
     underlying implementation of the connectome.
 
     Attributes:
         connectome: the brain's connectome object, holding the areas, stimuli and the synapse weights.
         recipe: a BrainRecipe object describing a brain to be baked.
         repeat: number of times to perform fire (only assembly use it)
+
+    Properties:
+        winners: The winners of each area in the current state.
+        support: The past-winners of each area until now.
+
+
     """
 
     def __init__(self, connectome: AbstractConnectome, recipe: BrainRecipe = None, repeat: int = 1):
@@ -42,18 +49,16 @@ class Brain(UniquelyIdentifiable):
             self.add_stimulus(stimulus)
 
     def fire(self, subconnectome: Dict[BrainPart, Union[List[BrainPart], Set[BrainPart]]],
-             iterations: int = 1, override_winners: Dict[Area, List[int]] = None,
-             enable_plasticity: bool = True):
+             iterations: int = 1, override_winners: Dict[Area, List[int]] = None):
         """
         :param subconnectome: A dictionary of connections to use in the projection
         :param iterations: number of fire iterations
         :param override_winners: if passed, will override the winners in the Area with the value
-        :param enable_plasticity: if True, update the connectomes
+
         :return:
         """
         for _ in range(iterations):
-            self.connectome.fire(subconnectome, override_winners=override_winners,
-                                 enable_plasticity=enable_plasticity)
+            self.connectome.fire(subconnectome, override_winners=override_winners)
 
     def add_area(self, area: Area):
         self.recipe.append(area)

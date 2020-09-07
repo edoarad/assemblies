@@ -28,8 +28,6 @@ class Connectome(AbstractConnectome):
         if initialize:
             self._initialize_parts((areas or []) + (stimuli or []))
 
-    # TODO: check what to do with plasticity
-
     def add_area(self, area: Area):
         super().add_area(area)
         self._initialize_parts([area])
@@ -117,14 +115,12 @@ class Connectome(AbstractConnectome):
             prev_winner_inputs += sum(self.connections[stim, area].synapses.sum(axis=0) for stim in src_stimuli)
         return np.argpartition(prev_winner_inputs, area.n - area.k)[-area.k:]
 
-    def fire(self, connections: Dict[BrainPart, List[Area]], *, override_winners: Dict[Area, List[int]] = None,
-             enable_plasticity=True):
+    def fire(self, connections: Dict[BrainPart, List[Area]], *, override_winners: Dict[Area, List[int]] = None):
         """
         Fire is the basic operation where some stimuli and some areas are activated,
         with only specified connections between them active.
         :param connections: A dictionary of connections to use in the projection, for example {area1
         :param override_winners: if passed, will override the winners in the Area with the value
-        :param enable_plasticity: if True, update the connectomes
         """
 
         sources_mapping: defaultdict[Area, List[BrainPart]] = defaultdict(lambda: [])
@@ -144,7 +140,7 @@ class Connectome(AbstractConnectome):
             else:
                 new_winners[area] = self._fire_into(area, sources_mapping[area])
 
-        if enable_plasticity:
+        if self.plasticity:
             self.update_connectomes(new_winners, sources_mapping)
 
         self.update_winners(new_winners, sources_mapping)
