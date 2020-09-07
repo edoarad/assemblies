@@ -61,7 +61,6 @@ class Connectome(AbstractConnectome):
         """ Get sources to area """
         return [source for source, dest in self.connections if dest == area]
 
-
     def _update_connection(self, source: BrainPart, area: Area, new_winners: Dict[Area, List[int]]) -> None:
         """
         Update one connection (based on the plasticity).
@@ -129,6 +128,8 @@ class Connectome(AbstractConnectome):
         Fire is the basic operation where some stimuli and some areas are activated,
         with only specified connections between them active.
         :param connections: A dictionary of connections to use in the projection, for example {area1
+        :param override_winners: if passed, will override the winners in the Area with the value
+        :param enable_plasticity: if True, update the connectomes
         """
 
         sources_mapping: defaultdict[Area, List[BrainPart]] = defaultdict(lambda: [])

@@ -81,10 +81,13 @@ class AbstractConnectome(metaclass=ABCMeta):
     def __repr__(self):
         return f'{self.__class__.__name__} with {len(self.areas)} areas, and {len(self.stimuli)} stimuli'
 
-    def fire(self, connections: Dict[BrainPart, List[Area]]):
+    def fire(self, connections: Dict[BrainPart, List[Area]], *, override_winners: Dict[Area, List[int]] = None,
+             enable_plasticity=True):
         """
 
         :param connections: The connections on which you want to perform the project
+        :param override_winners: if passed, will override the winners in the Area with the value
+        :param enable_plasticity: if True, update the connectomes
         :return:
         """
         pass
