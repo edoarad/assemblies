@@ -72,7 +72,6 @@ def my_example_simulation():
                            consecutive_runs=2)
 
     sequence.add_iteration(subconnectome={C: {Output}})
-    # TODO: decide what to do with the graph
     # sequence.display_connections_graph()
 
     # Create the data sets:
