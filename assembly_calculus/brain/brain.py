@@ -47,10 +47,9 @@ class Brain(UniquelyIdentifiable):
         for stimulus in self.recipe.stimuli:
             self.add_stimulus(stimulus)
 
-    # TODO: Change te name to fire
-    def next_round(self, subconnectome: Dict[BrainPart, Union[List[BrainPart], Set[BrainPart]]],
-                   iterations: int = 1, override_winners: Dict[Area, List[int]] = None,
-                   enable_plasticity: bool = True):
+    def fire(self, subconnectome: Dict[BrainPart, Union[List[BrainPart], Set[BrainPart]]],
+             iterations: int = 1, override_winners: Dict[Area, List[int]] = None,
+             enable_plasticity: bool = True):
         '''
         :param subconnectome: A dictionary of connections to use in the projection
         :param iterations: number of fire iterations
