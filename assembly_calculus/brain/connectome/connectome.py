@@ -81,8 +81,6 @@ class Connectome(AbstractConnectome):
         :param new_winners: the new winners per area
         :param sources: the sources of each area
         """
-        if self._plasticity_disabled:
-            return
         for area in new_winners:
             for source in sources[area]:
                 self._update_connection(source, area, new_winners)
