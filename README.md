@@ -20,14 +20,30 @@
     $ cd Brain/
     ```
 
-2. Run the installation script and activate the virtual environment:
-
+2. In a Linux system, run the installation script and activate the virtual environment:
     ```sh
     $ ./scripts/install.sh
     ...
     $ source .env/bin/activate
     [Brain] $ # you're good to go!
     ```
+   The script will also attempt to run the simulations.
+   After these commands, one can also run the simulations using their name without a path, such as `merge_simulation`
+   instead of `simulations/assemblies/merge_simulation.py`, like so:
+   ```sh
+   $ merge_simulation
+   ...
+   $ simplified_simulation
+   ```
+
+   For Windows users, install the necessary libraries with:
+   ```sh
+   > pip install -r requirements.txt
+   ```
+   and run the simulations using the full directory. For example:
+   ```sh
+   > .\simulations\assemblies\merge_simulation.py
+   ```
 
 3. To check that everything is working as expected, run the tests:
 
