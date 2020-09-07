@@ -1,19 +1,9 @@
-from __future__ import annotations  # import annotations from later version of python.
-# We need it here to annadiane that connectome has a method which returns itself
-
+import numpy as np
 from collections import defaultdict
 from abc import ABCMeta, abstractmethod
-from typing import Dict, List, Tuple, Optional, TypeVar, Mapping, Generic, Callable, Any, Set
-
-from wrapt import ObjectProxy  # Needed to pip install
+from typing import Dict, List, Tuple, Set
 
 from assembly_calculus.brain.components import BrainPart, Area, Stimulus, Connection
-
-
-# The wrapt library implements easy to use wrapper objects, which delegates everything to the object you are
-# using. It's very convenient to use (it can be used exactly in the same way).
-# More info and examples:
-# https://wrapt.readthedocs.io/en/latest/wrappers.html
 
 
 class AbstractConnectome(metaclass=ABCMeta):
@@ -30,17 +20,19 @@ class AbstractConnectome(metaclass=ABCMeta):
         represent the connection (e.g. numpy matrix). Each connection is held ObjectProxy which will
         make the connection.
         to be saved by reference. (This makes the get_subconnectome routine much easier to implement)
-
+        winners: The winners of each area in the current state.
+        support: The past-winners of each area until now.
+        plasticity: Whether or not the plasticity is enabled (Boolean)
     """
 
     def __init__(self, p, areas=None, stimuli=None):
         self.areas: List[Area] = []
         self.stimuli: List[Stimulus] = []
-        self.winners: Dict[Area, List[int]] = defaultdict(lambda: [])
+        self.winners: Dict[Area, np.ndarray] = defaultdict(lambda: [])
         self.support: Dict[Area, Set[int]] = defaultdict(lambda: set())
         self.connections: Dict[Tuple[BrainPart, Area], Connection] = {}
         self.p = p
-        self._plasticity_disabled = False
+        self.plasticity = True
 
         if areas:
             self.areas = areas
@@ -53,38 +45,11 @@ class AbstractConnectome(metaclass=ABCMeta):
     def add_stimulus(self, stimulus: Stimulus):
         self.stimuli.append(stimulus)
 
-    @property
-    def plasticity_disabled(self):
-        return self._plasticity_disabled
-
-    @property
-    def plasticity(self) -> bool:
-        return not self._plasticity_disabled
-
-    @plasticity.setter
-    def plasticity(self, mode: bool):
-        self._plasticity_disabled = not mode
-
-    @plasticity_disabled.setter
-    def plasticity_disabled(self, value):
-        self._plasticity_disabled = value
-
-    @abstractmethod
-    def get_sources(self, area: Area) -> List[BrainPart]:
-        """
-        Retrieve all parts with connection to specific areas, according to the current connectome
-        :param area: area which we need the connections to
-        :return: List of all connections to the area
-        """
-        pass
-
     def __repr__(self):
         return f'{self.__class__.__name__} with {len(self.areas)} areas, and {len(self.stimuli)} stimuli'
 
-    def fire(self, connections: Dict[BrainPart, List[Area]]):
+    def fire(self, connections: Dict[BrainPart, List[Area]], *, override_winners: Dict[Area, List[int]] = None):
         """
-
         :param connections: The connections on which you want to perform the project
-        :return:
+        :param override_winners: if passed, will override the winners in the Area with the value
         """
-        pass

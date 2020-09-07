@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from assembly_calculus.brain import BrainPart
-from assembly_calculus.learning.components.errors import MissingArea, MissingStimulus, \
+from assembly_calculus.learning.errors import MissingArea, MissingStimulus, \
     MaxAttemptsToGenerateStimuliReached
 from assembly_calculus.learning.input import InputStimuli, InputBitStimuli, MAX_ATTEMPTS
 from assembly_calculus.brain import Brain

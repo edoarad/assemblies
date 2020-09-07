@@ -77,4 +77,4 @@ def _fire_layered_areas(brain: Brain, firing_order: List[Dict[Projectable, List[
         for target in targets:
             mapping[target] = mapping.get(target, []) + [target]
 
-        brain.next_round(subconnectome=mapping, replace=True)   # fire this layer of objects
+        brain.fire(subconnectome=mapping)   # fire this layer of objects

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Optional, Union, TYPE_CHECKING, Dict, Set
+from typing import Optional, Union, TYPE_CHECKING, Dict, Set, Tuple
 
 from assembly_calculus.utils import UniquelyIdentifiable, bindable_brain, overlap
 
@@ -68,24 +68,26 @@ BrainPart = Union[Area, Stimulus]
 
 
 class Connection:
-    # TODO: type hinting to synapses
-    # TODO 2: why is this class needed? is it well-defined? do the type hints represent what really happens in its usage?
     def __init__(self, source: BrainPart, dest: BrainPart, synapses=None):
+        """
+        Generic representation of a connection between two brain parts.
+        :param source: The source brain part.
+        :param dest: The destination brain part.
+        :param synapses: Some dict-like representation of the synapses.
+        """
         self.source: BrainPart = source
         self.dest: BrainPart = dest
         self.synapses = synapses if synapses is not None else {}
 
     @property
     def beta(self):
-        # TODO: always define by dest
-        if isinstance(self.source, Stimulus):
-            return self.dest.beta
-        return self.source.beta
+        """The beta of the connection"""
+        return self.dest.beta
 
-    def __getitem__(self, key: int):
+    def __getitem__(self, key: Tuple[int, int]):
         return self.synapses[key]
 
-    def __setitem__(self, key: int, value: float):
+    def __setitem__(self, key: Tuple[int, int], value: float):
         self.synapses[key] = value
 
     def __repr__(self):

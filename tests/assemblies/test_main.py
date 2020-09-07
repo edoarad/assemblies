@@ -67,7 +67,7 @@ def test_merge(recipe, assembly_a, assembly_b, area_b, area_c):
     for _ in range(CERTAINTY_REPEAT):
         with bake(recipe, 0.1, Connectome, train_repeat=10, effective_repeat=EFFECTIVE_REPEAT) as brain:
             assembly_a >> area_c
-            brain.next_round(subconnectome={area_c: [area_b]}, replace=True, iterations=brain.repeat)
+            brain.fire(subconnectome={area_c: [area_b]}, iterations=brain.repeat)
 
             assert overlap(assembly_b.representative_neurons, area_b.winners) <= 0.10, \
                 "Assemblies formed bi-directional links without merge"
@@ -80,7 +80,7 @@ def test_merge(recipe, assembly_a, assembly_b, area_b, area_c):
     for _ in range(CERTAINTY_REPEAT):
         with bake(recipe, 0.1, Connectome, train_repeat=10, effective_repeat=EFFECTIVE_REPEAT) as brain:
             assembly_a >> area_c
-            brain.next_round(subconnectome={area_c: [area_b]}, replace=True, iterations=brain.repeat)
+            brain.fire(subconnectome={area_c: [area_b]}, iterations=brain.repeat)
 
             assert overlap(assembly_b.representative_neurons, area_b.winners) > 0.10, \
                 "Assemblies haven't formed bi-directional links"

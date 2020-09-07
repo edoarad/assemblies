@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from collections import defaultdict
 from typing import Dict, Set, TYPE_CHECKING, List, Optional, Union, Type
 from contextlib import contextmanager
 
 from assembly_calculus.brain.brain_recipe import BrainRecipe
-from assembly_calculus.brain.components import BrainPart, Stimulus, Area, OutputArea
+from assembly_calculus.brain.components import BrainPart, Stimulus, Area
 from assembly_calculus.brain.connectome.abstract_connectome import AbstractConnectome
 from assembly_calculus.utils import UniquelyIdentifiable
 
@@ -18,28 +17,29 @@ class Brain(UniquelyIdentifiable):
     Represents a simulated brain, with it's connectome which holds the areas, stimuli, and all the synapse weights.
     The brain updates by selecting a subgraph of stimuli and areas, and activating only those connections.
     The brain object works with a general connectome, which export an unified api for how the connections between the
-    parts of the brain should be used. In case of need, one should extend the connectome API as he would like to make
-    the implementation of the brain easier/better. Note that the brain implementation shouldn't depends on the
+    parts of the brain should be used.
+    In case of need, one should extend the connectome API as he would like to make
+    the implementation of the brain easier/better.
+    Note that the brain implementation shouldn't depends on the
     underlying implementation of the connectome.
 
     Attributes:
-        connectome: The full connectome of the brain, hold all the connections between the brain parts.
-        active_connectome: The current active subconnectome of the brain. Gives a nice way of supporting inhibit, disinhibit.
+        connectome: the brain's connectome object, holding the areas, stimuli and the synapse weights.
+        recipe: a BrainRecipe object describing a brain to be baked.
+        repeat: number of times to perform fire (only assembly use it)
+
+    Properties:
+        winners: The winners of each area in the current state.
+        support: The past-winners of each area until now.
+
 
     """
 
     def __init__(self, connectome: AbstractConnectome, recipe: BrainRecipe = None, repeat: int = 1):
-        '''
-        :param connectome: the brain's connectome object, holding the areas, stimuli and the synapse weights.
-        :param recipe: a BrainRecipe object describing a brain to be baked.
-        :param repeat: ????
-        '''
-        # TODO: complete self.repeat's documentation
         super(Brain, self).__init__()
         self.repeat = repeat
         self.recipe = recipe or BrainRecipe()
         self.connectome: AbstractConnectome = connectome
-        self.active_connectome: Dict[BrainPart, Set[BrainPart]] = defaultdict(lambda: set())
         self.ctx_stack: List[Dict[Union[BrainPart, Assembly], Optional[Brain]]] = []
 
         for area in self.recipe.areas:
@@ -48,61 +48,25 @@ class Brain(UniquelyIdentifiable):
         for stimulus in self.recipe.stimuli:
             self.add_stimulus(stimulus)
 
-    # TODO 6: this function is confusing: it depends on `replace` state, behaves differently if `subconnectome` is None or not,
-    # TODO 6: performs a merge operation between `active_connectome` and `subconnectome`, and returns an undefined value.
-    # TODO 6: please make it clearer and simplify the logic
-    # TODO: Change te name to fire
-    # TODO: document well
-    def next_round(self, subconnectome: Dict[BrainPart, Set[BrainPart]] = None, replace: bool = True,
-                   iterations: int = 1,
-                   override_winners: Dict[Area, List[int]] = None, enable_plasticity: bool = True):
-        if replace:
-            _active_connectome = subconnectome
-        else:
-            _active_connectome = self.active_connectome.copy()
-            # it is necessary to merge item-item
-            for source, destinations in subconnectome.items():
-                for dest in destinations:
-                    _active_connectome[source].add(dest)
+    def fire(self, subconnectome: Dict[BrainPart, Union[List[BrainPart], Set[BrainPart]]],
+             iterations: int = 1, override_winners: Dict[Area, List[int]] = None):
+        """
+        :param subconnectome: A dictionary of connections to use in the projection
+        :param iterations: number of fire iterations
+        :param override_winners: if passed, will override the winners in the Area with the value
 
+        :return:
+        """
         for _ in range(iterations):
-            self.connectome.fire(_active_connectome, override_winners=override_winners,
-                                 enable_plasticity=enable_plasticity)
+            self.connectome.fire(subconnectome, override_winners=override_winners)
 
     def add_area(self, area: Area):
         self.recipe.append(area)
         self.connectome.add_area(area)
-        self.enable(area, area)
 
     def add_stimulus(self, stimulus: Stimulus):
         self.recipe.append(stimulus)
         self.connectome.add_stimulus(stimulus)
-
-    def enable(self, source: BrainPart, dest: BrainPart = None):
-        """
-        Enable connection between two brain parts.
-        If dest is None then all connections from the source are inhibited.
-        :param source: The source brain part of the connection.
-        :param dest: The destination brain part of the connection.
-        """
-        if dest is not None:
-            self.active_connectome[source].add(dest)
-            return
-        for sink in self.connectome.areas + self.connectome.stimuli:
-            self.enable(source, sink)
-
-    def disable(self, source: BrainPart, dest: BrainPart = None):
-        """
-        Disinhibit connection between two brain parts (i.e. deactivate it).
-        If dest is None then all connections from the source are disinhibited.
-        :param source: The source brain part of the connection.
-        :param dest: The destination brain part of the connection.
-        """
-        if dest is not None:
-            self.active_connectome[source].discard(dest)
-            return
-        for sink in self.connectome.areas:
-            self.disable(source, sink)
 
     @property
     def winners(self):

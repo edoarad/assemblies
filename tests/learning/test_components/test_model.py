@@ -1,4 +1,4 @@
-from assembly_calculus.learning.components.errors import InputSizeMismatch
+from assembly_calculus.learning.errors import InputSizeMismatch
 
 from assembly_calculus.learning.model import LearningModel
 from tests.learning.test_components.learning_component_test_base import LearningComponentTestBase

@@ -40,5 +40,5 @@ class BrainTestUtils(object):
 		stimulus = Stimulus(stimulus_size)
 		self.brain.add_stimulus(stimulus)
 		areas_to_stimulate = self.brain.connectome.areas[:number_of_stimulated_areas]
-		self.brain.next_round({stimulus: areas_to_stimulate})
+		self.brain.fire({stimulus: areas_to_stimulate})
 		return self.brain

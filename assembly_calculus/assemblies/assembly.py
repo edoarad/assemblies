@@ -90,7 +90,7 @@ class AssemblySet(UniquelyIdentifiable):
                 subconnectome[assembly.area].add(area)
                 subconnectome[area].add(assembly.area)
 
-            brain.next_round(subconnectome=subconnectome, replace=True, iterations=brain.repeat * MERGE_REPEAT)
+            brain.fire(subconnectome=subconnectome, iterations=brain.repeat * MERGE_REPEAT)
 
         merged_assembly.bind_like(*self)
         return merged_assembly
@@ -125,7 +125,7 @@ class AssemblySet(UniquelyIdentifiable):
             parent_areas = {ass.area for ass in (x.parents + y.parents)}
             subconnectome = {parent_area: [area] for parent_area in parent_areas}
             # We compensate with more rounds, in order to avoid natural mixing (by removing self edge area: [area])
-            brain.next_round(subconnectome=subconnectome, replace=True, iterations=brain.repeat * ASSOCIATE_REPEAT)
+            brain.fire(subconnectome=subconnectome, iterations=brain.repeat * ASSOCIATE_REPEAT)
 
     def __rshift__(self, target_area: Area) -> Assembly:
         """
@@ -223,7 +223,7 @@ class Assembly(UniquelyIdentifiable):
         if brain is not None:
             activate([self], brain=brain)
             brain.winners[area] = list()
-            brain.next_round(subconnectome={self.area: [area], area: [area]}, replace=True,
+            brain.fire(subconnectome={self.area: [area], area: [area]},
                              iterations=brain.repeat * PROJECT_REPEAT)
 
         projected_assembly.bind_like(self)
@@ -264,8 +264,7 @@ class Assembly(UniquelyIdentifiable):
                 **{(parent.area if isinstance(parent, Assembly) else parent): [self.area] for parent in self.parents},
                 self.area: [area], area: [self.area]
             }
-            brain.next_round(subconnectome=subconnectome, replace=True,
-                             iterations=brain.repeat * RECIPROCAL_PROJECT_REPEAT)
+            brain.fire(subconnectome=subconnectome, iterations=brain.repeat * RECIPROCAL_PROJECT_REPEAT)
 
         projected_assembly.bind_like(self)
         return projected_assembly

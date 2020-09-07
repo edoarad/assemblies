@@ -1,7 +1,7 @@
 from abc import ABCMeta
 
-from assembly_calculus.learning.data_set import DataSetBase
-from assembly_calculus.learning.data_set import Mask
+from assembly_calculus.learning.data_set.mask import Mask
+from assembly_calculus.learning.data_set.lib.basic_types.data_set_base import DataSetBase
 
 
 class PartialDataSet(DataSetBase, metaclass=ABCMeta):
