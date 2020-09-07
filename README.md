@@ -29,7 +29,7 @@
     ```
    The script will also attempt to run the simulations.
    After these commands, one can also run the simulations using their name without a path, such as `merge_simulation`
-   instead of `simulations/assemblies/merge_simulation.py`, like so:
+   instead of `simulations.assemblies.merge_simulation`, like so:
    ```sh
    $ merge_simulation
    ...
@@ -42,7 +42,7 @@
    ```
    and run the simulations using the full directory. For example:
    ```sh
-   > .\simulations\assemblies\merge_simulation.py
+   > python -m simulations.assemblies.merge_simulation
    ```
 
 3. To check that everything is working as expected, run the tests:
