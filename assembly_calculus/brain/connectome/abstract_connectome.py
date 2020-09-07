@@ -1,20 +1,9 @@
-from __future__ import annotations  # import annotations from later version of python.
-# We need it here to annadiane that connectome has a method which returns itself
-
 import numpy as np
 from collections import defaultdict
 from abc import ABCMeta, abstractmethod
-from typing import Dict, List, Tuple, Optional, TypeVar, Mapping, Generic, Callable, Any, Set
-
-from wrapt import ObjectProxy  # Needed to pip install
+from typing import Dict, List, Tuple, Set
 
 from assembly_calculus.brain.components import BrainPart, Area, Stimulus, Connection
-
-
-# The wrapt library implements easy to use wrapper objects, which delegates everything to the object you are
-# using. It's very convenient to use (it can be used exactly in the same way).
-# More info and examples:
-# https://wrapt.readthedocs.io/en/latest/wrappers.html
 
 
 class AbstractConnectome(metaclass=ABCMeta):

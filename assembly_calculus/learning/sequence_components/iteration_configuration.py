@@ -1,4 +1,4 @@
-from typing import List, Union, Dict, Tuple
+from typing import Union
 
 import matplotlib.pyplot as plt
 
@@ -8,6 +8,7 @@ class IterationConfiguration:
     An internal configuration used by the sequence to keep track of the current
     iteration.
     """
+
     def __init__(self, number_of_cycles: Union[int, float]):
         """
         Create a new configuration and initialize tracking attributes, using the
@@ -37,4 +38,3 @@ class IterationConfiguration:
         self.number_of_cycles = number_of_cycles
 
         self.is_in_mid_run = False
-
