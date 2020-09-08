@@ -18,7 +18,6 @@ def common_value(*values) -> Optional:
     return values.pop() if len(values) == 1 else None
 
 
-# TODO: change random sampling to performance sampling (To performance; if possible)
 def activate(projectables: Iterable[Projectable], *, brain: Brain):
     """to prevent code duplication, this function does the common thing
     of taking a list of assemblies and creating a dictionary from area to neurons (of the
