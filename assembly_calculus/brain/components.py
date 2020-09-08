@@ -10,6 +10,23 @@ if TYPE_CHECKING:
 
 @bindable_brain.cls
 class Area(UniquelyIdentifiable):
+    """
+    Area is a description of some place in the brain.
+    The area consists of:
+    Attributes:
+        n: The number of neurons in it.
+        k: The number of firing neurons in each round.
+        beta: Plasticity constant which adjust how much each edge will change between rounds.
+    The area can be added to a brain, (either by designing a connectome and constructing a brain from it, or
+    by directly adding the brain).
+    The same area can be added to multiple brains. (Effective for describing multiple brains with similar design)
+    Bindable_properties:
+        When the area is bounded to some brain, the area can provide the following properties (delegated from the bounded
+        brain)
+        winners - the winners of the area.
+        support - the support in the area.
+        active_assembly - Find the active assembly in the current area.
+    """
     THRESHOLD: float = 0.20
 
     def __init__(self, n: int, k: Optional[int] = None, beta: float = 0.01):
@@ -28,7 +45,10 @@ class Area(UniquelyIdentifiable):
 
     @bindable_brain.method
     def read(self, *, preserve_brain: bool = True, brain: Brain) -> Optional[Assembly]:
-        """Returns the most activated assembly in the area"""
+        """
+        Returns the most activated assembly in the area.
+        Note: only available when bounded to some brain.
+        """
         assemblies: Set[Assembly] = brain.recipe.area_assembly_mapping[self]
         overlaps: Dict[Assembly, float] = {}
         for assembly in assemblies:
@@ -47,6 +67,14 @@ class Area(UniquelyIdentifiable):
 
 
 class Stimulus(UniquelyIdentifiable):
+    """
+    Stimulus is a description of receptive neurons for a brain which alert the brain on some input. (For example some
+    smell is currently present).
+    Same as the area the stimulus can be added to multiple brain parts.
+    Attributes:
+        n: The number of neurons in the stimulus (during a firing all of them fire).
+        beta: Plasticity constant which adjust how much each edge will change between rounds.
+    """
     def __init__(self, n: int, beta: float = 0.05):
         super(Stimulus, self).__init__()
         self.n = n
@@ -57,6 +85,12 @@ class Stimulus(UniquelyIdentifiable):
 
 
 class OutputArea(Area):
+    """
+    Special case of area with n=2, k=1.
+    This meant to implement an output bit.
+    Where the first neuron represent 0 and the second 1.
+    Note: Since k=1 only one of them can fire in each point.
+    """
     def __init__(self, beta: float):
         super(OutputArea, self).__init__(n=2, k=1, beta=beta)
 

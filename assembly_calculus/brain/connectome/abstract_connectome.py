@@ -50,6 +50,8 @@ class AbstractConnectome(metaclass=ABCMeta):
 
     def fire(self, connections: Dict[BrainPart, List[Area]], *, override_winners: Dict[Area, List[int]] = None):
         """
+        Fire is the basic operation where some stimuli and some areas are activated,
+        with only specified connections between them active.
         :param connections: The connections on which you want to perform the project
         :param override_winners: if passed, will override the winners in the Area with the value
         """

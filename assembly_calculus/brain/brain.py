@@ -25,7 +25,7 @@ class Brain(UniquelyIdentifiable):
 
     Attributes:
         connectome: the brain's connectome object, holding the areas, stimuli and the synapse weights.
-        recipe: a BrainRecipe object describing a brain to be baked.
+        recipe: a BrainRecipe object describing the recipe to build the current brain.
         repeat: number of times to perform fire (only assembly use it)
 
     Properties:
@@ -51,20 +51,27 @@ class Brain(UniquelyIdentifiable):
     def fire(self, subconnectome: Dict[BrainPart, Union[List[BrainPart], Set[BrainPart]]],
              iterations: int = 1, override_winners: Dict[Area, List[int]] = None):
         """
+        Make the brain run a discrete round of firing while activating only some specific connections in the brain.
         :param subconnectome: A dictionary of connections to use in the projection
         :param iterations: number of fire iterations
         :param override_winners: if passed, will override the winners in the Area with the value
-
-        :return:
         """
         for _ in range(iterations):
             self.connectome.fire(subconnectome, override_winners=override_winners)
 
     def add_area(self, area: Area):
+        """
+        Add a new area to the brain
+        :param area: New area object
+        """
         self.recipe.append(area)
         self.connectome.add_area(area)
 
     def add_stimulus(self, stimulus: Stimulus):
+        """
+        Add a new stimulus to the brain
+        :param stimulus: New area object
+        """
         self.recipe.append(stimulus)
         self.connectome.add_stimulus(stimulus)
 
@@ -78,6 +85,12 @@ class Brain(UniquelyIdentifiable):
 
     @contextmanager
     def temporary_plasticity(self, mode: bool):
+        """
+        During the duration of this context manager the plasticity would be enabled if the mode is True.
+        Usage:
+        >>> with Brain().temporary_plasticity(False) as brain:
+        >>>     brain.fire(...)  # plasticity is off now
+        """
         original_plasticity: bool = self.connectome.plasticity
         self.connectome.plasticity = mode
         yield self
@@ -85,6 +98,14 @@ class Brain(UniquelyIdentifiable):
 
     @contextmanager
     def freeze(self, freeze: bool = True):
+        """
+        During the duration of this context manager, there would be no changes in the connectome (winners or
+        Usage:
+        >>> brain = Brain()
+        >>> with brain.freeze():
+        >>>     brain.fire(...)  # plasticity is off now
+        >>> # brain has the same winners as before
+        """
         if not freeze:
             yield self
             return

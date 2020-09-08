@@ -57,6 +57,9 @@ class BrainRecipe:
             assembly.appears_in.add(self)
 
     def append(self, brain_object: BrainObjects):
+        """
+        Add some brain object to the recipe.
+        """
         from ..assemblies import Assembly
 
         if isinstance(brain_object, Area):
@@ -69,6 +72,9 @@ class BrainRecipe:
             raise ValueError("Invalid part")
 
     def extend(self, *brain_objects: BrainObjects):
+        """
+        Extent the recipe with some more brain objects
+        """
         for brain_object in brain_objects:
             self.append(brain_object)
 
