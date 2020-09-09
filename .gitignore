@@ -8,3 +8,4 @@ graphs
 __pycache__
 .idea/
 simulations/assemblies/artifacts
+__main__.py
