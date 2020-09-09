@@ -1,7 +1,7 @@
 import pytest
 
-from assembly_calculus.brain import *
-from assembly_calculus.brain.connectome import *
+from assembly_calculus.brain import Brain, Area, Stimulus
+from assembly_calculus.brain.connectome import Connectome
 
 EPSILON = 0.001
 BASIC_BETA = 0.1
@@ -197,7 +197,7 @@ def test_n_is_negative():
 def test_p_overflow():
     conn = Connectome(p=5, initialize=True)
 
-    a = Area(n=-10, k=1, beta=BASIC_BETA)
+    a = Area(n=10, k=1, beta=BASIC_BETA)
     conn.add_area(a)
     conn.fire({a: [a]})
 
@@ -206,6 +206,6 @@ def test_p_overflow():
 def test_p_underflow():
     conn = Connectome(p=-5, initialize=True)
 
-    a = Area(n=-10, k=1, beta=BASIC_BETA)
+    a = Area(n=10, k=1, beta=BASIC_BETA)
     conn.add_area(a)
     conn.fire({a: [a]})
