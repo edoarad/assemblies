@@ -10,6 +10,15 @@
 [![bananas](https://img.shields.io/badge/bananas-0-ffdb4d)](https://www.youtube.com/watch?v=aKn0HddzuWM)
 [![exbananas](https://img.shields.io/badge/exbananas-1-yellow)](https://www.youtube.com/watch?v=vnciwwsvNcc)
 
+
+## TODO
+1. Delete this
+2. link to other readmes
+3. remove useless branches
+4. explain memory issues and set TODOs for ideas on fixing these
+5. go over installation and use instructions
+6. clean up code
+
 ## Installation
 
 1. Clone the repository and enter it:
