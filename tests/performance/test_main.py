@@ -1,13 +1,11 @@
-
 import pytest
 
-from assembly_calculus.brain import *
-from assembly_calculus.brain.connectome import *
-
+from assembly_calculus.brain import Brain, Area, Stimulus
+from assembly_calculus.brain.connectome import Connectome
 
 EPSILON = 0.001
 BASIC_BETA = 0.1
-STANDARD_SIZES = [(5000, 71), (1250, 35), (3750, 61), (2500, 50)]
+STANDARD_SIZES = [(1225, 35), (900, 30), (400, 20)]
 SMALL_SIZES = [(4, 2), (9, 3), (16, 4), (25, 5)]
 
 
@@ -38,11 +36,13 @@ def test_init_connectomes_area():
     conn = Connectome(p=0, initialize=True)
     a = Area(n=3, k=1, beta=BASIC_BETA)
     conn.add_area(a)
+    conn._initialize_parts([a])
     assert check_synapses(conn.connections[a, a], 0)
     assert conn.connections[a, a].beta == BASIC_BETA
     conn = Connectome(p=1)
     a = Area(n=3, k=1, beta=BASIC_BETA)
     conn.add_area(a)
+    conn._initialize_parts([a])
     assert check_synapses(conn.connections[a, a], 1)
     assert conn.connections[a, a].beta == BASIC_BETA
 
@@ -53,6 +53,7 @@ def test_init_connectomes_stimulus():
     conn.add_area(a)
     s = Stimulus(n=2, beta=BASIC_BETA)
     conn.add_stimulus(s)
+    conn._initialize_parts([a, s])
     assert check_synapses(conn.connections[s, a], 0)
     assert conn.connections[s, a].beta == BASIC_BETA
     conn = Connectome(p=1)
@@ -60,6 +61,7 @@ def test_init_connectomes_stimulus():
     conn.add_area(a)
     s = Stimulus(n=2, beta=BASIC_BETA)
     conn.add_stimulus(s)
+    conn._initialize_parts([a, s])
     assert check_synapses(conn.connections[s, a], 1)
     assert conn.connections[s, a].beta == BASIC_BETA
 
@@ -72,12 +74,14 @@ def simple_conn():
     conn.add_area(b)
     s = Stimulus(n=1, beta=BASIC_BETA)
     conn.add_stimulus(s)
+    conn._initialize_connection(s, a)
+    conn._initialize_connection(a, b)
+    conn.connections[s, a].synapses[0, 0] = 1
+    conn.connections[s, a].synapses[0, 1] = 0
     conn.connections[a, b].synapses[0, 0] = 1
     conn.connections[a, b].synapses[0, 1] = 0
     conn.connections[a, b].synapses[1, 0] = 0
     conn.connections[a, b].synapses[1, 1] = 0
-    conn.connections[s, a].synapses[0, 0] = 1
-    conn.connections[s, a].synapses[0, 1] = 0
     return conn, a, b, s
 
 
@@ -132,7 +136,7 @@ def test_area_winner_count(n, k):
 @pytest.mark.parametrize("n, k", STANDARD_SIZES)
 def test_areas_winner_count(n, k):
     conn = Connectome(p=1, initialize=True)
-    a = Area(n=n, k=k+1, beta=BASIC_BETA)
+    a = Area(n=n, k=k + 1, beta=BASIC_BETA)
     conn.add_area(a)
     b = Area(n=n, k=k, beta=BASIC_BETA)
     conn.add_area(a)
@@ -193,7 +197,7 @@ def test_n_is_negative():
 def test_p_overflow():
     conn = Connectome(p=5, initialize=True)
 
-    a = Area(n=-10, k=1, beta=BASIC_BETA)
+    a = Area(n=10, k=1, beta=BASIC_BETA)
     conn.add_area(a)
     conn.fire({a: [a]})
 
@@ -202,7 +206,6 @@ def test_p_overflow():
 def test_p_underflow():
     conn = Connectome(p=-5, initialize=True)
 
-    a = Area(n=-10, k=1, beta=BASIC_BETA)
+    a = Area(n=10, k=1, beta=BASIC_BETA)
     conn.add_area(a)
     conn.fire({a: [a]})
-

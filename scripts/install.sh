@@ -12,7 +12,7 @@ function main {
 	cp scripts/start_merge_simulations.sh .env/bin/merge_simulations
 	chmod +x .env/bin/merge_simulations
 	cp scripts/start_simplified_simulation.sh .env/bin/simplified_simulation
-	chmod +X .env/bin/simplified_simulation
+	chmod +x .env/bin/simplified_simulation
 	
 }
 
