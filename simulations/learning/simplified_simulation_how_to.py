@@ -33,8 +33,8 @@ def my_example_simulation():
      5. Area C -> Output
     """
     # Define our args:
-    n = 10000
-    k = 100
+    n = 1000
+    k = 31
     p = 0.01
     beta = 0.05
     noise_p = 0
