@@ -30,25 +30,9 @@ class Connectome(AbstractConnectome):
 
     def add_area(self, area: Area):
         super().add_area(area)
-        self._initialize_parts([area])
 
     def add_stimulus(self, stimulus: Stimulus):
         super().add_stimulus(stimulus)
-        self._initialize_parts([stimulus])
-
-    def _initialize_parts(self, parts: List[BrainPart]) -> None:
-        """
-        Initialize all the connections to and from the given brain parts.
-        :param parts: List of stimuli and areas to initialize
-        """
-        try:
-            for part in parts:
-                for other in self.areas + self.stimuli:
-                    self._initialize_connection(part, other)
-                    if isinstance(part, Area) and part != other:
-                        self._initialize_connection(other, part)
-        except Exception as e:
-            print(e)
 
     def _initialize_connection(self, part: BrainPart, area: Area) -> None:
         """
@@ -130,6 +114,7 @@ class Connectome(AbstractConnectome):
 
         for part, areas in connections.items():
             for area in areas:
+                self._initialize_connection(part, area)
                 sources_mapping[area] = sources_mapping[area] or []
                 sources_mapping[area].append(part)
 
