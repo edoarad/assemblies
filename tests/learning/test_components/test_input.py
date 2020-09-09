@@ -24,7 +24,7 @@ class InputTests(TestCase):
         self.n = 100
         self.k = 10
         self.beta = 0.05
-        self.brain = Brain(Connectome(p=0.1, initialize=True))
+        self.brain = Brain(Connectome(p=0.1))
 
         A = Area(self.n, self.k, self.beta)
         self.brain.add_area(A)

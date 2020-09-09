@@ -12,12 +12,10 @@ def simple_conn():
     a = Area(n=2, k=1, beta=0.2)
     b = Area(n=2, k=1, beta=0.2)
     s = Stimulus(n=1, beta=0.2)
-    return Connectome(p=0.3, areas=[a,b], stimuli=[s], initialize=True), a, b, s
+    return Connectome(p=0.3, areas=[a,b], stimuli=[s]), a, b, s
 ```
 
-`initialize=True` will initialize the given areas and stimuli connections.
-
-One my also add areas and or stimuli after creating a connectome, like so:
+One may also add areas and or stimuli after creating a connectome, like so:
 
 ```python
 >>> conn.add_area(a)

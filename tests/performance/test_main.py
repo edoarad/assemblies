@@ -19,41 +19,41 @@ def check_synapses(con, value):
 
 
 def test_area_in_connectome():
-    conn = Connectome(p=0, initialize=True)
+    conn = Connectome(p=0)
     a = Area(n=3, k=1, beta=BASIC_BETA)
     conn.add_area(a)
     assert a in conn.areas
 
 
 def test_stimulus_in_connectome():
-    conn = Connectome(p=0, initialize=True)
+    conn = Connectome(p=0)
     s = Stimulus(n=3, beta=BASIC_BETA)
     conn.add_stimulus(s)
     assert s in conn.stimuli
 
 
 def test_init_connectomes_area():
-    conn = Connectome(p=0, initialize=True)
+    conn = Connectome(p=0)
     a = Area(n=3, k=1, beta=BASIC_BETA)
     conn.add_area(a)
-    conn._initialize_parts([a])
+    conn._initialize_connection(a,a)
     assert check_synapses(conn.connections[a, a], 0)
     assert conn.connections[a, a].beta == BASIC_BETA
     conn = Connectome(p=1)
-    a = Area(n=3, k=1, beta=BASIC_BETA)
-    conn.add_area(a)
-    conn._initialize_parts([a])
-    assert check_synapses(conn.connections[a, a], 1)
-    assert conn.connections[a, a].beta == BASIC_BETA
+    b = Area(n=3, k=1, beta=BASIC_BETA)
+    conn.add_area(b)
+    conn._initialize_connection(b,b)
+    assert check_synapses(conn.connections[b, b], 1)
+    assert conn.connections[b, b].beta == BASIC_BETA
 
 
 def test_init_connectomes_stimulus():
-    conn = Connectome(p=0, initialize=True)
+    conn = Connectome(p=0)
     a = Area(n=3, k=1, beta=BASIC_BETA)
     conn.add_area(a)
     s = Stimulus(n=2, beta=BASIC_BETA)
     conn.add_stimulus(s)
-    conn._initialize_parts([a, s])
+    conn._initialize_connection(s, a)
     assert check_synapses(conn.connections[s, a], 0)
     assert conn.connections[s, a].beta == BASIC_BETA
     conn = Connectome(p=1)
@@ -61,13 +61,13 @@ def test_init_connectomes_stimulus():
     conn.add_area(a)
     s = Stimulus(n=2, beta=BASIC_BETA)
     conn.add_stimulus(s)
-    conn._initialize_parts([a, s])
+    conn._initialize_connection(s, a)
     assert check_synapses(conn.connections[s, a], 1)
     assert conn.connections[s, a].beta == BASIC_BETA
 
 
 def simple_conn():
-    conn = Connectome(p=0, initialize=True)
+    conn = Connectome(p=0)
     a = Area(n=2, k=1, beta=BASIC_BETA)
     conn.add_area(a)
     b = Area(n=2, k=1, beta=BASIC_BETA)
@@ -102,7 +102,7 @@ def test_fire_connectomes():
 
 # Supposed to test whether or not the code crashes with different n's
 def test_fire_different_n():
-    conn = Connectome(p=0.5, initialize=True)
+    conn = Connectome(p=0.5)
     a = Area(n=3, k=1, beta=BASIC_BETA)
     conn.add_area(a)
     b = Area(n=2, k=1, beta=BASIC_BETA)
@@ -114,7 +114,7 @@ def test_fire_different_n():
 
 # Supposed to test whether or not the code crashes with different k's
 def test_fire_different_k():
-    conn = Connectome(p=0.5, initialize=True)
+    conn = Connectome(p=0.5)
     a = Area(n=30, k=5, beta=BASIC_BETA)
     b = Area(n=30, k=3, beta=BASIC_BETA)
     conn.add_area(a)
@@ -126,7 +126,7 @@ def test_fire_different_k():
 
 @pytest.mark.parametrize("n, k", STANDARD_SIZES)
 def test_area_winner_count(n, k):
-    conn = Connectome(p=1, initialize=True)
+    conn = Connectome(p=1)
     a = Area(n=n, k=k, beta=BASIC_BETA)
     conn.add_area(a)
     conn.fire({a: [a]})
@@ -135,7 +135,7 @@ def test_area_winner_count(n, k):
 
 @pytest.mark.parametrize("n, k", STANDARD_SIZES)
 def test_areas_winner_count(n, k):
-    conn = Connectome(p=1, initialize=True)
+    conn = Connectome(p=1)
     a = Area(n=n, k=k + 1, beta=BASIC_BETA)
     conn.add_area(a)
     b = Area(n=n, k=k, beta=BASIC_BETA)
@@ -148,7 +148,7 @@ def test_areas_winner_count(n, k):
 @pytest.mark.parametrize("count", [2, 3, 5, 10, 25])
 @pytest.mark.parametrize("n, k", SMALL_SIZES)
 def test_fire_many_to_one(n, k, count):
-    conn = Connectome(p=1, initialize=True)
+    conn = Connectome(p=1)
     a = Area(n=n, k=k, beta=BASIC_BETA)
     conn.add_area(a)
     bs = [Area(n=n, k=k, beta=BASIC_BETA) for _ in range(count)]
@@ -163,7 +163,7 @@ def test_fire_many_to_one(n, k, count):
 @pytest.mark.parametrize("count", [2, 3, 5, 10, 25])
 @pytest.mark.parametrize("n, k", SMALL_SIZES)
 def test_fire_one_to_many(n, k, count):
-    conn = Connectome(p=1, initialize=True)
+    conn = Connectome(p=1)
     a = Area(n=n, k=k, beta=BASIC_BETA)
     conn.add_area(a)
     bs = [Area(n=n, k=k, beta=BASIC_BETA) for _ in range(count)]
@@ -177,7 +177,7 @@ def test_fire_one_to_many(n, k, count):
 
 @pytest.mark.xfail()
 def test_bigger_k():
-    conn = Connectome(p=1, initialize=True)
+    conn = Connectome(p=1)
 
     a = Area(n=1, k=5, beta=BASIC_BETA)
     conn.add_area(a)
@@ -186,7 +186,7 @@ def test_bigger_k():
 
 @pytest.mark.xfail()
 def test_n_is_negative():
-    conn = Connectome(p=1, initialize=True)
+    conn = Connectome(p=1)
 
     a = Area(n=-10, k=1, beta=BASIC_BETA)
     conn.add_area(a)
@@ -195,7 +195,7 @@ def test_n_is_negative():
 
 @pytest.mark.xfail()
 def test_p_overflow():
-    conn = Connectome(p=5, initialize=True)
+    conn = Connectome(p=5)
 
     a = Area(n=10, k=1, beta=BASIC_BETA)
     conn.add_area(a)
@@ -204,7 +204,7 @@ def test_p_overflow():
 
 @pytest.mark.xfail()
 def test_p_underflow():
-    conn = Connectome(p=-5, initialize=True)
+    conn = Connectome(p=-5)
 
     a = Area(n=10, k=1, beta=BASIC_BETA)
     conn.add_area(a)

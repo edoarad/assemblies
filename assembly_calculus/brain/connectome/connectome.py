@@ -14,7 +14,7 @@ class Connectome(AbstractConnectome):
     The object representing the connection in here is ndarray from numpy
     """
 
-    def __init__(self, p: float, areas=None, stimuli=None, initialize=False):
+    def __init__(self, p: float, areas=None, stimuli=None):
         """
         :param p: The attribute p for the probability of an edge to exits
         :param areas: list of areas
@@ -25,25 +25,11 @@ class Connectome(AbstractConnectome):
 
         self.rng = RandomMatrix()
 
-        if initialize:
-            self._initialize_parts((areas or []) + (stimuli or []))
-
     def add_area(self, area: Area):
         super().add_area(area)
 
     def add_stimulus(self, stimulus: Stimulus):
         super().add_stimulus(stimulus)
-
-    def _initialize_parts(self, parts: List[BrainPart]) -> None:
-        """
-        Initialize all the connections to and from the given brain parts.
-        :param parts: List of stimuli and areas to initialize
-        """
-        for part in parts:
-            for other in self.areas + self.stimuli:
-                self._initialize_connection(part, other)
-                if isinstance(part, Area):
-                    self._initialize_connection(other, part)
 
     def _initialize_connection(self, part: BrainPart, area: Area) -> None:
         """
@@ -57,7 +43,9 @@ class Connectome(AbstractConnectome):
             synapses = self.rng.multi_generate(area.n, part.n, self.p).reshape((part.n, area.n), order='F')
             self.connections[part, area] = Connection(part, area, synapses)
         except Exception as e:
-            print(e)
+            print(f'Memory error in initializing connection {part}->{Area}.')
+            raise e
+            
 
     def _update_connection(self, source: BrainPart, area: Area, new_winners: Dict[Area, np.ndarray]) -> None:
         """
