@@ -7,7 +7,7 @@ def _get_free_memory() -> int:
         free_memory = 0
         for i in mem:
             sline = i.split()
-            if str(sline[0]) in ('MemFree:', 'Buffers:', 'Cached:'):
+            if str(sline[0]) in ('MemFree:', 'Buffers:', 'Cached:', 'SwapFree:'):
                 free_memory += int(sline[1])
         return free_memory
 
@@ -17,7 +17,8 @@ def protecc_ram(pctg: float = 0.5):
     try:
         import resource
         soft, hard = resource.getrlimit(resource.RLIMIT_AS)
-        resource.setrlimit(resource.RLIMIT_AS, (int(_get_free_memory() * 1024 * pctg), hard))
+        free_mem =_get_free_memory()
+        resource.setrlimit(resource.RLIMIT_AS, (int(free_mem * 1024 * pctg), hard))
     except:  # noqa
         print("Warning: no ram protection (possibly running are on windows?)", file=stderr)
         pass
