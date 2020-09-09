@@ -42,7 +42,7 @@ class Connectome(AbstractConnectome):
         for part in parts:
             for other in self.areas + self.stimuli:
                 self._initialize_connection(part, other)
-                if isinstance(part, Area) and part != other:
+                if isinstance(part, Area):
                     self._initialize_connection(other, part)
 
     def _initialize_connection(self, part: BrainPart, area: Area) -> None:
@@ -51,6 +51,8 @@ class Connectome(AbstractConnectome):
         :param part: Stimulus or Area which the connection should come from
         :param area: Area which the connection go to
         """
+        if (part, area) in self.connections:
+            return
         try:
             synapses = self.rng.multi_generate(area.n, part.n, self.p).reshape((part.n, area.n), order='F')
             self.connections[part, area] = Connection(part, area, synapses)

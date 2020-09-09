@@ -1,9 +1,7 @@
-
 import pytest
 
 from assembly_calculus.brain import *
 from assembly_calculus.brain.connectome import *
-
 
 EPSILON = 0.001
 BASIC_BETA = 0.1
@@ -38,11 +36,13 @@ def test_init_connectomes_area():
     conn = Connectome(p=0, initialize=True)
     a = Area(n=3, k=1, beta=BASIC_BETA)
     conn.add_area(a)
+    conn._initialize_parts([a])
     assert check_synapses(conn.connections[a, a], 0)
     assert conn.connections[a, a].beta == BASIC_BETA
     conn = Connectome(p=1)
     a = Area(n=3, k=1, beta=BASIC_BETA)
     conn.add_area(a)
+    conn._initialize_parts([a])
     assert check_synapses(conn.connections[a, a], 1)
     assert conn.connections[a, a].beta == BASIC_BETA
 
@@ -53,6 +53,7 @@ def test_init_connectomes_stimulus():
     conn.add_area(a)
     s = Stimulus(n=2, beta=BASIC_BETA)
     conn.add_stimulus(s)
+    conn._initialize_parts([a, s])
     assert check_synapses(conn.connections[s, a], 0)
     assert conn.connections[s, a].beta == BASIC_BETA
     conn = Connectome(p=1)
@@ -60,6 +61,7 @@ def test_init_connectomes_stimulus():
     conn.add_area(a)
     s = Stimulus(n=2, beta=BASIC_BETA)
     conn.add_stimulus(s)
+    conn._initialize_parts([a, s])
     assert check_synapses(conn.connections[s, a], 1)
     assert conn.connections[s, a].beta == BASIC_BETA
 
@@ -72,8 +74,8 @@ def simple_conn():
     conn.add_area(b)
     s = Stimulus(n=1, beta=BASIC_BETA)
     conn.add_stimulus(s)
-    conn._initialize_connection(s,a)
-    conn._initialize_connection(a,b)
+    conn._initialize_connection(s, a)
+    conn._initialize_connection(a, b)
     conn.connections[s, a].synapses[0, 0] = 1
     conn.connections[s, a].synapses[0, 1] = 0
     conn.connections[a, b].synapses[0, 0] = 1
@@ -134,7 +136,7 @@ def test_area_winner_count(n, k):
 @pytest.mark.parametrize("n, k", STANDARD_SIZES)
 def test_areas_winner_count(n, k):
     conn = Connectome(p=1, initialize=True)
-    a = Area(n=n, k=k+1, beta=BASIC_BETA)
+    a = Area(n=n, k=k + 1, beta=BASIC_BETA)
     conn.add_area(a)
     b = Area(n=n, k=k, beta=BASIC_BETA)
     conn.add_area(a)
@@ -207,4 +209,3 @@ def test_p_underflow():
     a = Area(n=-10, k=1, beta=BASIC_BETA)
     conn.add_area(a)
     conn.fire({a: [a]})
-
