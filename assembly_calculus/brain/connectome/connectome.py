@@ -41,11 +41,14 @@ class Connectome(AbstractConnectome):
         Initialize all the connections to and from the given brain parts.
         :param parts: List of stimuli and areas to initialize
         """
-        for part in parts:
-            for other in self.areas + self.stimuli:
-                self._initialize_connection(part, other)
-                if isinstance(part, Area) and part != other:
-                    self._initialize_connection(other, part)
+        try:
+            for part in parts:
+                for other in self.areas + self.stimuli:
+                    self._initialize_connection(part, other)
+                    if isinstance(part, Area) and part != other:
+                        self._initialize_connection(other, part)
+        except Exception as e:
+            print(e)
 
     def _initialize_connection(self, part: BrainPart, area: Area) -> None:
         """
