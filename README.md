@@ -62,7 +62,7 @@ The `Brain` packages provides the following classes:
 
     ```pycon
     >>> from Brain import Area
-    >>> area = Area(beta = 0.1, n = 10 ** 7, k = 10 ** 4)
+    >>> area = Area(beta = 0.1, n = 1000, k = 31)
     ```
 
     The area class provides methods for handling areas within the brain.
@@ -78,7 +78,7 @@ The `Brain` packages provides the following classes:
     
     ```pycon
     >>> from assembly_calculus import Area, Stimulus, Assembly, BrainRecipe
-    >>> area = Area(beta = 0.1, n = 10 ** 7, k = 10 ** 4)
+    >>> area = Area(beta = 0.1, n = 1000, k = 31)
     >>> stim = Stimulus(1000 ** 0.5)
     >>> assembly = Assembly([stim], area)
     >>> recipe = BrainRecipe(stim, area, assembly)
@@ -135,7 +135,7 @@ The `Brain` packages provides the following classes:
         >>> class LazyConnectome(Connectome):
         >>>     #implementation of a specific connectome
         >>>> connectome = LazyConnectome()
-        >>> area = Area(beta = 0.1, n = 10 ** 7, k = 10 ** 4)
+        >>> area = Area(beta = 0.1, n = 1000, k = 31)
         >>> connectome.add_area(area)
         ```
     - `NonLazyRandomConnectome` 
@@ -145,7 +145,7 @@ The `Brain` packages provides the following classes:
        ```pycon
         >>> from Connectome import NonLazyRandomConnectome
         >>>> connectome = NonLazyRandomConnectome()
-        >>> area = Area(beta = 0.1, n = 10 ** 7, k = 10 ** 4)
+        >>> area = Area(beta = 0.1, n = 1000, k = 31)
         >>> connectome.add_area(area)
         ```
     - `To be continued`
@@ -158,7 +158,14 @@ The `Brain` packages provides the following classes:
     ```pycon
     >>> from Brain import Brain, NonLazyRandomConnectome, Area
     >>> connectome = NonLazyRandomConnectome()
-    >>> area = Area(beta = 0.1, n = 10 ** 7, k = 10 ** 4)
+    >>> area = Area(beta = 0.1, n = 1000, k = 31)
     >>> connectome.add_area(area)
     >>> brain = Brain(connectome)
     ```
+
+## General notes
+
+In order to handle possible memory issues, it's recommended to increase the swap region in your hard drive.
+[ON WINDOWS COMPUTERS] In the computer's search bar, search for 'View Advanced System Properties'.
+In that window, under 'Performance', press 'Settings...'. On the opened window, switch to 'Advanced', and under 'Virtual Memory',
+press 'Change' to change the swapping region.
