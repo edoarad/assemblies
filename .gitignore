@@ -1,9 +1,10 @@
-.floo
-.floobits_readme
 .flooignore
 .env
 .pytest_cache
+.pdbrc
+.swp
 graphs
 **/__pycache__/
 __pycache__
 .idea/
+simulations/assemblies/artifacts
