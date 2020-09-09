@@ -2,5 +2,5 @@
 
 
 
-python -m simulations.learning.simplified_simulation_how_to
+python3 -m simulations.learning.simplified_simulation_how_to
 

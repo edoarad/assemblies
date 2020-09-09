@@ -1,6 +1,6 @@
 #!/bin/bash
 
 
-python -m simulations.assemblies.merge_simulations
+python3 -m simulations.assemblies.merge_simulations
 
 
