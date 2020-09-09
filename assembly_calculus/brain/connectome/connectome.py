@@ -19,7 +19,7 @@ class Connectome(AbstractConnectome):
         :param p: The attribute p for the probability of an edge to exits
         :param areas: list of areas
         :param stimuli: list of stimuli
-        :param initialize: Whether or not to initialize the connectome of the brain.
+        :param initialize: Whether or not to initialize all the connections of the connectome.
         """
         super(Connectome, self).__init__(p, areas, stimuli)
 
@@ -34,14 +34,28 @@ class Connectome(AbstractConnectome):
     def add_stimulus(self, stimulus: Stimulus):
         super().add_stimulus(stimulus)
 
+    def _initialize_parts(self, parts: List[BrainPart]) -> None:
+        """
+        Initialize all the connections to and from the given brain parts.
+        :param parts: List of stimuli and areas to initialize
+        """
+        for part in parts:
+            for other in self.areas + self.stimuli:
+                self._initialize_connection(part, other)
+                if isinstance(part, Area) and part != other:
+                    self._initialize_connection(other, part)
+
     def _initialize_connection(self, part: BrainPart, area: Area) -> None:
         """
         Initalize the connection from brain part to an area
         :param part: Stimulus or Area which the connection should come from
         :param area: Area which the connection go to
         """
-        synapses = self.rng.multi_generate(area.n, part.n, self.p).reshape((part.n, area.n), order='F')
-        self.connections[part, area] = Connection(part, area, synapses)
+        try:
+            synapses = self.rng.multi_generate(area.n, part.n, self.p).reshape((part.n, area.n), order='F')
+            self.connections[part, area] = Connection(part, area, synapses)
+        except Exception as e:
+            print(e)
 
     def _update_connection(self, source: BrainPart, area: Area, new_winners: Dict[Area, np.ndarray]) -> None:
         """
@@ -109,12 +123,10 @@ class Connectome(AbstractConnectome):
         :param connections: A dictionary of connections to use in the projection, for example {area1
         :param override_winners: if passed, will override the winners in the Area with the value
         """
-
         sources_mapping: defaultdict[Area, List[BrainPart]] = defaultdict(lambda: [])
 
         for part, areas in connections.items():
             for area in areas:
-                self._initialize_connection(part, area)
                 sources_mapping[area] = sources_mapping[area] or []
                 sources_mapping[area].append(part)
 

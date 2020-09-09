@@ -7,7 +7,7 @@ from assembly_calculus.brain.connectome import *
 
 EPSILON = 0.001
 BASIC_BETA = 0.1
-STANDARD_SIZES = [(5000, 71), (1250, 35), (3750, 61), (2500, 50)]
+STANDARD_SIZES = [(1225, 35), (900, 30), (400, 20)]
 SMALL_SIZES = [(4, 2), (9, 3), (16, 4), (25, 5)]
 
 
@@ -72,12 +72,14 @@ def simple_conn():
     conn.add_area(b)
     s = Stimulus(n=1, beta=BASIC_BETA)
     conn.add_stimulus(s)
+    conn._initialize_connection(s,a)
+    conn._initialize_connection(a,b)
+    conn.connections[s, a].synapses[0, 0] = 1
+    conn.connections[s, a].synapses[0, 1] = 0
     conn.connections[a, b].synapses[0, 0] = 1
     conn.connections[a, b].synapses[0, 1] = 0
     conn.connections[a, b].synapses[1, 0] = 0
     conn.connections[a, b].synapses[1, 1] = 0
-    conn.connections[s, a].synapses[0, 0] = 1
-    conn.connections[s, a].synapses[0, 1] = 0
     return conn, a, b, s
 
 
