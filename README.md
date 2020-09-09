@@ -166,6 +166,10 @@ The `Brain` packages provides the following classes:
 ## General notes
 
 In order to handle possible memory issues, it's recommended to increase the swap region in your hard drive.
+Links:
+https://bogdancornianu.com/change-swap-size-in-ubuntu/
+https://docs.alfresco.com/3.4/tasks/swap-space-lin.html
+
 [ON WINDOWS COMPUTERS] In the computer's search bar, search for 'View Advanced System Properties'.
 In that window, under 'Performance', press 'Settings...'. On the opened window, switch to 'Advanced', and under 'Virtual Memory',
 press 'Change' to change the swapping region.
