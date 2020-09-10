@@ -29,7 +29,7 @@ class Area(UniquelyIdentifiable):
         active_assembly - Find the active assembly in the current area.
     """
 
-    def __init__(self, n: int, k: Optional[int] = None, beta: float = 0.05):
+    def __init__(self, n: int, k: Optional[int] = None, beta: float = 0.01):
         super(Area, self).__init__()
 
         verify_component_params(n,k,beta)

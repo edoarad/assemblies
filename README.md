@@ -18,6 +18,7 @@
 4. explain memory issues and set TODOs for ideas on fixing these
 5. go over installation and use instructions
 6. clean up code
+7. fix problems in high plasticity
 
 ## Installation
 
@@ -93,16 +94,20 @@ The `Brain` packages provides the following classes:
     ```pycon
     >>> from assembly_calculus import Area, Stimulus, Assembly, BrainRecipe
     >>> area = Area(n = 1000, k = 31, beta = 0.1)
-    >>> stim = Stimulus(1000 ** 0.5)
+    >>> stim = Stimulus(31)
     >>> assembly = Assembly([stim], area)
     >>> recipe = BrainRecipe(stim, area, assembly)
     ```
     
+    `BrainRecipe` is used to automatically generate a brain equipped with a working connectome and any relation that has been defined thus far such as `project` between assemblies that has been defined before activating the recipe. 
+    
     Representing multiple assemblies and operating on them can be achieved using `|` in the following manner:
     
     ```pycon
-    >>> assembly_set = (ass1 | ass2 | ass3)         # this represents the set of these 'ass1', 'ass2', 'ass3'
-    >>> assembly_singelton = (ass| ...)             # this represents the singleton containing 'ass'
+    >>> # This represents the set of these 'ass1', 'ass2', 'ass3':
+    >>> assembly_set = (ass1 | ass2 | ass3)         
+    >>> # Using `Ellipsis`, this represents the singleton containing 'ass':
+    >>> assembly_singelton = (ass| ...)             
     ```
     The assembly class provides methods for manipulating assemblies within the brain.
     
