@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import Optional, Union, TYPE_CHECKING, Dict, Set, Tuple
+from assembly_calculus.brain.components_utils import verify_component_params
 
 from assembly_calculus.utils import UniquelyIdentifiable, bindable_brain, overlap
 
@@ -27,10 +28,11 @@ class Area(UniquelyIdentifiable):
         support - the support in the area.
         active_assembly - Find the active assembly in the current area.
     """
-    THRESHOLD: float = 0.20
 
-    def __init__(self, n: int, k: Optional[int] = None, beta: float = 0.01):
+    def __init__(self, n: int, k: Optional[int] = None, beta: float = 0.05):
         super(Area, self).__init__()
+
+        verify_component_params(n,k,beta)
         self.beta: float = beta
         self.n: int = n
         self.k: int = k or int(n ** 0.5)
@@ -49,6 +51,7 @@ class Area(UniquelyIdentifiable):
         Returns the most activated assembly in the area.
         Note: only available when bounded to some brain.
         """
+        THRESHOLD = 0.20  # If there is no assembly that overlaps with winners in at least TRESHOLD percent, return None
         assemblies: Set[Assembly] = brain.recipe.area_assembly_mapping[self]
         overlaps: Dict[Assembly, float] = {}
         for assembly in assemblies:
@@ -56,7 +59,7 @@ class Area(UniquelyIdentifiable):
                                          assembly.sample_neurons(preserve_brain=preserve_brain, brain=brain))
 
         maximal_assembly = max(overlaps.keys(), key=lambda x: overlaps[x])
-        return maximal_assembly if overlaps[maximal_assembly] > Area.THRESHOLD else None
+        return maximal_assembly if overlaps[maximal_assembly] > THRESHOLD else None
 
     @bindable_brain.property
     def active_assembly(self, *, brain: Brain) -> Optional[Assembly]:

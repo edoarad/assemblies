@@ -6,18 +6,18 @@ and `p` = the probability of a connection between 2 neurons.
 For example:
 
 ```python
-from brain.connectome import *
+from brain.connectome import Connectome
 from brain.components import Area, Stimulus
 def simple_conn():
-    a = Area(n=2, k=1, beta=0.2)
-    b = Area(n=2, k=1, beta=0.2)
-    s = Stimulus(n=1, beta=0.2)
+    a = Area(n=1000, k=31, beta=0.05)
+    b = Area(n=1000, k=31, beta=0.05)
+    s = Stimulus(n=1, beta=0.05)
     return Connectome(p=0.3, areas=[a,b], stimuli=[s]), a, b, s
 ```
 
 One may also add areas and or stimuli after creating a connectome, like so:
 
-```python
+```pycon
 >>> conn.add_area(a)
 >>> conn.add_stimulus(s)
 ```
@@ -27,7 +27,7 @@ one may fire the connectome from given sources to given destinations.
 
 For example:
 
-```python
+```pycon
 >>> conn, a, b, s = simple_conn()
 >>> conn.fire({s: [a], a: [b]})
 ```

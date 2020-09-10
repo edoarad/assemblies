@@ -70,9 +70,14 @@ The `Brain` packages provides the following classes:
     This class represents an Area in the brain.
 
     ```pycon
-    >>> from Brain import Area
-    >>> area = Area(beta = 0.1, n = 1000, k = 31)
+    >>> from assembly_calculus.brain import Area
+    >>> area = Area(n = 1000, k = 31, beta = 0.05)
     ```
+
+    Where as in the paper:
+    * `n` is the number of neurons in each area, 
+    * `k` is the number of "winners": neurons that fire after each round (which by default are calculated as `sqrt(n)`), 
+    * and `beta` is the plasticity parameter for synapses going _into_ `area`. 
 
     The area class provides methods for handling areas within the brain.
     - `read`
@@ -87,7 +92,7 @@ The `Brain` packages provides the following classes:
     
     ```pycon
     >>> from assembly_calculus import Area, Stimulus, Assembly, BrainRecipe
-    >>> area = Area(beta = 0.1, n = 1000, k = 31)
+    >>> area = Area(n = 1000, k = 31, beta = 0.1)
     >>> stim = Stimulus(1000 ** 0.5)
     >>> assembly = Assembly([stim], area)
     >>> recipe = BrainRecipe(stim, area, assembly)
