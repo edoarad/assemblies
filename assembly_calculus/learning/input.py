@@ -71,7 +71,7 @@ class InputStimuli:
 	"""
 
 	def __init__(self, brain: Brain, stimulus_k: int, *areas: Union[Area, List[Area]],
-	             override: Dict[int, Tuple[Stimulus, Stimulus]] = None, verbose=True) -> None:
+	             override: Dict[int, Tuple[Stimulus, Stimulus]] = None, verbose=False) -> None:
 		"""
 		:param brain: the brain to create the input stimuli in.
 		:param stimulus_k: the number of firing neurons of an auto-generated input stimulus.
