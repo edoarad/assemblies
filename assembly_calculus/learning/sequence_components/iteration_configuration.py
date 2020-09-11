@@ -1,7 +1,5 @@
 from typing import Union
 
-import matplotlib.pyplot as plt
-
 
 class IterationConfiguration:
     """

@@ -12,6 +12,10 @@ class TestSet(PartialDataSet):
     Iterating over the test set will output data points from the portion of
     the data dedicated to testing.
     """
+
+    # Skip Pytest discovery.
+    __test__ = False
+
     def __init__(self, base_data_set: DataSet, mask: Mask) -> None:
         super().__init__(base_data_set, mask, noise_probability=0.)
 

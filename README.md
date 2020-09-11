@@ -1,22 +1,20 @@
 
+## Introduction
+This implementation of assembly calculus has been done by talented students in Tel Aviv University as their coursework in "Assembly Calculus Workshop". 
+The details of the workshop are in [this document](https://docs.google.com/document/d/1czzQee_afvhgzptOJJFCVQ1OuU_OoXoYw1m_3ew0zCM/edit#).
+
 
 ## TODO
 1. Delete this
-2. link to other readmes
-3. remove useless branches
-4. explain memory issues and set TODOs for ideas on fixing these
-5. go over installation and use instructions
 6. clean up code
-7. fix problems in high plasticity
+7. fix problems in high plasticity (sometimes, assembly tests fail)
 
 ## Installation
 
 1. Clone the repository and enter it:
 
     ```sh
-    $ git clone git@github.com:BrainProjectTau/Brain.git
-    ...
-    $ cd Brain/
+    $ git clone https://github.com/edoarad/assemblies
     ```
 
 2. In a Linux system, run the installation script and activate the virtual environment:
@@ -50,6 +48,8 @@
     $ pytest tests/
     ...
     ```
+
+    If there are memory errors, 
 
 ## Usage
 
@@ -176,6 +176,10 @@ The `Brain` packages provides the following classes:
     This module is used for assessing the use of the brain architecture as a framework for statistical learning tasks. Documentation is [here](assembly_calculus/brain/performance/multithreaded/README.md)
 
 ## General notes
+
+The current (Sep 20) implementation has large memory requirements. Depending on the computer performing the simulation, the brain should be no more than `n=1000` or perhaps `n=10000`.
+To fix this, it may be better to maintain in memory only visited synapses or only the exponent of `(1+beta)` which can later be substituted into a polynomial.
+
 
 In order to handle possible memory issues, it's recommended to increase the swap region in your hard drive.
 Links:

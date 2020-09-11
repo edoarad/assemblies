@@ -77,6 +77,10 @@ class TestResults:
     certain ResultType (such as true positive), and also exposes the accuracy,
     precision, and recall of the model (as calculated based on the results).
     """
+
+    # Skip Pytest discovery.
+    __test__ = False
+
     def __init__(self) -> None:
         """
         Create an empty TestResult object.
