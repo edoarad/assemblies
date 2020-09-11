@@ -86,6 +86,46 @@ The `Brain` packages provides the following classes:
         ```pycon
         >>> read_assembly = area.read(preserve_brain=True, brain=brain)
         ```
+    
+- `Connectome`
+    
+    A connectome represents the graph of connections between areas and stimuli of the brain.
+
+    A connectome is initialized with a list of areas and stimuli,
+    and `p` = the probability of an existing synaptic connection between any 2 neurons.
+
+    For example:
+
+    ```python
+    from brain.connectome import Connectome
+    from brain.components import Area, Stimulus
+    def simple_conn():
+        a = Area(n=1000, k=31, beta=0.05)
+        b = Area(n=1000, k=31, beta=0.05)
+        s = Stimulus(n=1, beta=0.05)
+        return Connectome(p=0.3, areas=[a,b], stimuli=[s]), a, b, s
+    ```
+
+    One may also add areas and or stimuli after creating a connectome, like so:
+
+    ```pycon
+    >>> conn.add_area(a)
+    >>> conn.add_stimulus(s)
+    ```
+
+    After initializing a connectome,
+    one may fire the connectome from given sources to given destinations.
+
+    For example:
+
+    ```pycon
+    >>> conn, a, b, s = simple_conn()
+    >>> conn.fire({s: [a], a: [b]})
+    ```
+
+    This will cause a projection from `s` to `a` and from `a` to `b`.
+    
+- `Brain`
         
 - `Assembly`
     
@@ -139,48 +179,12 @@ The `Brain` packages provides the following classes:
                 (assembly_ac | ...).associate(assembly_bc | ...)
         ```
         
-    
-- `Connectome`
-    
-    Sub-package which holds the structre of the brain.
-    The sub-package defines the following classes:
-    
-    - `Connectome`
-        Abstract class which defines the API which a general connectome should have.
-        This class should be inhereted and implemented.
-        
-        ```pycon
-        >>> from Connectome import Connectome
-        >>> class LazyConnectome(Connectome):
-        >>>     #implementation of a specific connectome
-        >>>> connectome = LazyConnectome()
-        >>> area = Area(beta = 0.1, n = 1000, k = 31)
-        >>> connectome.add_area(area)
-        ```
-    - `NonLazyRandomConnectome` 
-        Already implemented Connectome which by decides it's edge by chance.
-        This Connectome doesn't use any kind of laziness.
-       
-       ```pycon
-        >>> from Connectome import NonLazyRandomConnectome
-        >>>> connectome = NonLazyRandomConnectome()
-        >>> area = Area(beta = 0.1, n = 1000, k = 31)
-        >>> connectome.add_area(area)
-        ```
-    - `To be continued`
-        More ways to implement a connectome can be applied simply by inhereting from Connectome and implementing it's API.
-    
-- `Brain`
 
-    This class represents a simulated brain, with it's connectome which holds the areas, stimuli, and all the synapse weights.
 
-    ```pycon
-    >>> from Brain import Brain, NonLazyRandomConnectome, Area
-    >>> connectome = NonLazyRandomConnectome()
-    >>> area = Area(beta = 0.1, n = 1000, k = 31)
-    >>> connectome.add_area(area)
-    >>> brain = Brain(connectome)
-    ```
+
+- `Learning`
+
+    This module is used for assessing the use of the brain architecture as a framework for statistical learning tasks. Documentation is [here](assembly_calculus/brain/performance/multithreaded/README.md)
 
 ## General notes
 
@@ -192,3 +196,6 @@ https://docs.alfresco.com/3.4/tasks/swap-space-lin.html
 [ON WINDOWS COMPUTERS] In the computer's search bar, search for 'View Advanced System Properties'.
 In that window, under 'Performance', press 'Settings...'. On the opened window, switch to 'Advanced', and under 'Virtual Memory',
 press 'Change' to change the swapping region.
+
+### Multithreading
+See [documentation here](assembly_calculus/brain/performance/multithreaded/README.md)
